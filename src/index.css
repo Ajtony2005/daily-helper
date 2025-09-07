@@ -1,0 +1,59 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+@import "tailwindcss";
+
+.bg-appBackground {
+  background-color: #f3f4f6; /* Replace with a valid color or Tailwind key */
+}
+.bg-appBackground-dark {
+  background-color: #1f2937; /* Replace with a valid color or Tailwind key */
+}
+.text-card-foreground {
+  color: #111827; /* Tailwind gray-900 or another valid color */
+}
+.text-card-darkForeground {
+  color: #f9fafb; /* Tailwind gray-50 or another valid color */
+}
+/* Add more custom color utilities as needed */
+
+@layer base {
+  html {
+    @apply scroll-smooth bg-appBackground dark:bg-appBackground-dark text-card-foreground dark:text-card-darkForeground font-sans antialiased;
+  }
+  body {
+    @apply min-h-screen bg-appBackground dark:bg-appBackground-dark text-card-foreground dark:text-card-darkForeground font-sans antialiased transition-colors duration-500;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-card-glass dark:bg-card-glass-dark shadow-card rounded-2xl border border-border dark:border-border-dark p-6 backdrop-blur-lg transition-all duration-300;
+  }
+  .card-glass {
+    @apply bg-card-glass dark:bg-card-glass-dark backdrop-blur-lg shadow-glass rounded-3xl border border-border dark:border-border-dark p-8 transition-all duration-500;
+  }
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary-500 to-secondary-500 dark:from-primary-700 dark:to-secondary-700 text-white font-semibold px-6 py-3 rounded-xl shadow-soft hover:from-secondary-500 hover:to-primary-500 focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 transition-all;
+  }
+  .btn-secondary {
+    @apply bg-gradient-to-r from-accent-500 to-primary-500 dark:from-accent-700 dark:to-primary-700 text-white font-semibold px-6 py-3 rounded-xl shadow-soft hover:from-primary-500 hover:to-accent-500 focus:ring-2 focus:ring-accent-400 focus:ring-offset-2 transition-all;
+  }
+  .glass {
+    @apply glass dark:glass-dark;
+  }
+  .glass-strong {
+    @apply glass-strong dark:glass-strong-dark;
+  }
+  .neon-border {
+    @apply neon-border dark:neon-border-dark;
+  }
+  .text-gradient-primary {
+    @apply text-gradient-primary dark:text-gradient-primary-dark;
+  }
+  .text-gradient-secondary {
+    @apply text-gradient-secondary dark:text-gradient-secondary-dark;
+  }
+  .text-gradient-accent {
+    @apply text-gradient-accent dark:text-gradient-accent-dark;
+  }
+}
