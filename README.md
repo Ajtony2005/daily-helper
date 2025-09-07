@@ -1,69 +1,95 @@
-# React + TypeScript + Vite
+# Daily Helper
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Daily Helper is a modern productivity dashboard designed to help you organize and manage your daily life in one place. It combines multiple tools and modules into a single, beautiful, and responsive web app. Whether you want to track your finances, manage your inventory, plan meals, keep shopping lists, organize recipes, manage to-dos, or monitor wellness habits, Daily Helper brings all these features together with a creative and user-friendly interface.
 
-Currently, two official plugins are available:
+## What Daily Helper Knows & Does
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Finance Tracking:** Record expenses, view summaries, and monitor your budget.
+- **Inventory Management:** Keep track of household items, supplies, and assets.
+- **Shopping Lists:** Create, edit, and check off items for your next shopping trip.
+- **Meal Planning:** Plan weekly meals, save favorite dishes, and organize ingredients.
+- **To-Do Lists:** Manage tasks, set priorities, and mark items as complete.
+- **Recipe Organizer:** Save, categorize, and view recipes with ingredient lists.
+- **Wellness Tracker:** Log habits, track progress, and set wellness goals.
 
-## Expanding the ESLint configuration
+## Why Use Daily Helper?
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **All-in-One Dashboard:** No need for multiple apps—everything is integrated.
+- **Modern, Responsive Design:** Works beautifully on desktop and mobile, with creative visuals and smooth transitions.
+- **Dark/Light Mode:** Choose your preferred theme, with persistent settings.
+- **Customizable:** Built with Tailwind CSS v4 and shadcn/ui for easy theming and extension.
+- **Fast & Secure:** Powered by React 19 and Vite 7 for instant updates and reliable performance.
+- **Open Source:** Freely available under the MIT license.
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Daily Helper is ideal for students, families, professionals, or anyone who wants to streamline daily routines and boost productivity with a single, easy-to-use tool.
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## Features
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Finance, Inventory, Shopping, Meals, To-Do, Recipes, Wellness modules
+- Modern responsive UI with glassmorphism and gradients
+- Dark/light mode toggle (persists theme)
+- Mobile hamburger menu for navigation
+- Custom Tailwind v4 utilities and color palette
+- Fast development with Vite
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18+ recommended)
+- Yarn or npm
+
+### Installation
+
+```sh
+yarn install
+# or
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+yarn dev
+# or
+npm run dev
 ```
+
+### Build
+
+```sh
+yarn build
+# or
+npm run build
+```
+
+## Project Structure
+
+```
+src/
+  App.tsx         # Main app shell
+  layout/
+    Navbar.tsx    # Responsive navbar with theme toggle
+  pages/          # Page components
+  features/       # Feature modules
+  components/ui/  # UI components (badge, button, card)
+  index.css       # Global styles, custom utilities
+  ...
+```
+
+## Customization
+
+- Tailwind config: `tailwind.config.js` (custom colors, gradients, glassmorphism)
+- Global styles: `src/index.css` (custom utilities, dark mode)
+- Navbar: `src/layout/Navbar.tsx` (responsive, theme toggle)
+
+## Credits
+
+- [React](https://react.dev/)
+- [Vite](https://vitejs.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [shadcn/ui](https://ui.shadcn.com/)
+
+## License
+
+MIT
