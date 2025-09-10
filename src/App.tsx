@@ -10,6 +10,9 @@ import SpendingTracker from "./features/finance/SpendingTracker";
 import Shopping from "./features/shopping/Shopping";
 import Inventory from "./features/inventory/Inventory";
 import FoodTracker from "./features/meals/Foodtracker";
+import Wellness from "./features/wellness/Wellness";
+import Recipes from "./features/recipes/Recipes";
+import ToDo from "./features/todo/ToDo";
 
 export default function App() {
   const [isDark] = useState(() => {
@@ -47,6 +50,9 @@ export default function App() {
           <Route path="/shopping" element={<Shopping />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/meals" element={<FoodTracker />} />
+          <Route path="/todo" element={<ToDo />} />
+          <Route path="/wellness" element={<Wellness />} />
+          <Route path="/recipes" element={<Recipes />} />
         </Routes>
       </main>
     </Router>
