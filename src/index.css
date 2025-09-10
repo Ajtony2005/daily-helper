@@ -1,59 +1,144 @@
+/* styles.css */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-
 @import "tailwindcss";
 
-.bg-appBackground {
-  background-color: #f3f4f6; /* Replace with a valid color or Tailwind key */
-}
-.bg-appBackground-dark {
-  background-color: #1f2937; /* Replace with a valid color or Tailwind key */
-}
-.text-card-foreground {
-  color: #111827; /* Tailwind gray-900 or another valid color */
-}
-.text-card-darkForeground {
-  color: #f9fafb; /* Tailwind gray-50 or another valid color */
-}
-/* Add more custom color utilities as needed */
-
-@layer base {
-  html {
-    @apply scroll-smooth bg-appBackground dark:bg-appBackground-dark text-card-foreground dark:text-card-darkForeground font-sans antialiased;
-  }
-  body {
-    @apply min-h-screen bg-appBackground dark:bg-appBackground-dark text-card-foreground dark:text-card-darkForeground font-sans antialiased transition-colors duration-500;
-  }
+/* Színek */
+:root {
+  --color-appBackground: #0f172a;
+  --color-primary: #2563eb;
+  --color-primary-400: #60a5fa;
+  --color-primary-600: #2563eb;
+  --color-secondary: #10b981;
+  --color-card: #1e1e1e;
+  --color-card-glass: rgba(255, 255, 255, 0.05);
+  --color-card-darkForeground: #e5e7eb;
+  --color-border: #374151;
+  --color-ring: #ff6f00;
+  --color-chart-1: #ff6f00;
+  --color-chart-2: #00c853;
+  --color-chart-3: #00e5ff;
+  --color-chart-4: #ff3d00;
+  --color-chart-5: #737373;
 }
 
-@layer components {
-  .card {
-    @apply bg-card-glass dark:bg-card-glass-dark shadow-card rounded-2xl border border-border dark:border-border-dark p-6 backdrop-blur-lg transition-all duration-300;
+/* Betűtípus */
+body {
+  font-family: "Inter", system-ui, sans-serif;
+  background-color: var(--color-appBackground);
+  color: var(--color-card-darkForeground);
+}
+
+/* Border Radius + Glass */
+.glass {
+  background: rgba(30, 30, 30, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(30, 30, 30, 0.3);
+  border-radius: 1.5rem;
+}
+
+/* Gombok */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+.btn-primary:hover {
+  background-color: var(--color-primary-600);
+}
+
+/* Keyframes */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
   }
-  .card-glass {
-    @apply bg-card-glass dark:bg-card-glass-dark backdrop-blur-lg shadow-glass rounded-3xl border border-border dark:border-border-dark p-8 transition-all duration-500;
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
-  .btn-primary {
-    @apply bg-gradient-to-r from-primary-500 to-secondary-500 dark:from-primary-700 dark:to-secondary-700 text-white font-semibold px-6 py-3 rounded-xl shadow-soft hover:from-secondary-500 hover:to-primary-500 focus:ring-2 focus:ring-primary-400 focus:ring-offset-2 transition-all;
+}
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
   }
-  .btn-secondary {
-    @apply bg-gradient-to-r from-accent-500 to-primary-500 dark:from-accent-700 dark:to-primary-700 text-white font-semibold px-6 py-3 rounded-xl shadow-soft hover:from-primary-500 hover:to-accent-500 focus:ring-2 focus:ring-accent-400 focus:ring-offset-2 transition-all;
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
-  .glass {
-    @apply glass dark:glass-dark;
+}
+
+@keyframes fade-in-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
   }
-  .glass-strong {
-    @apply glass-strong dark:glass-strong-dark;
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
-  .neon-border {
-    @apply neon-border dark:neon-border-dark;
+}
+
+@keyframes slide-in-left {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
   }
-  .text-gradient-primary {
-    @apply text-gradient-primary dark:text-gradient-primary-dark;
+  100% {
+    opacity: 1;
+    transform: translateX(0);
   }
-  .text-gradient-secondary {
-    @apply text-gradient-secondary dark:text-gradient-secondary-dark;
+}
+
+@keyframes slide-in-right {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
   }
-  .text-gradient-accent {
-    @apply text-gradient-accent dark:text-gradient-accent-dark;
+  100% {
+    opacity: 1;
+    transform: translateX(0);
   }
+}
+
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 5px #ff6f00, 0 0 10px #ff6f00;
+  }
+  100% {
+    box-shadow: 0 0 10px #ff6f00, 0 0 20px #ff6f00, 0 0 30px #ff6f00;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Animáció osztályok */
+.fade-in {
+  animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.fade-in-up {
+  animation: fade-in-up 0.6s ease-out both;
+}
+.fade-in-down {
+  animation: fade-in-down 0.6s ease-out both;
+}
+.slide-in-left {
+  animation: slide-in-left 0.5s ease-out both;
+}
+.slide-in-right {
+  animation: slide-in-right 0.5s ease-out both;
+}
+.glow {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+.float {
+  animation: float 3s ease-in-out infinite;
 }

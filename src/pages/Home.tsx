@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { motion, useAnimation } from "framer-motion";
 
 const features = [
   {
@@ -55,73 +56,117 @@ const features = [
 ];
 
 export default function Home() {
+  const buttonControls = useAnimation();
+
+  const handleButtonClick = async () => {
+    await buttonControls.start({
+      scale: [1, 1.1, 1],
+      transition: { duration: 0.3 },
+    });
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, delay: i * 0.1 },
+    }),
+  };
+
   return (
-    <div className="min-h-screen w-full bg-appBackground dark:bg-appBackground-dark text-card-foreground dark:text-card-darkForeground transition-colors duration-500">
+    <div className="min-h-screen flex flex-col relative overflow-hidden font-sans bg-gray-900 text-white">
       {/* Hero Section */}
-      <section className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-16 text-center">
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight animate-pulse bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-secondary-500 dark:from-primary-300 dark:to-secondary-400">
-          DailyHelper
-        </h1>
-        <p className="mt-4 text-lg sm:text-xl md:text-2xl max-w-2xl mx-auto text-card-foreground dark:text-card-darkForeground opacity-80">
-          Your all-in-one student companion to organize, plan, and thrive. Built
-          for the modern student life.
-        </p>
-        <Button
-          asChild
-          className="mt-8 bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 px-6 rounded-full transition-all duration-300 transform hover:scale-105 shadow-soft"
+      <section className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-16 text-center relative">
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="relative z-10"
         >
-          <a href="/dashboard">
-            Get Started <ArrowRight className="ml-2 h-5 w-5" />
-          </a>
-        </Button>
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+            DailyHelper
+          </h1>
+          <p className="mt-4 text-lg sm:text-xl md:text-2xl max-w-2xl mx-auto text-blue-300">
+            Your all-in-one student companion to organize, plan, and thrive.
+            Built for the modern student life.
+          </p>
+          <motion.div animate={buttonControls} className="mt-8">
+            <Button
+              asChild
+              onClick={handleButtonClick}
+              className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-6 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+            >
+              <a href="/dashboard">
+                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                  Get Started <ArrowRight className="ml-2 h-5 w-5" />
+                </span>
+                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
+              </a>
+            </Button>
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* Features Section */}
       <section className="px-4 py-12 w-full">
-        <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12 text-card-foreground dark:text-card-darkForeground">
+        <h2 className="text-3xl sm:text-4xl font-extrabold mb-12 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
           Everything You Need to Succeed
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-          {features.map((feature) => (
-            <Card
+          {features.map((feature, i) => (
+            <motion.div
               key={feature.name}
-              className="bg-card-glass dark:bg-card-glass-dark backdrop-blur-lg border border-border dark:border-border-dark rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 w-full"
+              custom={i}
+              initial="hidden"
+              animate="visible"
+              variants={cardVariants}
             >
-              <CardHeader className="flex flex-row items-center gap-4">
-                <span className={`text-3xl p-3 rounded-full ${feature.accent}`}>
-                  {feature.icon}
-                </span>
-                <CardTitle className="text-xl font-semibold text-card-foreground dark:text-card-darkForeground">
-                  {feature.name}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4 min-h-[80px] text-card-foreground dark:text-card-darkForeground opacity-80">
-                  {feature.desc}
-                </p>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="w-full bg-transparent border-primary-500 text-primary-500 hover:bg-primary-500 hover:text-white transition-colors"
-                >
-                  <a href={feature.path}>Explore {feature.name}</a>
-                </Button>
-              </CardContent>
-            </Card>
+              <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
+                <CardHeader className="flex flex-row items-center gap-4 p-6 relative z-10">
+                  <span
+                    className={`text-3xl p-3 rounded-full ${feature.accent}`}
+                  >
+                    {feature.icon}
+                  </span>
+                  <CardTitle className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+                    {feature.name}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 relative z-10">
+                  <p className="mb-4 min-h-[80px] text-blue-300 opacity-80">
+                    {feature.desc}
+                  </p>
+                  <Button
+                    asChild
+                    className="w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+                  >
+                    <a href={feature.path}>
+                      <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                        Explore {feature.name}
+                      </span>
+                      <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
+                    </a>
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
       </section>
 
       {/* Why Choose Us Section */}
-      <section className="px-4 py-12 w-full bg-card-glass dark:bg-card-glass-dark">
-        <Card className="w-full bg-card-glass dark:bg-card-glass-dark backdrop-blur-lg border border-border dark:border-border-dark rounded-xl shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-primary-400 dark:text-primary-300">
+      <section className="px-4 py-12 w-full">
+        <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
+          <CardHeader className="p-6 relative z-10">
+            <CardTitle className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
               Why DailyHelper?
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ul className="list-disc pl-6 space-y-3 text-card-foreground dark:text-card-darkForeground opacity-80">
+          <CardContent className="p-6 relative z-10">
+            <ul className="list-disc pl-6 space-y-3 text-blue-300 opacity-80">
               <li>All-in-one dashboard tailored for student life</li>
               <li>Modern, responsive, and visually stunning design</li>
               <li>
@@ -135,10 +180,15 @@ export default function Home() {
               </li>
             </ul>
             <Button
-              className="mt-6 bg-secondary-500 hover:bg-secondary-600 text-white font-semibold rounded-full shadow-soft"
+              className="mt-6 w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
               asChild
             >
-              <a href="/about">Learn More</a>
+              <a href="/about">
+                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                  Learn More
+                </span>
+                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
+              </a>
             </Button>
           </CardContent>
         </Card>
@@ -146,21 +196,27 @@ export default function Home() {
 
       {/* Call to Action */}
       <section className="px-4 py-16 text-center w-full">
-        <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-card-foreground dark:text-card-darkForeground">
+        <h2 className="text-3xl sm:text-4xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
           Ready to Simplify Your Student Life?
         </h2>
-        <p className="text-lg max-w-2xl mx-auto mb-8 text-card-foreground dark:text-card-darkForeground opacity-80">
+        <p className="text-lg max-w-2xl mx-auto mb-8 text-blue-300 opacity-80">
           Join thousands of students who are staying organized and thriving with
           DailyHelper.
         </p>
-        <Button
-          asChild
-          className="bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 px-8 rounded-full transition-all duration-300 transform hover:scale-105 shadow-soft"
-        >
-          <a href="/signup">
-            Sign Up Now <ArrowRight className="ml-2 h-5 w-5" />
-          </a>
-        </Button>
+        <motion.div animate={buttonControls}>
+          <Button
+            asChild
+            onClick={handleButtonClick}
+            className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+          >
+            <a href="/res">
+              <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                Sign Up Now <ArrowRight className="ml-2 h-5 w-5" />
+              </span>
+              <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
+            </a>
+          </Button>
+        </motion.div>
       </section>
     </div>
   );
