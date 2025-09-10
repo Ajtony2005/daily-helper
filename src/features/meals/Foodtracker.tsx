@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { format, addDays, subDays } from "date-fns";
-import { Camera, CheckCircle, Plus, XCircle } from "lucide-react";
+import { CheckCircle, Plus, XCircle } from "lucide-react";
 
 const foodCategories = [
   { name: "Vegetable/Fruit", color: "bg-green-500" },
@@ -59,7 +59,7 @@ type InventoryItem = {
 
 const FoodTracker = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
-  const [inventory, setInventory] = useState<InventoryItem[]>([]); // Assume inventory is passed or fetched
+  const [, setInventory] = useState<InventoryItem[]>([]); // Assume inventory is passed or fetched
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAddMeal, setShowAddMeal] = useState(false);
   const [form, setForm] = useState({
@@ -116,12 +116,6 @@ const FoodTracker = () => {
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
-  };
-
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setForm({ ...form, photo: e.target.files[0] });
-    }
   };
 
   const handleAddMeal = () => {
@@ -511,178 +505,7 @@ const FoodTracker = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold"
-                      htmlFor="quantity"
-                      animate={
-                        form.quantity
-                          ? { y: -25, scale: 0.9 }
-                          : { y: 0, scale: 1 }
-                      }
-                    >
-                      Quantity
-                    </motion.label>
-                    <motion.input
-                      id="quantity"
-                      type="text"
-                      name="quantity"
-                      value={form.quantity}
-                      onChange={handleChange}
-                      placeholder="e.g., 2"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold"
-                      htmlFor="unit"
-                      animate={
-                        form.unit ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                      }
-                    >
-                      Unit
-                    </motion.label>
-                    <motion.input
-                      id="unit"
-                      type="text"
-                      name="unit"
-                      value={form.unit}
-                      onChange={handleChange}
-                      placeholder="e.g., pcs, g"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold"
-                      htmlFor="calories"
-                      animate={
-                        form.calories
-                          ? { y: -25, scale: 0.9 }
-                          : { y: 0, scale: 1 }
-                      }
-                    >
-                      Calories (kcal)
-                    </motion.label>
-                    <motion.input
-                      id="calories"
-                      type="text"
-                      name="calories"
-                      value={form.calories}
-                      onChange={handleChange}
-                      placeholder="e.g., 200"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold"
-                      htmlFor="protein"
-                      animate={
-                        form.protein
-                          ? { y: -25, scale: 0.9 }
-                          : { y: 0, scale: 1 }
-                      }
-                    >
-                      Protein (g)
-                    </motion.label>
-                    <motion.input
-                      id="protein"
-                      type="text"
-                      name="protein"
-                      value={form.protein}
-                      onChange={handleChange}
-                      placeholder="e.g., 20"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold"
-                      htmlFor="fat"
-                      animate={
-                        form.fat ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                      }
-                    >
-                      Fat (g)
-                    </motion.label>
-                    <motion.input
-                      id="fat"
-                      type="text"
-                      name="fat"
-                      value={form.fat}
-                      onChange={handleChange}
-                      placeholder="e.g., 10"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold"
-                      htmlFor="carbs"
-                      animate={
-                        form.carbs ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                      }
-                    >
-                      Carbs (g)
-                    </motion.label>
-                    <motion.input
-                      id="carbs"
-                      type="text"
-                      name="carbs"
-                      value={form.carbs}
-                      onChange={handleChange}
-                      placeholder="e.g., 30"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold"
-                    htmlFor="photo"
-                    animate={
-                      form.photo ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Photo (Optional)
-                  </motion.label>
-                  <div className="flex items-center gap-2">
-                    <motion.input
-                      id="photo"
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoUpload}
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                    <Camera className="text-blue-300 w-5 h-5" />
-                  </div>
-                </div>
+
                 {error && (
                   <motion.p
                     className="text-red-400 text-center font-medium"
