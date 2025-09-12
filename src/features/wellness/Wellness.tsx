@@ -41,10 +41,13 @@ type Vitamin = {
   name: string;
   time: string;
   taken: boolean;
+  frequency: number; // Hány naponta kell szedni
+  createdAt: string; // Hozzáadás dátuma
 };
 
 type WaterIntake = {
   id: string;
+  quantity: number; // Vízmennyiség ml-ben
   taken: boolean;
 };
 
@@ -66,8 +69,13 @@ const Wellness = () => {
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAddVitamin, setShowAddVitamin] = useState(false);
-  const [vitaminForm, setVitaminForm] = useState({ name: "", time: "" });
+  const [vitaminForm, setVitaminForm] = useState({
+    name: "",
+    time: "",
+    frequency: "1",
+  });
   const [error, setError] = useState("");
+  const [waterQuantityInput, setWaterQuantityInput] = useState<string>("250"); // Új állapot a vízmennyiség beviteléhez
 
   // Get or initialize data for the selected date
   const getDailyData = (date: Date): DailyData => {
@@ -79,13 +87,28 @@ const Wellness = () => {
         weather: null,
         exercise: { hasExercise: false },
         vitamins: [
-          { id: "1", name: "D-vitamin", time: "Morning", taken: false },
-          { id: "2", name: "C-vitamin", time: "After Lunch", taken: false },
+          {
+            id: "1",
+            name: "D-vitamin",
+            time: "Morning",
+            taken: false,
+            frequency: 1,
+            createdAt: new Date().toISOString(),
+          },
+          {
+            id: "2",
+            name: "C-vitamin",
+            time: "After Lunch",
+            taken: false,
+            frequency: 1,
+            createdAt: new Date().toISOString(),
+          },
         ],
         waterIntakes: Array(8)
           .fill(null)
           .map((_, i) => ({
             id: `water-${i}`,
+            quantity: 250, // Alapértelmezett: 250 ml
             taken: false,
           })),
         moodEnergy: { mood: "", energy: "" },
@@ -135,7 +158,9 @@ const Wellness = () => {
   };
 
   const getDailyStatus = (data: DailyData) => {
-    const allVitaminsTaken = data.vitamins.every((v) => v.taken);
+    const allVitaminsTaken = data.vitamins.every(
+      (v) => v.taken || !isVitaminApplicable(v, selectedDate)
+    );
     const allWaterTaken = data.waterIntakes.every((w) => w.taken);
     const exerciseDone =
       !data.exercise.hasExercise ||
@@ -145,7 +170,9 @@ const Wellness = () => {
     if (allVitaminsTaken && allWaterTaken && exerciseDone && moodEnergyLogged)
       return "green";
     if (
-      data.vitamins.some((v) => !v.taken) ||
+      data.vitamins.some(
+        (v) => !v.taken && isVitaminApplicable(v, selectedDate)
+      ) ||
       data.waterIntakes.some((w) => !w.taken) ||
       !moodEnergyLogged
     )
@@ -153,9 +180,22 @@ const Wellness = () => {
     return "red";
   };
 
+  const isVitaminApplicable = (vitamin: Vitamin, date: Date): boolean => {
+    const createdDate = new Date(vitamin.createdAt);
+    const currentDate = new Date(date);
+    const diffInDays = Math.floor(
+      (currentDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    return diffInDays % vitamin.frequency === 0;
+  };
+
   const handleAddVitamin = () => {
-    if (!vitaminForm.name.trim() || !vitaminForm.time.trim()) {
-      setError("Vitamin name and time are required.");
+    if (
+      !vitaminForm.name.trim() ||
+      !vitaminForm.time.trim() ||
+      !vitaminForm.frequency
+    ) {
+      setError("Vitamin name, time, and frequency are required.");
       return;
     }
     setDailyData((prev) =>
@@ -170,13 +210,15 @@ const Wellness = () => {
                   name: vitaminForm.name.trim(),
                   time: vitaminForm.time.trim(),
                   taken: false,
+                  frequency: parseInt(vitaminForm.frequency, 10),
+                  createdAt: new Date().toISOString(),
                 },
               ],
             }
           : d
       )
     );
-    setVitaminForm({ name: "", time: "" });
+    setVitaminForm({ name: "", time: "", frequency: "1" });
     setShowAddVitamin(false);
     setError("");
   };
@@ -196,14 +238,16 @@ const Wellness = () => {
     );
   };
 
-  const handleToggleWater = (id: string) => {
+  const handleToggleWater = (id: string, quantity?: number) => {
     setDailyData((prev) =>
       prev.map((d) =>
         d.date === format(selectedDate, "yyyy-MM-dd")
           ? {
               ...d,
               waterIntakes: d.waterIntakes.map((w) =>
-                w.id === id ? { ...w, taken: !w.taken } : w
+                w.id === id
+                  ? { ...w, taken: !w.taken, quantity: quantity || w.quantity }
+                  : w
               ),
             }
           : d
@@ -261,6 +305,10 @@ const Wellness = () => {
     setVitaminForm({ ...vitaminForm, [e.target.name]: e.target.value });
     setError("");
   };
+
+  const totalWaterIntake = currentData.waterIntakes
+    .filter((w) => w.taken)
+    .reduce((sum, w) => sum + w.quantity, 0);
 
   const inputVariants = {
     focus: {
@@ -454,24 +502,34 @@ const Wellness = () => {
                 <Plus className="w-5 h-5 mr-2" /> Add Vitamin
               </Button>
               <div className="bg-gray-800/30 p-4 rounded-xl border border-blue-600/40">
-                {currentData.vitamins.length === 0 ? (
-                  <p className="text-gray-400">No vitamins added.</p>
+                {currentData.vitamins.filter((v) =>
+                  isVitaminApplicable(v, selectedDate)
+                ).length === 0 ? (
+                  <p className="text-gray-400">
+                    No vitamins scheduled for today.
+                  </p>
                 ) : (
-                  currentData.vitamins.map((vitamin) => (
-                    <div
-                      key={vitamin.id}
-                      className="flex items-center gap-2 mb-2"
-                    >
-                      <Checkbox
-                        checked={vitamin.taken}
-                        onCheckedChange={() => handleToggleVitamin(vitamin.id)}
-                        className="text-green-500"
-                      />
-                      <span className="text-white">
-                        {vitamin.name} ({vitamin.time})
-                      </span>
-                    </div>
-                  ))
+                  currentData.vitamins
+                    .filter((v) => isVitaminApplicable(v, selectedDate))
+                    .map((vitamin) => (
+                      <div
+                        key={vitamin.id}
+                        className="flex items-center gap-2 mb-2"
+                      >
+                        <Checkbox
+                          checked={vitamin.taken}
+                          onCheckedChange={() =>
+                            handleToggleVitamin(vitamin.id)
+                          }
+                          className="text-green-500"
+                        />
+                        <span className="text-white">
+                          {vitamin.name} ({vitamin.time}, every{" "}
+                          {vitamin.frequency} day
+                          {vitamin.frequency > 1 ? "s" : ""})
+                        </span>
+                      </div>
+                    ))
                 )}
               </div>
             </div>
@@ -479,11 +537,35 @@ const Wellness = () => {
             {/* Water Intake Tracker */}
             <div className="mb-6">
               <h3 className="text-xl font-bold text-white mb-2">
-                Water Intake (8 glasses)
+                Water Intake (Total: {totalWaterIntake} ml)
               </h3>
+              <div className="flex items-center gap-4 mb-4">
+                <Input
+                  type="number"
+                  value={waterQuantityInput}
+                  onChange={(e) => setWaterQuantityInput(e.target.value)}
+                  placeholder="ml"
+                  className="w-32 bg-gray-800/30 text-white border border-blue-600/40"
+                />
+                <Button
+                  onClick={() => {
+                    const quantity = parseInt(waterQuantityInput, 10);
+                    if (quantity > 0) {
+                      handleToggleWater(
+                        currentData.waterIntakes.find((w) => !w.taken)?.id ||
+                          "",
+                        quantity
+                      );
+                    }
+                  }}
+                  className="bg-blue-600 text-white py-2 px-4 rounded-xl"
+                >
+                  Add Water
+                </Button>
+              </div>
               <div className="bg-gray-800/30 p-4 rounded-xl border border-blue-600/40 grid grid-cols-4 md:grid-cols-8 gap-2">
                 {currentData.waterIntakes.map((water) => (
-                  <div key={water.id} className="flex justify-center">
+                  <div key={water.id} className="flex flex-col items-center">
                     <motion.div
                       animate={{ scale: water.taken ? 1.2 : 1 }}
                       transition={{ duration: 0.2 }}
@@ -495,6 +577,9 @@ const Wellness = () => {
                         onClick={() => handleToggleWater(water.id)}
                       />
                     </motion.div>
+                    <span className="text-sm text-white">
+                      {water.quantity} ml
+                    </span>
                   </div>
                 ))}
               </div>
@@ -616,6 +701,32 @@ const Wellness = () => {
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
+                  />
+                </div>
+                <div className="relative">
+                  <motion.label
+                    className="block text-blue-300 mb-2 font-semibold"
+                    htmlFor="frequency"
+                    animate={
+                      vitaminForm.frequency
+                        ? { y: -25, scale: 0.9 }
+                        : { y: 0, scale: 1 }
+                    }
+                  >
+                    Frequency (days)
+                  </motion.label>
+                  <motion.input
+                    id="frequency"
+                    type="number"
+                    name="frequency"
+                    value={vitaminForm.frequency}
+                    onChange={handleVitaminFormChange}
+                    placeholder="e.g., 1 for daily"
+                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
+                    variants={inputVariants}
+                    whileFocus="focus"
+                    initial="blur"
+                    min="1"
                   />
                 </div>
                 {error && (
