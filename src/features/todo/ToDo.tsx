@@ -243,7 +243,9 @@ const ToDo = () => {
     const search = searchQuery.toLowerCase();
     return tasks.filter(
       (task) =>
-        (selectedCategory === "All" || task.category === selectedCategory) &&
+        (selectedCategory === "All" ||
+          selectedCategory === "All Tasks" ||
+          task.category === selectedCategory) &&
         (task.name.toLowerCase().includes(search) ||
           task.notes.toLowerCase().includes(search))
     );
@@ -265,7 +267,6 @@ const ToDo = () => {
     return "gray";
   };
 
-  // Drag & Drop sorting (simple implementation - for full drag & drop, use react-beautiful-dnd)
   const handleSortTasks = (sortBy: "priority" | "deadline") => {
     const sorted = [...getFilteredTasks()].sort((a, b) => {
       if (sortBy === "priority") {
@@ -356,6 +357,7 @@ const ToDo = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All">All</SelectItem>
+                  <SelectItem value="All Tasks">All Tasks</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {cat}
@@ -392,10 +394,10 @@ const ToDo = () => {
                 Sort by Deadline
               </Button>
               <Button
-                onClick={() => setSelectedCategory("Today")}
+                onClick={() => setSelectedCategory("All Tasks")}
                 className="bg-blue-600 text-white py-2 px-4 rounded-xl"
               >
-                Today's Tasks
+                All Tasks
               </Button>
             </div>
             {viewMode === "list" ? (
@@ -497,44 +499,113 @@ const ToDo = () => {
               </div>
             ) : (
               <div className="space-y-8">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  className="rounded-xl bg-gray-800/30 border border-blue-600/40 p-4"
-                />
-                <div className="space-y-4">
-                  {getTasksForDate(selectedDate).map((task) => (
-                    <motion.div
-                      key={task.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3 }}
-                      className={`bg-gray-800/30 p-4 rounded-xl border border-blue-600/40 shadow-inner ${
-                        getTaskStatus(task) === "green"
-                          ? "bg-green-500/10"
-                          : getTaskStatus(task) === "yellow"
-                          ? "bg-yellow-500/10"
-                          : getTaskStatus(task) === "red"
-                          ? "bg-red-500/10"
-                          : ""
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={task.completed}
-                          onCheckedChange={() => handleToggleCompleted(task.id)}
-                          className="text-green-500"
-                        />
-                        <div className="font-bold text-lg text-white">
-                          {task.name}
+                <div className="flex justify-center mb-8">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => date && setSelectedDate(date)}
+                    className="rounded-3xl bg-gray-800/30 border-4 border-blue-600/60 p-16 text-3xl shadow-2xl w-full max-w-4xl"
+                    style={{ fontSize: "2.5rem", minHeight: "600px" }}
+                  />
+                </div>
+                <div className="space-y-6">
+                  {getTasksForDate(selectedDate).map((task) => {
+                    const statusColor = {
+                      green: "bg-green-500/10 border-green-400 text-green-400",
+                      yellow:
+                        "bg-yellow-500/10 border-yellow-400 text-yellow-400",
+                      red: "bg-red-500/10 border-red-400 text-red-400",
+                      gray: "bg-gray-500/10 border-gray-400 text-gray-400",
+                    }[getTaskStatus(task)];
+                    return (
+                      <motion.div
+                        key={task.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className={`bg-gray-800/30 p-8 rounded-2xl border-2 border-blue-600/40 shadow-inner text-lg ${statusColor}`}
+                        style={{ fontSize: "1.125rem" }}
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex items-center gap-4">
+                            <Checkbox
+                              checked={task.completed}
+                              onCheckedChange={() =>
+                                handleToggleCompleted(task.id)
+                              }
+                              className="text-green-500 scale-125"
+                            />
+                            <div className="font-bold text-2xl text-white">
+                              {task.name}
+                            </div>
+                          </div>
+                          <div className="flex gap-4">
+                            <Button
+                              type="button"
+                              onClick={() => handleOpenEditTask(task)}
+                              className="bg-blue-600 text-white p-2 rounded-2xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group text-xl"
+                            >
+                              <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                                <Edit2 className="w-6 h-6" />
+                              </span>
+                              <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
+                            </Button>
+                            <Button
+                              type="button"
+                              onClick={() => handleDeleteTask(task.id)}
+                              className="bg-red-500 text-white p-2 rounded-2xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group text-xl"
+                            >
+                              <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                                <Trash2 className="w-6 h-6" />
+                              </span>
+                              <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-sm text-gray-300">
-                        Priority: {task.priority}
-                      </div>
-                    </motion.div>
-                  ))}
+                        <div className="text-lg text-gray-300 mb-2">
+                          Deadline: {task.deadline || "No deadline"}
+                        </div>
+                        <div className="text-lg text-gray-300 mb-2">
+                          Category: {task.category}
+                        </div>
+                        <div className="text-lg text-gray-300 mb-2">
+                          Priority: {task.priority}
+                        </div>
+                        <div className="text-lg text-gray-300 mb-2">
+                          Notes: {task.notes || "No notes"}
+                        </div>
+                        {task.attachment && (
+                          <div className="text-lg text-gray-300 mb-2">
+                            Attachment: {task.attachment.name}
+                          </div>
+                        )}
+                        <div className="mt-6">
+                          <h4 className="text-xl font-semibold text-blue-300 mb-4">
+                            Subtasks
+                          </h4>
+                          <div className="space-y-4">
+                            {task.subtasks.map((subtask) => (
+                              <div
+                                key={subtask.id}
+                                className="flex items-center gap-4"
+                              >
+                                <Checkbox
+                                  checked={subtask.completed}
+                                  onCheckedChange={() =>
+                                    handleToggleSubtask(task.id, subtask.id)
+                                  }
+                                  className="text-green-500 scale-125"
+                                />
+                                <span className="text-white text-lg">
+                                  {subtask.name}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -548,11 +619,11 @@ const ToDo = () => {
           initial="hidden"
           animate="visible"
           variants={modalVariants}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm p-4"
           onClick={() => setShowAddTask(false)}
         >
           <motion.div
-            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
+            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-[90vw] sm:max-w-md max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
@@ -813,11 +884,11 @@ const ToDo = () => {
           initial="hidden"
           animate="visible"
           variants={modalVariants}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm p-4"
           onClick={() => setShowEditTask(false)}
         >
           <motion.div
-            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
+            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-[90vw] sm:max-w-md max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
