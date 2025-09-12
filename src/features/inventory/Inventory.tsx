@@ -35,7 +35,6 @@ type InventoryItem = {
   quantity: number;
   unit: string;
   category: string;
-  minQuantity: number;
   expirationDate: string;
   location: string;
   status: "in_stock" | "low" | "out";
@@ -122,7 +121,6 @@ const Inventory = () => {
     unit: "",
     category: predefinedCategories[0],
     newCategory: "",
-    minQuantity: "",
     expirationDate: "",
     location: locations[0],
     newLocation: "",
@@ -141,18 +139,13 @@ const Inventory = () => {
   };
 
   const handleAddItem = async () => {
-    if (
-      !form.name.trim() ||
-      !form.quantity.trim() ||
-      !form.minQuantity.trim()
-    ) {
-      setError("Name, quantity, and min quantity are required.");
+    if (!form.name.trim() || !form.quantity.trim()) {
+      setError("Name and quantity are required.");
       return;
     }
     const quantityNum = parseFloat(form.quantity);
-    const minQuantityNum = parseFloat(form.minQuantity);
-    if (isNaN(quantityNum) || isNaN(minQuantityNum)) {
-      setError("Quantity and min quantity must be numbers.");
+    if (isNaN(quantityNum)) {
+      setError("Quantity must be a number.");
       return;
     }
     let selectedCategory = form.category;
@@ -184,15 +177,12 @@ const Inventory = () => {
       quantity: quantityNum,
       unit: form.unit.trim(),
       category: selectedCategory,
-      minQuantity: minQuantityNum,
       expirationDate: form.expirationDate,
       location: selectedLocation,
       status: form.status,
     };
     if (newItem.quantity === 0) {
       newItem.status = "out";
-    } else if (newItem.quantity < newItem.minQuantity) {
-      newItem.status = "low";
     }
     setItems([...items, newItem]);
     // Automatic transfer to shopping list if low or out
@@ -205,7 +195,6 @@ const Inventory = () => {
       unit: "",
       category: predefinedCategories[0],
       newCategory: "",
-      minQuantity: "",
       expirationDate: "",
       location: locations[0],
       newLocation: "",
@@ -217,19 +206,13 @@ const Inventory = () => {
   };
 
   const handleEditItem = async () => {
-    if (
-      !editItem ||
-      !form.name.trim() ||
-      !form.quantity.trim() ||
-      !form.minQuantity.trim()
-    ) {
-      setError("Name, quantity, and min quantity are required.");
+    if (!editItem || !form.name.trim() || !form.quantity.trim()) {
+      setError("Name and quantity are required.");
       return;
     }
     const quantityNum = parseFloat(form.quantity);
-    const minQuantityNum = parseFloat(form.minQuantity);
-    if (isNaN(quantityNum) || isNaN(minQuantityNum)) {
-      setError("Quantity and min quantity must be numbers.");
+    if (isNaN(quantityNum)) {
+      setError("Quantity must be a number.");
       return;
     }
     let selectedCategory = form.category;
@@ -261,15 +244,12 @@ const Inventory = () => {
       quantity: quantityNum,
       unit: form.unit.trim(),
       category: selectedCategory,
-      minQuantity: minQuantityNum,
       expirationDate: form.expirationDate,
       location: selectedLocation,
       status: form.status,
     };
     if (updatedItem.quantity === 0) {
       updatedItem.status = "out";
-    } else if (updatedItem.quantity < updatedItem.minQuantity) {
-      updatedItem.status = "low";
     }
     setItems(
       items.map((item) => (item.id === editItem.id ? updatedItem : item))
@@ -284,7 +264,6 @@ const Inventory = () => {
       unit: "",
       category: predefinedCategories[0],
       newCategory: "",
-      minQuantity: "",
       expirationDate: "",
       location: locations[0],
       newLocation: "",
@@ -304,7 +283,6 @@ const Inventory = () => {
       unit: item.unit,
       category: item.category,
       newCategory: "",
-      minQuantity: item.minQuantity.toString(),
       expirationDate: item.expirationDate,
       location: item.location,
       newLocation: "",
@@ -573,18 +551,9 @@ const Inventory = () => {
                         </div>
                         <div className="text-sm text-gray-300 mb-2">
                           Quantity: {item.quantity} {item.unit}
-                          {item.quantity < item.minQuantity &&
-                            item.quantity > 0 && (
-                              <span className="text-yellow-500 ml-2">
-                                (Low)
-                              </span>
-                            )}
                           {item.quantity === 0 && (
                             <span className="text-red-500 ml-2">(Out)</span>
                           )}
-                        </div>
-                        <div className="text-sm text-gray-300 mb-2">
-                          Min Quantity: {item.minQuantity} {item.unit}
                         </div>
                         <div className="text-sm text-gray-300 mb-2">
                           Expiration: {item.expirationDate || "N/A"}
@@ -895,31 +864,6 @@ const Inventory = () => {
                       initial="blur"
                     />
                   )}
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="minQuantity"
-                    animate={
-                      form.minQuantity
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Min Quantity
-                  </motion.label>
-                  <motion.input
-                    id="minQuantity"
-                    type="text"
-                    name="minQuantity"
-                    value={form.minQuantity}
-                    onChange={handleChange}
-                    placeholder="Min quantity"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
                 </div>
                 <div className="relative">
                   <motion.label
