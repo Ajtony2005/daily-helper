@@ -522,22 +522,22 @@ const Recipes = () => {
           initial="hidden"
           animate="visible"
           variants={modalVariants}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm p-4"
           onClick={() => {
             setShowAddRecipe(false);
             setShowEditRecipe(false);
           }}
         >
           <motion.div
-            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
+            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-[90vw] sm:max-w-md max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-            <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+            <CardContent className="p-6 sm:p-10 relative z-10">
+              <CardTitle className="text-2xl sm:text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                 {showAddRecipe ? "Add Recipe" : "Edit Recipe"}
               </CardTitle>
-              <motion.form className="space-y-6">
+              <motion.form className="space-y-4 sm:space-y-6">
                 <div className="relative">
                   <motion.label
                     className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
