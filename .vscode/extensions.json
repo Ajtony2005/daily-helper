@@ -1,0 +1,20 @@
+{
+  "recommendations": [
+    "editorconfig.editorconfig",
+    "pkief.material-icon-theme",
+    "gruntfuggly.todo-tree",
+    "eamodio.gitlens",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "christian-kohler.path-intellisense",
+    "christian-kohler.npm-intellisense",
+    "CoenraadS.bracket-pair-colorizer-2",
+    "yzhang.markdown-all-in-one",
+    "github.copilot",
+    "github.copilot-chat",
+    "github.github-vscode-theme",
+    "github.vscode-github-actions",
+    "github.vscode-pull-request-github"
+  ]
+}
