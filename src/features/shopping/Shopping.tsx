@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Save, Printer, Trash2, ShoppingBag, Edit2 } from "lucide-react";
+import { Plus, Save, Download, Trash2, ShoppingBag, Edit2 } from "lucide-react"; // Printer helyett Download ikon
+import { Toast } from "@/components/ui/toast";
 import Loading from "@/pages/Loading";
 
 const predefinedCategories = [
@@ -48,9 +49,9 @@ type ItemsByStore = {
 };
 
 const Shopping = () => {
-  // Print modal state
-  const [showPrintModal, setShowPrintModal] = useState(false);
-  const [printStore, setPrintStore] = useState<string>("");
+  const [showToast, setShowToast] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false); // showPrintModal helyett
+  const [downloadStore, setDownloadStore] = useState<string>(""); // printStore helyett
   const [stores, setStores] = useState<string[]>(["Lidl", "Tesco", "Market"]);
   const [itemsByStore, setItemsByStore] = useState<ItemsByStore>(
     stores.reduce((acc, store) => {
@@ -78,7 +79,6 @@ const Shopping = () => {
       return acc;
     }, {} as { [key: string]: string })
   );
-  // Removed templates and favorites logic
   const [showAddStore, setShowAddStore] = useState(false);
   const [newStoreName, setNewStoreName] = useState("");
   const [shoppingModeStore, setShoppingModeStore] = useState<string | null>(
@@ -227,18 +227,36 @@ const Shopping = () => {
     return grouped;
   };
 
-  // Removed template save/load handlers
+  // Új függvény a .txt fájl letöltéséhez
+  const handleDownloadList = () => {
+    if (!downloadStore) return;
 
-  // Print only selected store's shopping list
-  const handlePrint = () => {
-    setShowPrintModal(true);
-  };
+    const groupedItems = getFilteredAndGroupedItems(downloadStore);
+    let content = `${downloadStore}\n\n`;
 
-  const handlePrintStore = () => {
-    setShowPrintModal(false);
-    setTimeout(() => {
-      window.print();
-    }, 100);
+    Object.keys(groupedItems).forEach((category) => {
+      content += `${category}:\n`;
+      groupedItems[category].forEach((item) => {
+        content += `[ ] ${item.name} - ${item.quantity} ${item.unit}${
+          item.note ? ` (${item.note})` : ""
+        }\n`;
+      });
+      content += "\n";
+    });
+
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${downloadStore}_shopping_list.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    setShowDownloadModal(false);
+    setDownloadStore("");
+    setShowToast(true);
   };
 
   const handleAddStore = async () => {
@@ -522,9 +540,6 @@ const Shopping = () => {
           </CardContent>
         </Card>
 
-        {/* Templates and favorites removed */}
-
-        {/* Print Button */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -533,25 +548,24 @@ const Shopping = () => {
         >
           <Button
             type="button"
-            onClick={handlePrint}
+            onClick={() => setShowDownloadModal(true)}
             className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
           >
             <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-              <Printer className="w-5 h-5" />
-              Print List
+              <Download className="w-5 h-5" />
+              Download List
             </span>
             <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
           </Button>
         </motion.div>
 
-        {/* Print Modal */}
-        {showPrintModal && (
+        {showDownloadModal && (
           <motion.div
             initial="hidden"
             animate="visible"
             variants={modalVariants}
             className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowPrintModal(false)}
+            onClick={() => setShowDownloadModal(false)}
           >
             <motion.div
               className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
@@ -560,16 +574,19 @@ const Shopping = () => {
               <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
               <CardContent className="p-10 relative z-10">
                 <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                  Print Shopping List
+                  Download Shopping List
                 </CardTitle>
                 <div className="mb-6">
                   <Label
-                    htmlFor="print-store"
+                    htmlFor="download-store"
                     className="block text-blue-300 mb-2 font-semibold"
                   >
                     Select Store
                   </Label>
-                  <Select value={printStore} onValueChange={setPrintStore}>
+                  <Select
+                    value={downloadStore}
+                    onValueChange={setDownloadStore}
+                  >
                     <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
                       <SelectValue placeholder="Select store" />
                     </SelectTrigger>
@@ -585,15 +602,15 @@ const Shopping = () => {
                 <div className="flex gap-2">
                   <Button
                     type="button"
-                    disabled={!printStore}
-                    onClick={handlePrintStore}
+                    disabled={!downloadStore}
+                    onClick={handleDownloadList}
                     className="flex-1 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
                   >
-                    Print
+                    Download
                   </Button>
                   <Button
                     type="button"
-                    onClick={() => setShowPrintModal(false)}
+                    onClick={() => setShowDownloadModal(false)}
                     className="flex-1 bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
                   >
                     Cancel
@@ -603,456 +620,503 @@ const Shopping = () => {
             </motion.div>
           </motion.div>
         )}
-      </motion.div>
 
-      {/* Add Store Modal */}
-      {showAddStore && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={modalVariants}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-          onClick={() => setShowAddStore(false)}
-        >
+        {showAddStore && (
           <motion.div
-            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
+            initial="hidden"
+            animate="visible"
+            variants={modalVariants}
+            className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowAddStore(false)}
           >
-            <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-            <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                Add Store
-              </CardTitle>
-              <div className="relative">
-                <motion.label
-                  className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                  htmlFor="newStoreName"
-                  animate={
-                    newStoreName ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                  }
-                >
-                  Store Name
-                </motion.label>
-                <motion.input
-                  id="newStoreName"
-                  type="text"
-                  value={newStoreName}
-                  onChange={(e) => setNewStoreName(e.target.value)}
-                  placeholder="Enter store name"
-                  className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50 mb-4"
-                  variants={inputVariants}
-                  whileFocus="focus"
-                  initial="blur"
-                />
-              </div>
-              {error && (
-                <motion.p
-                  id="store-error"
-                  aria-live="assertive"
-                  className="text-red-400 mb-4 text-center font-medium drop-shadow animate-pulse"
-                  variants={errorVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  {error}
-                </motion.p>
-              )}
-              <div className="flex gap-2">
-                <motion.div animate={buttonControls}>
+            <motion.div
+              className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
+              <CardContent className="p-10 relative z-10">
+                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+                  Add Store
+                </CardTitle>
+                <div className="relative">
+                  <motion.label
+                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
+                    htmlFor="newStoreName"
+                    animate={
+                      newStoreName ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
+                    }
+                  >
+                    Store Name
+                  </motion.label>
+                  <motion.input
+                    id="newStoreName"
+                    type="text"
+                    value={newStoreName}
+                    onChange={(e) => setNewStoreName(e.target.value)}
+                    placeholder="Enter store name"
+                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50 mb-4"
+                    variants={inputVariants}
+                    whileFocus="focus"
+                    initial="blur"
+                  />
+                </div>
+                {error && (
+                  <motion.p
+                    id="store-error"
+                    aria-live="assertive"
+                    className="text-red-400 mb-4 text-center font-medium drop-shadow animate-pulse"
+                    variants={errorVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    {error}
+                  </motion.p>
+                )}
+                <div className="flex gap-2">
+                  <motion.div animate={buttonControls}>
+                    <Button
+                      type="button"
+                      disabled={isLoading}
+                      onClick={handleAddStore}
+                      className={`flex-1 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                        isLoading ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      {isLoading ? (
+                        <Loading />
+                      ) : (
+                        <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                          <Plus className="w-5 h-5" />
+                          Add Store
+                        </span>
+                      )}
+                      <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
+                    </Button>
+                  </motion.div>
                   <Button
                     type="button"
                     disabled={isLoading}
-                    onClick={handleAddStore}
-                    className={`flex-1 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                    onClick={() => {
+                      setShowAddStore(false);
+                      setNewStoreName("");
+                      setError("");
+                    }}
+                    className={`flex-1 bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 ${
                       isLoading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >
-                    {isLoading ? (
-                      <Loading />
-                    ) : (
-                      <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                        <Plus className="w-5 h-5" />
-                        Add Store
-                      </span>
-                    )}
-                    <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
+                    Cancel
                   </Button>
-                </motion.div>
-                <Button
-                  type="button"
-                  disabled={isLoading}
-                  onClick={() => {
-                    setShowAddStore(false);
-                    setNewStoreName("");
-                    setError("");
-                  }}
-                  className={`flex-1 bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 ${
-                    isLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </CardContent>
+                </div>
+              </CardContent>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
+        )}
 
-      {/* Add Item Modal */}
-      {showAddItem && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={modalVariants}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-          onClick={() => setShowAddItem(false)}
-        >
+        {showAddItem && (
           <motion.div
-            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
+            initial="hidden"
+            animate="visible"
+            variants={modalVariants}
+            className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowAddItem(false)}
           >
-            <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-            <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                Add Shopping Item
-              </CardTitle>
-              <motion.form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleAddItem();
-                }}
-                className="space-y-6"
-              >
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="store"
-                    animate={
-                      form.store ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Store
-                  </motion.label>
-                  <Select
-                    value={form.store}
-                    onValueChange={(value) =>
-                      setForm({ ...form, store: value })
-                    }
-                  >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
-                      <SelectValue placeholder="Select store" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {stores.map((store) => (
-                        <SelectItem key={store} value={store}>
-                          {store}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="name"
-                    animate={
-                      form.name ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Name
-                  </motion.label>
-                  <motion.input
-                    id="name"
-                    type="text"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    placeholder="Item name"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+            <motion.div
+              className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
+              <CardContent className="p-10 relative z-10">
+                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+                  Add Shopping Item
+                </CardTitle>
+                <motion.form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleAddItem();
+                  }}
+                  className="space-y-6"
+                >
                   <div className="relative">
                     <motion.label
                       className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="quantity"
+                      htmlFor="store"
                       animate={
-                        form.quantity
+                        form.store ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
+                      }
+                    >
+                      Store
+                    </motion.label>
+                    <Select
+                      value={form.store}
+                      onValueChange={(value) =>
+                        setForm({ ...form, store: value })
+                      }
+                    >
+                      <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                        <SelectValue placeholder="Select store" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {stores.map((store) => (
+                          <SelectItem key={store} value={store}>
+                            {store}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="relative">
+                    <motion.label
+                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
+                      htmlFor="name"
+                      animate={
+                        form.name ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
+                      }
+                    >
+                      Name
+                    </motion.label>
+                    <motion.input
+                      id="name"
+                      type="text"
+                      name="name"
+                      value={form.name}
+                      onChange={handleChange}
+                      placeholder="Item name"
+                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                      variants={inputVariants}
+                      whileFocus="focus"
+                      initial="blur"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="relative">
+                      <motion.label
+                        className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
+                        htmlFor="quantity"
+                        animate={
+                          form.quantity
+                            ? { y: -25, scale: 0.9 }
+                            : { y: 0, scale: 1 }
+                        }
+                      >
+                        Quantity
+                      </motion.label>
+                      <motion.input
+                        id="quantity"
+                        type="text"
+                        name="quantity"
+                        value={form.quantity}
+                        onChange={handleChange}
+                        placeholder="Quantity"
+                        className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                        variants={inputVariants}
+                        whileFocus="focus"
+                        initial="blur"
+                      />
+                    </div>
+                    <div className="relative">
+                      <motion.label
+                        className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
+                        htmlFor="unit"
+                        animate={
+                          form.unit
+                            ? { y: -25, scale: 0.9 }
+                            : { y: 0, scale: 1 }
+                        }
+                      >
+                        Unit
+                      </motion.label>
+                      <motion.input
+                        id="unit"
+                        type="text"
+                        name="unit"
+                        value={form.unit}
+                        onChange={handleChange}
+                        placeholder="Unit (kg, pcs, etc.)"
+                        className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                        variants={inputVariants}
+                        whileFocus="focus"
+                        initial="blur"
+                      />
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <motion.label
+                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
+                      htmlFor="note"
+                      animate={
+                        form.note ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
+                      }
+                    >
+                      Note
+                    </motion.label>
+                    <motion.input
+                      id="note"
+                      type="text"
+                      name="note"
+                      value={form.note}
+                      onChange={handleChange}
+                      placeholder="Special note"
+                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                      variants={inputVariants}
+                      whileFocus="focus"
+                      initial="blur"
+                    />
+                  </div>
+                  <div className="relative">
+                    <motion.label
+                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
+                      htmlFor="priority"
+                      animate={
+                        form.priority
                           ? { y: -25, scale: 0.9 }
                           : { y: 0, scale: 1 }
                       }
                     >
-                      Quantity
+                      Priority
                     </motion.label>
-                    <motion.input
-                      id="quantity"
-                      type="text"
-                      name="quantity"
-                      value={form.quantity}
-                      onChange={handleChange}
-                      placeholder="Quantity"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="unit"
-                      animate={
-                        form.unit ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
+                    <Select
+                      value={form.priority}
+                      onValueChange={(value) =>
+                        setForm({
+                          ...form,
+                          priority: value as "low" | "medium" | "high",
+                        })
                       }
                     >
-                      Unit
-                    </motion.label>
-                    <motion.input
-                      id="unit"
-                      type="text"
-                      name="unit"
-                      value={form.unit}
-                      onChange={handleChange}
-                      placeholder="Unit (kg, pcs, etc.)"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
+                      <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {priorities.map((p) => (
+                          <SelectItem key={p.value} value={p.value}>
+                            {p.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="note"
-                    animate={
-                      form.note ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Note
-                  </motion.label>
-                  <motion.input
-                    id="note"
-                    type="text"
-                    name="note"
-                    value={form.note}
-                    onChange={handleChange}
-                    placeholder="Special note"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="priority"
-                    animate={
-                      form.priority
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Priority
-                  </motion.label>
-                  <Select
-                    value={form.priority}
-                    onValueChange={(value) =>
-                      setForm({
-                        ...form,
-                        priority: value as "low" | "medium" | "high",
-                      })
-                    }
-                  >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {priorities.map((p) => (
-                        <SelectItem key={p.value} value={p.value}>
-                          {p.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="category"
-                    animate={
-                      form.category
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Category
-                  </motion.label>
-                  <Select
-                    value={form.category}
-                    onValueChange={(value) =>
-                      setForm({ ...form, category: value })
-                    }
-                  >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {predefinedCategories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {error && (
-                  <motion.p
-                    id="form-error"
-                    aria-live="assertive"
-                    className="text-red-400 mb-6 text-center font-medium drop-shadow animate-pulse"
-                    variants={errorVariants}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    {error}
-                  </motion.p>
-                )}
-                <motion.div animate={buttonControls}>
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
-                      isLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {isLoading ? (
-                      <Loading />
-                    ) : (
-                      <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                        <Plus className="w-5 h-5" />
-                        Add Item
-                      </span>
-                    )}
-                    <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                  </Button>
-                </motion.div>
-                <Button
-                  type="button"
-                  disabled={isLoading}
-                  onClick={() => setShowAddItem(false)}
-                  className={`w-full bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 ${
-                    isLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  Cancel
-                </Button>
-              </motion.form>
-            </CardContent>
-          </motion.div>
-        </motion.div>
-      )}
-
-      {/* Edit Item Modal */}
-      {showEditItem && editItem && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={modalVariants}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-          onClick={() => setShowEditItem(false)}
-        >
-          <motion.div
-            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-            <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                Edit Shopping Item
-              </CardTitle>
-              <motion.form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleEditItem();
-                }}
-                className="space-y-6"
-              >
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="store"
-                    animate={
-                      form.store ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Store
-                  </motion.label>
-                  <Select
-                    value={form.store}
-                    onValueChange={(value) =>
-                      setForm({ ...form, store: value })
-                    }
-                  >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
-                      <SelectValue placeholder="Select store" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {stores.map((store) => (
-                        <SelectItem key={store} value={store}>
-                          {store}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="name"
-                    animate={
-                      form.name ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Name
-                  </motion.label>
-                  <motion.input
-                    id="name"
-                    type="text"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    placeholder="Item name"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
                   <div className="relative">
                     <motion.label
                       className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="quantity"
+                      htmlFor="category"
                       animate={
-                        form.quantity
+                        form.category
                           ? { y: -25, scale: 0.9 }
                           : { y: 0, scale: 1 }
                       }
                     >
-                      Quantity
+                      Category
+                    </motion.label>
+                    <Select
+                      value={form.category}
+                      onValueChange={(value) =>
+                        setForm({ ...form, category: value })
+                      }
+                    >
+                      <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {predefinedCategories.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {error && (
+                    <motion.p
+                      id="form-error"
+                      aria-live="assertive"
+                      className="text-red-400 mb-6 text-center font-medium drop-shadow animate-pulse"
+                      variants={errorVariants}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      {error}
+                    </motion.p>
+                  )}
+                  <motion.div animate={buttonControls}>
+                    <Button
+                      type="submit"
+                      disabled={isLoading}
+                      className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                        isLoading ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      {isLoading ? (
+                        <Loading />
+                      ) : (
+                        <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                          <Plus className="w-5 h-5" />
+                          Add Item
+                        </span>
+                      )}
+                      <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
+                    </Button>
+                  </motion.div>
+                  <Button
+                    type="button"
+                    disabled={isLoading}
+                    onClick={() => setShowAddItem(false)}
+                    className={`w-full bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 ${
+                      isLoading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                  >
+                    Cancel
+                  </Button>
+                </motion.form>
+              </CardContent>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showEditItem && editItem && (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={modalVariants}
+            className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowEditItem(false)}
+          >
+            <motion.div
+              className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
+              <CardContent className="p-10 relative z-10">
+                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+                  Edit Shopping Item
+                </CardTitle>
+                <motion.form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleEditItem();
+                  }}
+                  className="space-y-6"
+                >
+                  <div className="relative">
+                    <motion.label
+                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
+                      htmlFor="store"
+                      animate={
+                        form.store ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
+                      }
+                    >
+                      Store
+                    </motion.label>
+                    <Select
+                      value={form.store}
+                      onValueChange={(value) =>
+                        setForm({ ...form, store: value })
+                      }
+                    >
+                      <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                        <SelectValue placeholder="Select store" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {stores.map((store) => (
+                          <SelectItem key={store} value={store}>
+                            {store}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="relative">
+                    <motion.label
+                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
+                      htmlFor="name"
+                      animate={
+                        form.name ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
+                      }
+                    >
+                      Name
                     </motion.label>
                     <motion.input
-                      id="quantity"
+                      id="name"
                       type="text"
-                      name="quantity"
-                      value={form.quantity}
+                      name="name"
+                      value={form.name}
                       onChange={handleChange}
-                      placeholder="Quantity"
+                      placeholder="Item name"
+                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                      variants={inputVariants}
+                      whileFocus="focus"
+                      initial="blur"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="relative">
+                      <motion.label
+                        className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
+                        htmlFor="quantity"
+                        animate={
+                          form.quantity
+                            ? { y: -25, scale: 0.9 }
+                            : { y: 0, scale: 1 }
+                        }
+                      >
+                        Quantity
+                      </motion.label>
+                      <motion.input
+                        id="quantity"
+                        type="text"
+                        name="quantity"
+                        value={form.quantity}
+                        onChange={handleChange}
+                        placeholder="Quantity"
+                        className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                        variants={inputVariants}
+                        whileFocus="focus"
+                        initial="blur"
+                      />
+                    </div>
+                    <div className="relative">
+                      <motion.label
+                        className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
+                        htmlFor="unit"
+                        animate={
+                          form.unit
+                            ? { y: -25, scale: 0.9 }
+                            : { y: 0, scale: 1 }
+                        }
+                      >
+                        Unit
+                      </motion.label>
+                      <motion.input
+                        id="unit"
+                        type="text"
+                        name="unit"
+                        value={form.unit}
+                        onChange={handleChange}
+                        placeholder="Unit (kg, pcs, etc.)"
+                        className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                        variants={inputVariants}
+                        whileFocus="focus"
+                        initial="blur"
+                      />
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <motion.label
+                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
+                      htmlFor="note"
+                      animate={
+                        form.note ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
+                      }
+                    >
+                      Note
+                    </motion.label>
+                    <motion.input
+                      id="note"
+                      type="text"
+                      name="note"
+                      value={form.note}
+                      onChange={handleChange}
+                      placeholder="Special note"
                       className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
                       variants={inputVariants}
                       whileFocus="focus"
@@ -1062,202 +1126,155 @@ const Shopping = () => {
                   <div className="relative">
                     <motion.label
                       className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="unit"
+                      htmlFor="priority"
                       animate={
-                        form.unit ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
+                        form.priority
+                          ? { y: -25, scale: 0.9 }
+                          : { y: 0, scale: 1 }
                       }
                     >
-                      Unit
+                      Priority
                     </motion.label>
-                    <motion.input
-                      id="unit"
-                      type="text"
-                      name="unit"
-                      value={form.unit}
-                      onChange={handleChange}
-                      placeholder="Unit (kg, pcs, etc.)"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
+                    <Select
+                      value={form.priority}
+                      onValueChange={(value) =>
+                        setForm({
+                          ...form,
+                          priority: value as "low" | "medium" | "high",
+                        })
+                      }
+                    >
+                      <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {priorities.map((p) => (
+                          <SelectItem key={p.value} value={p.value}>
+                            {p.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="note"
-                    animate={
-                      form.note ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Note
-                  </motion.label>
-                  <motion.input
-                    id="note"
-                    type="text"
-                    name="note"
-                    value={form.note}
-                    onChange={handleChange}
-                    placeholder="Special note"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="priority"
-                    animate={
-                      form.priority
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Priority
-                  </motion.label>
-                  <Select
-                    value={form.priority}
-                    onValueChange={(value) =>
-                      setForm({
-                        ...form,
-                        priority: value as "low" | "medium" | "high",
-                      })
-                    }
-                  >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {priorities.map((p) => (
-                        <SelectItem key={p.value} value={p.value}>
-                          {p.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="category"
-                    animate={
-                      form.category
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Category
-                  </motion.label>
-                  <Select
-                    value={form.category}
-                    onValueChange={(value) =>
-                      setForm({ ...form, category: value })
-                    }
-                  >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {predefinedCategories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {error && (
-                  <motion.p
-                    id="form-error"
-                    aria-live="assertive"
-                    className="text-red-400 mb-6 text-center font-medium drop-shadow animate-pulse"
-                    variants={errorVariants}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    {error}
-                  </motion.p>
-                )}
-                <motion.div animate={buttonControls}>
+                  <div className="relative">
+                    <motion.label
+                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
+                      htmlFor="category"
+                      animate={
+                        form.category
+                          ? { y: -25, scale: 0.9 }
+                          : { y: 0, scale: 1 }
+                      }
+                    >
+                      Category
+                    </motion.label>
+                    <Select
+                      value={form.category}
+                      onValueChange={(value) =>
+                        setForm({ ...form, category: value })
+                      }
+                    >
+                      <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {predefinedCategories.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {error && (
+                    <motion.p
+                      id="form-error"
+                      aria-live="assertive"
+                      className="text-red-400 mb-6 text-center font-medium drop-shadow animate-pulse"
+                      variants={errorVariants}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      {error}
+                    </motion.p>
+                  )}
+                  <motion.div animate={buttonControls}>
+                    <Button
+                      type="submit"
+                      disabled={isLoading}
+                      className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                        isLoading ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      {isLoading ? (
+                        <Loading />
+                      ) : (
+                        <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                          <Save className="w-5 h-5" />
+                          Save Changes
+                        </span>
+                      )}
+                      <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
+                    </Button>
+                  </motion.div>
                   <Button
-                    type="submit"
+                    type="button"
                     disabled={isLoading}
-                    className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                    onClick={() => {
+                      setShowEditItem(false);
+                      setEditItem(null);
+                      setForm({
+                        store: stores[0],
+                        name: "",
+                        quantity: "",
+                        unit: "",
+                        note: "",
+                        priority: "medium",
+                        category: predefinedCategories[0],
+                      });
+                      setError("");
+                    }}
+                    className={`w-full bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 ${
                       isLoading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >
-                    {isLoading ? (
-                      <Loading />
-                    ) : (
-                      <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                        <Save className="w-5 h-5" />
-                        Save Changes
-                      </span>
-                    )}
-                    <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
+                    Cancel
                   </Button>
-                </motion.div>
-                <Button
-                  type="button"
-                  disabled={isLoading}
-                  onClick={() => {
-                    setShowEditItem(false);
-                    setEditItem(null);
-                    setForm({
-                      store: stores[0],
-                      name: "",
-                      quantity: "",
-                      unit: "",
-                      note: "",
-                      priority: "medium",
-                      category: predefinedCategories[0],
-                    });
-                    setError("");
-                  }}
-                  className={`w-full bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 ${
-                    isLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  Cancel
-                </Button>
-              </motion.form>
-            </CardContent>
+                </motion.form>
+              </CardContent>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
+        )}
 
-      {/* Shopping Mode Modal */}
-      {shoppingModeStore && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={modalVariants}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-          onClick={() => setShoppingModeStore(null)}
-        >
+        {shoppingModeStore && (
           <motion.div
-            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md h-[80vh]"
-            onClick={(e) => e.stopPropagation()}
+            initial="hidden"
+            animate="visible"
+            variants={modalVariants}
+            className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShoppingModeStore(null)}
           >
-            <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-            <CardContent className="p-10 relative z-10 h-full flex flex-col">
-              <CardTitle className="text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                Shopping Mode - {shoppingModeStore}
-              </CardTitle>
-              <Input
-                placeholder="Search items..."
-                value={searchQueries[shoppingModeStore]}
-                onChange={(e) =>
-                  handleSearchChange(shoppingModeStore, e.target.value)
-                }
-                className="mb-4 bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-              />
-              <div className="flex-1 overflow-y-auto">
-                {Object.keys(getFilteredAndGroupedItems(shoppingModeStore)).map(
-                  (category) => (
+            <motion.div
+              className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md h-[80vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
+              <CardContent className="p-10 relative z-10 h-full flex flex-col">
+                <CardTitle className="text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+                  Shopping Mode - {shoppingModeStore}
+                </CardTitle>
+                <Input
+                  placeholder="Search items..."
+                  value={searchQueries[shoppingModeStore]}
+                  onChange={(e) =>
+                    handleSearchChange(shoppingModeStore, e.target.value)
+                  }
+                  className="mb-4 bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                />
+                <div className="flex-1 overflow-y-auto">
+                  {Object.keys(
+                    getFilteredAndGroupedItems(shoppingModeStore)
+                  ).map((category) => (
                     <div key={category} className="mb-4">
                       <h3 className="text-lg font-semibold text-blue-300 mb-2">
                         {category}
@@ -1346,65 +1363,28 @@ const Shopping = () => {
                           ))}
                       </div>
                     </div>
-                  )
-                )}
-              </div>
-              <Button
-                type="button"
-                onClick={() => setShoppingModeStore(null)}
-                className="w-full bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 mt-4"
-              >
-                Exit Shopping Mode
-              </Button>
-            </CardContent>
+                  ))}
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => setShoppingModeStore(null)}
+                  className="w-full bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 mt-4"
+                >
+                  Exit Shopping Mode
+                </Button>
+              </CardContent>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
-      {/* Print-only section for selected store */}
-      {printStore && (
-        <div
-          id="print-section"
-          style={{ display: "none" }}
-          className="print-section"
-        >
-          <div className="p-8 print:p-0 print:bg-white print:text-black">
-            <h2 className="text-4xl font-extrabold mb-8 text-center print:text-black print:mb-6">
-              {printStore}
-            </h2>
-            <div className="flex flex-wrap gap-4 justify-center">
-              {Object.keys(getFilteredAndGroupedItems(printStore)).length >
-              0 ? (
-                Object.keys(getFilteredAndGroupedItems(printStore)).map(
-                  (category) =>
-                    getFilteredAndGroupedItems(printStore)[category].map(
-                      (item) => (
-                        <div
-                          key={item.id}
-                          className="w-48 h-32 print:w-40 print:h-28 bg-blue-100 print:bg-gray-200 rounded-xl shadow-md flex flex-col justify-center items-center p-4 mb-2 border-2 border-blue-400 print:border-gray-400"
-                          style={{ breakInside: "avoid" }}
-                        >
-                          <div className="font-bold text-lg mb-2 text-blue-900 print:text-black text-center">
-                            {item.name}
-                          </div>
-                          <div className="text-md text-gray-700 print:text-black mb-1">
-                            {item.quantity} {item.unit}
-                          </div>
-                          {item.note && (
-                            <div className="text-xs text-gray-500 print:text-gray-700 text-center">
-                              {item.note}
-                            </div>
-                          )}
-                        </div>
-                      )
-                    )
-                )
-              ) : (
-                <p className="text-center">No items added yet</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+        )}
+        {/* Toast notification */}
+        {showToast && (
+          <Toast
+            message="Download successful!"
+            type="success"
+            onClose={() => setShowToast(false)}
+          />
+        )}
+      </motion.div>
     </div>
   );
 };
