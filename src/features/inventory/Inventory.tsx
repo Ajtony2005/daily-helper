@@ -41,6 +41,9 @@ type InventoryItem = {
 };
 
 const Inventory = () => {
+  // Dropdown open state for cards
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
   // Category management
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editCategoryIndex, setEditCategoryIndex] = useState<number | null>(
@@ -415,92 +418,188 @@ const Inventory = () => {
               className="mb-6 bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-              {/* Category Card */}
+              {/* Category Card with Arrow Toggle */}
               <Card className="bg-gray-800/30 border border-blue-600/40 shadow-inner rounded-xl">
                 <CardContent className="p-6">
-                  <CardTitle className="text-2xl font-bold mb-4 text-blue-400">
-                    Categories
-                  </CardTitle>
-                  <div className="space-y-2">
-                    {predefinedCategories.map((cat, idx) => (
-                      <div
-                        key={cat}
-                        className="flex items-center justify-between bg-gray-900/30 rounded-lg px-4 py-2"
-                      >
-                        <span className="text-white font-medium">{cat}</span>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => openEditCategory(idx)}
-                            className="bg-blue-600 text-white p-1 rounded-xl"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => handleDeleteCategory(idx)}
-                            className="bg-red-500 text-white p-1 rounded-xl"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="flex items-center justify-between mb-4">
+                    <CardTitle className="text-2xl font-bold text-blue-400">
+                      Categories
+                    </CardTitle>
+                    <button
+                      type="button"
+                      className="text-blue-400 focus:outline-none"
+                      onClick={() => setCategoryOpen((open) => !open)}
+                      aria-label={
+                        categoryOpen ? "Hide categories" : "Show categories"
+                      }
+                    >
+                      {categoryOpen ? (
+                        <svg
+                          width="24"
+                          height="24"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            d="M8 14l4-4 4 4"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          width="24"
+                          height="24"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            d="M8 10l4 4 4-4"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      )}
+                    </button>
                   </div>
-                  <Button
-                    onClick={() => {
-                      setShowCategoryModal(true);
-                      setEditCategoryIndex(null);
-                      setCategoryInput("");
-                    }}
-                    className="mt-4 w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-2 rounded-xl"
-                  >
-                    + Add Category
-                  </Button>
+                  {categoryOpen && (
+                    <>
+                      <div className="space-y-2">
+                        {predefinedCategories.map((cat, idx) => (
+                          <div
+                            key={cat}
+                            className="flex items-center justify-between bg-gray-900/30 rounded-lg px-4 py-2"
+                          >
+                            <span className="text-white font-medium">
+                              {cat}
+                            </span>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => openEditCategory(idx)}
+                                className="bg-blue-600 text-white p-1 rounded-xl"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleDeleteCategory(idx)}
+                                className="bg-red-500 text-white p-1 rounded-xl"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        onClick={() => {
+                          setShowCategoryModal(true);
+                          setEditCategoryIndex(null);
+                          setCategoryInput("");
+                        }}
+                        className="mt-4 w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-2 rounded-xl"
+                      >
+                        + Add Category
+                      </Button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
-              {/* Location Card */}
+              {/* Location Card with Arrow Toggle */}
               <Card className="bg-gray-800/30 border border-blue-600/40 shadow-inner rounded-xl">
                 <CardContent className="p-6">
-                  <CardTitle className="text-2xl font-bold mb-4 text-blue-400">
-                    Locations
-                  </CardTitle>
-                  <div className="space-y-2">
-                    {locations.map((loc, idx) => (
-                      <div
-                        key={loc}
-                        className="flex items-center justify-between bg-gray-900/30 rounded-lg px-4 py-2"
-                      >
-                        <span className="text-white font-medium">{loc}</span>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => openEditLocation(idx)}
-                            className="bg-blue-600 text-white p-1 rounded-xl"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => handleDeleteLocation(idx)}
-                            className="bg-red-500 text-white p-1 rounded-xl"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="flex items-center justify-between mb-4">
+                    <CardTitle className="text-2xl font-bold text-blue-400">
+                      Locations
+                    </CardTitle>
+                    <button
+                      type="button"
+                      className="text-blue-400 focus:outline-none"
+                      onClick={() => setLocationOpen((open) => !open)}
+                      aria-label={
+                        locationOpen ? "Hide locations" : "Show locations"
+                      }
+                    >
+                      {locationOpen ? (
+                        <svg
+                          width="24"
+                          height="24"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            d="M8 14l4-4 4 4"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          width="24"
+                          height="24"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            d="M8 10l4 4 4-4"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      )}
+                    </button>
                   </div>
-                  <Button
-                    onClick={() => {
-                      setShowLocationModal(true);
-                      setEditLocationIndex(null);
-                      setLocationInput("");
-                    }}
-                    className="mt-4 w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-2 rounded-xl"
-                  >
-                    + Add Location
-                  </Button>
+                  {locationOpen && (
+                    <>
+                      <div className="space-y-2">
+                        {locations.map((loc, idx) => (
+                          <div
+                            key={loc}
+                            className="flex items-center justify-between bg-gray-900/30 rounded-lg px-4 py-2"
+                          >
+                            <span className="text-white font-medium">
+                              {loc}
+                            </span>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => openEditLocation(idx)}
+                                className="bg-blue-600 text-white p-1 rounded-xl"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleDeleteLocation(idx)}
+                                className="bg-red-500 text-white p-1 rounded-xl"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        onClick={() => {
+                          setShowLocationModal(true);
+                          setEditLocationIndex(null);
+                          setLocationInput("");
+                        }}
+                        className="mt-4 w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-2 rounded-xl"
+                      >
+                        + Add Location
+                      </Button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </div>
