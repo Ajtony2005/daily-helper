@@ -11,6 +11,12 @@ export default defineConfig({
 
   theme: {
     extend: {
+      boxShadow: {
+        glass: "0 4px 30px rgba(0, 0, 0, 0.1)",
+      },
+      backdropBlur: {
+        xl: "24px",
+      },
       colors: {
         appBackground: "#0f172a",
         primary: "#2563eb",
