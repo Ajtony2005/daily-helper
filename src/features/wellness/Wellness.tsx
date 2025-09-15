@@ -75,9 +75,8 @@ const Wellness = () => {
     frequency: "1",
   });
   const [error, setError] = useState("");
-  const [waterQuantityInput, setWaterQuantityInput] = useState<string>("250"); // Új állapot a vízmennyiség beviteléhez
+  const [waterQuantityInput, setWaterQuantityInput] = useState<string>("250");
 
-  // Get or initialize data for the selected date
   const getDailyData = (date: Date): DailyData => {
     const dateKey = format(date, "yyyy-MM-dd");
     let data = dailyData.find((d) => d.date === dateKey);
@@ -108,7 +107,7 @@ const Wellness = () => {
           .fill(null)
           .map((_, i) => ({
             id: `water-${i}`,
-            quantity: 250, // Alapértelmezett: 250 ml
+            quantity: 250,
             taken: false,
           })),
         moodEnergy: { mood: "", energy: "" },
@@ -120,7 +119,6 @@ const Wellness = () => {
 
   const currentData = getDailyData(selectedDate);
 
-  // Mock weather API call
   useEffect(() => {
     const fetchWeather = async () => {
       const mockWeather: WeatherData = {
@@ -343,15 +341,21 @@ const Wellness = () => {
             <div className="flex justify-between items-center mb-6">
               <Button
                 onClick={() => setSelectedDate(subDays(selectedDate, 1))}
-                className="bg-blue-600 text-white py-2 px-4 rounded-xl"
+                className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
               >
-                Previous Day
+                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                  Previous Day
+                </span>
+                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
               </Button>
               <Button
                 onClick={() => setSelectedDate(addDays(selectedDate, 1))}
-                className="bg-blue-600 text-white py-2 px-4 rounded-xl"
+                className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
               >
-                Next Day
+                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                  Next Day
+                </span>
+                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
               </Button>
             </div>
 
@@ -361,7 +365,7 @@ const Wellness = () => {
                 Daily Status
               </h3>
               <div
-                className={`p-4 rounded-xl text-center ${
+                className={`p-4 rounded-xl text-center glass ${
                   getDailyStatus(currentData) === "green"
                     ? "bg-green-500/20 text-green-400"
                     : getDailyStatus(currentData) === "yellow"
@@ -383,7 +387,7 @@ const Wellness = () => {
                 Weather Forecast
               </h3>
               {currentData.weather ? (
-                <div className="bg-gray-800/30 p-4 rounded-xl border border-blue-600/40">
+                <div className="glass p-4 rounded-xl border border-blue-600/40">
                   <div className="flex items-center gap-4">
                     {currentData.weather.condition === "sunny" && (
                       <Sun className="text-yellow-500 w-8 h-8" />
@@ -434,7 +438,7 @@ const Wellness = () => {
               <h3 className="text-xl font-bold text-white mb-2">
                 Daily Exercise
               </h3>
-              <div className="bg-gray-800/30 p-4 rounded-xl border border-blue-600/40">
+              <div className="glass p-4 rounded-xl border border-blue-600/40">
                 <div className="flex items-center gap-2 mb-4">
                   <Checkbox
                     checked={currentData.exercise.hasExercise}
@@ -453,14 +457,22 @@ const Wellness = () => {
                           handleExerciseDetailsChange({ name: "type", value })
                         }
                       >
-                        <SelectTrigger className="w-full bg-gray-800/30 text-white border border-blue-600/40">
+                        <SelectTrigger className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Running">Running</SelectItem>
-                          <SelectItem value="Gym">Gym</SelectItem>
-                          <SelectItem value="Yoga">Yoga</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
+                        <SelectContent className="dropdown fade-in-down">
+                          <SelectItem value="Running" className="dropdown-item">
+                            Running
+                          </SelectItem>
+                          <SelectItem value="Gym" className="dropdown-item">
+                            Gym
+                          </SelectItem>
+                          <SelectItem value="Yoga" className="dropdown-item">
+                            Yoga
+                          </SelectItem>
+                          <SelectItem value="Other" className="dropdown-item">
+                            Other
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -471,7 +483,7 @@ const Wellness = () => {
                         name="time"
                         value={currentData.exercise.time || ""}
                         onChange={handleExerciseDetailsChange}
-                        className="w-full bg-gray-800/30 text-white border border-blue-600/40"
+                        className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in"
                       />
                     </div>
                     <div>
@@ -482,7 +494,7 @@ const Wellness = () => {
                         value={currentData.exercise.location || ""}
                         onChange={handleExerciseDetailsChange}
                         placeholder="e.g., Park, Gym"
-                        className="w-full bg-gray-800/30 text-white border border-blue-600/40"
+                        className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                       />
                     </div>
                   </div>
@@ -497,11 +509,14 @@ const Wellness = () => {
               </h3>
               <Button
                 onClick={() => setShowAddVitamin(true)}
-                className="bg-blue-600 text-white py-2 px-4 rounded-xl mb-4"
+                className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group mb-4"
               >
-                <Plus className="w-5 h-5 mr-2" /> Add Vitamin
+                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                  <Plus className="w-5 h-5 mr-2" /> Add Vitamin
+                </span>
+                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
               </Button>
-              <div className="bg-gray-800/30 p-4 rounded-xl border border-blue-600/40">
+              <div className="glass p-4 rounded-xl border border-blue-600/40">
                 {currentData.vitamins.filter((v) =>
                   isVitaminApplicable(v, selectedDate)
                 ).length === 0 ? (
@@ -545,7 +560,7 @@ const Wellness = () => {
                   value={waterQuantityInput}
                   onChange={(e) => setWaterQuantityInput(e.target.value)}
                   placeholder="ml"
-                  className="w-32 bg-gray-800/30 text-white border border-blue-600/40"
+                  className="w-32 glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                 />
                 <Button
                   onClick={() => {
@@ -558,12 +573,15 @@ const Wellness = () => {
                       );
                     }
                   }}
-                  className="bg-blue-600 text-white py-2 px-4 rounded-xl"
+                  className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
                 >
-                  Add Water
+                  <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                    Add Water
+                  </span>
+                  <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
                 </Button>
               </div>
-              <div className="bg-gray-800/30 p-4 rounded-xl border border-blue-600/40 grid grid-cols-4 md:grid-cols-8 gap-2">
+              <div className="glass p-4 rounded-xl border border-blue-600/40 grid grid-cols-4 md:grid-cols-8 gap-2">
                 {currentData.waterIntakes.map((water) => (
                   <div key={water.id} className="flex flex-col items-center">
                     <motion.div
@@ -590,7 +608,7 @@ const Wellness = () => {
               <h3 className="text-xl font-bold text-white mb-2">
                 Mood & Energy Diary
               </h3>
-              <div className="bg-gray-800/30 p-4 rounded-xl border border-blue-600/40 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="glass p-4 rounded-xl border border-blue-600/40 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-blue-300">Mood</Label>
                   <Select
@@ -599,14 +617,22 @@ const Wellness = () => {
                       handleMoodEnergyChange({ name: "mood", value })
                     }
                   >
-                    <SelectTrigger className="w-full bg-gray-800/30 text-white border border-blue-600/40">
+                    <SelectTrigger className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select mood" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Happy">Happy</SelectItem>
-                      <SelectItem value="Neutral">Neutral</SelectItem>
-                      <SelectItem value="Sad">Sad</SelectItem>
-                      <SelectItem value="Stressed">Stressed</SelectItem>
+                    <SelectContent className="dropdown fade-in-down">
+                      <SelectItem value="Happy" className="dropdown-item">
+                        Happy
+                      </SelectItem>
+                      <SelectItem value="Neutral" className="dropdown-item">
+                        Neutral
+                      </SelectItem>
+                      <SelectItem value="Sad" className="dropdown-item">
+                        Sad
+                      </SelectItem>
+                      <SelectItem value="Stressed" className="dropdown-item">
+                        Stressed
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -618,13 +644,19 @@ const Wellness = () => {
                       handleMoodEnergyChange({ name: "energy", value })
                     }
                   >
-                    <SelectTrigger className="w-full bg-gray-800/30 text-white border border-blue-600/40">
+                    <SelectTrigger className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select energy level" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="High">High</SelectItem>
-                      <SelectItem value="Medium">Medium</SelectItem>
-                      <SelectItem value="Low">Low</SelectItem>
+                    <SelectContent className="dropdown fade-in-down">
+                      <SelectItem value="High" className="dropdown-item">
+                        High
+                      </SelectItem>
+                      <SelectItem value="Medium" className="dropdown-item">
+                        Medium
+                      </SelectItem>
+                      <SelectItem value="Low" className="dropdown-item">
+                        Low
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -672,7 +704,7 @@ const Wellness = () => {
                     value={vitaminForm.name}
                     onChange={handleVitaminFormChange}
                     placeholder="e.g., D-vitamin"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
+                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -697,7 +729,7 @@ const Wellness = () => {
                     value={vitaminForm.time}
                     onChange={handleVitaminFormChange}
                     placeholder="e.g., Morning"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
+                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -722,7 +754,7 @@ const Wellness = () => {
                     value={vitaminForm.frequency}
                     onChange={handleVitaminFormChange}
                     placeholder="e.g., 1 for daily"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
+                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -745,12 +777,13 @@ const Wellness = () => {
                 <Button
                   type="button"
                   onClick={handleAddVitamin}
-                  className="w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
                 >
-                  <span className="flex items-center justify-center gap-2">
+                  <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
                     <Plus className="w-5 h-5" />
                     Add Vitamin
                   </span>
+                  <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
                 </Button>
                 <Button
                   type="button"

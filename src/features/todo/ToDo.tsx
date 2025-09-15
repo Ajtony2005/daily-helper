@@ -346,20 +346,24 @@ const ToDo = () => {
                 placeholder="Search tasks..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                className="flex-1 glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
               />
               <Select
                 value={selectedCategory}
                 onValueChange={setSelectedCategory}
               >
-                <SelectTrigger className="w-48 bg-gray-800/30 text-white border border-blue-600/40">
+                <SelectTrigger className="w-48 glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                   <SelectValue placeholder="Filter by category" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All</SelectItem>
-                  <SelectItem value="All Tasks">All Tasks</SelectItem>
+                <SelectContent className="dropdown fade-in-down">
+                  <SelectItem value="All" className="dropdown-item">
+                    All
+                  </SelectItem>
+                  <SelectItem value="All Tasks" className="dropdown-item">
+                    All Tasks
+                  </SelectItem>
                   {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
+                    <SelectItem key={cat} value={cat} className="dropdown-item">
                       {cat}
                     </SelectItem>
                   ))}
@@ -371,33 +375,46 @@ const ToDo = () => {
                   setViewMode(value)
                 }
               >
-                <SelectTrigger className="w-48 bg-gray-800/30 text-white border border-blue-600/40">
+                <SelectTrigger className="w-48 glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                   <SelectValue placeholder="View mode" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="list">List View</SelectItem>
-                  <SelectItem value="calendar">Calendar View</SelectItem>
+                <SelectContent className="dropdown fade-in-down">
+                  <SelectItem value="list" className="dropdown-item">
+                    List View
+                  </SelectItem>
+                  <SelectItem value="calendar" className="dropdown-item">
+                    Calendar View
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex gap-4 mb-6">
               <Button
                 onClick={() => handleSortTasks("priority")}
-                className="bg-blue-600 text-white py-2 px-4 rounded-xl"
+                className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
               >
-                Sort by Priority
+                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                  Sort by Priority
+                </span>
+                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
               </Button>
               <Button
                 onClick={() => handleSortTasks("deadline")}
-                className="bg-blue-600 text-white py-2 px-4 rounded-xl"
+                className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
               >
-                Sort by Deadline
+                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                  Sort by Deadline
+                </span>
+                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
               </Button>
               <Button
                 onClick={() => setSelectedCategory("All Tasks")}
-                className="bg-blue-600 text-white py-2 px-4 rounded-xl"
+                className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
               >
-                All Tasks
+                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                  All Tasks
+                </span>
+                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
               </Button>
             </div>
             {viewMode === "list" ? (
@@ -416,7 +433,7 @@ const ToDo = () => {
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.3 }}
-                      className={`bg-gray-800/30 p-4 rounded-xl border border-blue-600/40 shadow-inner ${statusColor}`}
+                      className={`glass p-4 rounded-xl border border-blue-600/40 shadow-inner ${statusColor}`}
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
@@ -504,7 +521,7 @@ const ToDo = () => {
                     mode="single"
                     selected={selectedDate}
                     onSelect={(date) => date && setSelectedDate(date)}
-                    className="rounded-3xl bg-gray-800/30 border-4 border-blue-600/60 p-16 text-3xl shadow-2xl w-full max-w-4xl"
+                    className="rounded-3xl glass border-4 border-blue-600/60 p-16 text-3xl shadow-2xl w-full max-w-4xl fade-in"
                     style={{ fontSize: "2.5rem", minHeight: "600px" }}
                   />
                 </div>
@@ -523,7 +540,7 @@ const ToDo = () => {
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.3 }}
-                        className={`bg-gray-800/30 p-8 rounded-2xl border-2 border-blue-600/40 shadow-inner text-lg ${statusColor}`}
+                        className={`glass p-8 rounded-2xl border-2 border-blue-600/40 shadow-inner text-lg ${statusColor} fade-in`}
                         style={{ fontSize: "1.125rem" }}
                       >
                         <div className="flex justify-between items-start mb-4">
@@ -655,7 +672,7 @@ const ToDo = () => {
                     value={form.name}
                     onChange={handleChange}
                     placeholder="Enter task name"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -679,7 +696,7 @@ const ToDo = () => {
                     name="deadline"
                     value={form.deadline}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300"
+                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -703,16 +720,22 @@ const ToDo = () => {
                       setForm({ ...form, category: value, newCategory: "" })
                     }
                   >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                    <SelectTrigger className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dropdown fade-in-down">
                       {categories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
+                        <SelectItem
+                          key={cat}
+                          value={cat}
+                          className="dropdown-item"
+                        >
                           {cat}
                         </SelectItem>
                       ))}
-                      <SelectItem value="Add New">Add New</SelectItem>
+                      <SelectItem value="Add New" className="dropdown-item">
+                        Add New
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   {form.category === "Add New" && (
@@ -723,7 +746,7 @@ const ToDo = () => {
                       value={form.newCategory}
                       onChange={handleChange}
                       placeholder="New category name"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50 mt-2"
+                      className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -751,12 +774,16 @@ const ToDo = () => {
                       })
                     }
                   >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                    <SelectTrigger className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dropdown fade-in-down">
                       {priorities.map((p) => (
-                        <SelectItem key={p.value} value={p.value}>
+                        <SelectItem
+                          key={p.value}
+                          value={p.value}
+                          className="dropdown-item"
+                        >
                           {p.label}
                         </SelectItem>
                       ))}
@@ -781,7 +808,7 @@ const ToDo = () => {
                     value={form.subtasks}
                     onChange={handleChange}
                     placeholder="Enter subtasks, one per line"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50 min-h-[100px]"
+                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -803,7 +830,7 @@ const ToDo = () => {
                     value={form.notes}
                     onChange={handleChange}
                     placeholder="Enter notes"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50 min-h-[100px]"
+                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -825,7 +852,7 @@ const ToDo = () => {
                     id="attachment"
                     type="file"
                     onChange={handleFileChange}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300"
+                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -920,7 +947,7 @@ const ToDo = () => {
                     value={form.name}
                     onChange={handleChange}
                     placeholder="Enter task name"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -944,7 +971,7 @@ const ToDo = () => {
                     name="deadline"
                     value={form.deadline}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300"
+                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -968,16 +995,22 @@ const ToDo = () => {
                       setForm({ ...form, category: value, newCategory: "" })
                     }
                   >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                    <SelectTrigger className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dropdown fade-in-down">
                       {categories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
+                        <SelectItem
+                          key={cat}
+                          value={cat}
+                          className="dropdown-item"
+                        >
                           {cat}
                         </SelectItem>
                       ))}
-                      <SelectItem value="Add New">Add New</SelectItem>
+                      <SelectItem value="Add New" className="dropdown-item">
+                        Add New
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   {form.category === "Add New" && (
@@ -988,7 +1021,7 @@ const ToDo = () => {
                       value={form.newCategory}
                       onChange={handleChange}
                       placeholder="New category name"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50 mt-2"
+                      className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -1016,12 +1049,16 @@ const ToDo = () => {
                       })
                     }
                   >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                    <SelectTrigger className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dropdown fade-in-down">
                       {priorities.map((p) => (
-                        <SelectItem key={p.value} value={p.value}>
+                        <SelectItem
+                          key={p.value}
+                          value={p.value}
+                          className="dropdown-item"
+                        >
                           {p.label}
                         </SelectItem>
                       ))}
@@ -1046,7 +1083,7 @@ const ToDo = () => {
                     value={form.subtasks}
                     onChange={handleChange}
                     placeholder="Enter subtasks, one per line"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50 min-h-[100px]"
+                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -1068,7 +1105,7 @@ const ToDo = () => {
                     value={form.notes}
                     onChange={handleChange}
                     placeholder="Enter notes"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50 min-h-[100px]"
+                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -1090,7 +1127,7 @@ const ToDo = () => {
                     id="attachment"
                     type="file"
                     onChange={handleFileChange}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300"
+                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"

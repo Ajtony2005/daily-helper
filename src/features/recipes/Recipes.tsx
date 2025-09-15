@@ -382,16 +382,22 @@ const Recipes = () => {
                 placeholder="Search recipes or ingredients..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                className="glass flex-1 px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
               />
               <Select value={filterMealType} onValueChange={setFilterMealType}>
-                <SelectTrigger className="w-48 bg-gray-800/30 text-white border border-blue-600/40">
+                <SelectTrigger className="glass w-48 px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                   <SelectValue placeholder="Filter by meal type" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All</SelectItem>
+                <SelectContent className="dropdown fade-in-down">
+                  <SelectItem value="All" className="dropdown-item">
+                    All
+                  </SelectItem>
                   {mealTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
+                    <SelectItem
+                      key={type}
+                      value={type}
+                      className="dropdown-item"
+                    >
                       {type}
                     </SelectItem>
                   ))}
@@ -401,13 +407,19 @@ const Recipes = () => {
                 value={filterRecipeType}
                 onValueChange={setFilterRecipeType}
               >
-                <SelectTrigger className="w-48 bg-gray-800/30 text-white border border-blue-600/40">
+                <SelectTrigger className="glass w-48 px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                   <SelectValue placeholder="Filter by recipe type" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All</SelectItem>
+                <SelectContent className="dropdown fade-in-down">
+                  <SelectItem value="All" className="dropdown-item">
+                    All
+                  </SelectItem>
                   {recipeTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
+                    <SelectItem
+                      key={type}
+                      value={type}
+                      className="dropdown-item"
+                    >
                       {type}
                     </SelectItem>
                   ))}
@@ -555,7 +567,7 @@ const Recipes = () => {
                     value={form.name}
                     onChange={handleChange}
                     placeholder="Recipe name"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -619,21 +631,21 @@ const Recipes = () => {
                       value={form.newIngredientQuantity}
                       onChange={handleChange}
                       placeholder="Quantity"
-                      className="bg-gray-800/30 text-white border border-blue-600/40"
+                      className="glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     />
                     <Input
                       name="newIngredientUnit"
                       value={form.newIngredientUnit}
                       onChange={handleChange}
                       placeholder="Unit"
-                      className="bg-gray-800/30 text-white border border-blue-600/40"
+                      className="glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     />
                     <Input
                       name="newIngredientName"
                       value={form.newIngredientName}
                       onChange={handleChange}
                       placeholder="Name"
-                      className="bg-gray-800/30 text-white border border-blue-600/40"
+                      className="glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     />
                   </div>
                   <Button
@@ -662,7 +674,7 @@ const Recipes = () => {
                     value={form.instructions}
                     onChange={handleChange}
                     placeholder="Step-by-step instructions"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50 min-h-[150px]"
+                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in min-h-[150px]"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -688,7 +700,7 @@ const Recipes = () => {
                       value={form.prepTime}
                       onChange={handleChange}
                       placeholder="e.g., 15 min"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -713,7 +725,7 @@ const Recipes = () => {
                       value={form.cookTime}
                       onChange={handleChange}
                       placeholder="e.g., 30 min"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -739,7 +751,7 @@ const Recipes = () => {
                     value={form.servings}
                     onChange={handleChange}
                     placeholder="e.g., 4"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -761,7 +773,7 @@ const Recipes = () => {
                     value={form.notes}
                     onChange={handleChange}
                     placeholder="Additional notes or variations"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50 min-h-[100px]"
+                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in min-h-[100px]"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -857,12 +869,16 @@ const Recipes = () => {
                           handleAddToMenu(day, meal, value)
                         }
                       >
-                        <SelectTrigger className="bg-gray-800/30 text-white border border-blue-600/40">
+                        <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                           <SelectValue placeholder={meal} />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="dropdown fade-in-down">
                           {recipes.map((recipe) => (
-                            <SelectItem key={recipe.id} value={recipe.id}>
+                            <SelectItem
+                              key={recipe.id}
+                              value={recipe.id}
+                              className="dropdown-item"
+                            >
                               {recipe.name}
                             </SelectItem>
                           ))}
@@ -876,7 +892,10 @@ const Recipes = () => {
                 onClick={generateShoppingList}
                 className="w-full bg-blue-600 text-white py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 mt-6"
               >
-                Generate Shopping List
+                <span className="flex items-center justify-center gap-2">
+                  <CalendarDays className="w-5 h-5" />
+                  Generate Shopping List
+                </span>
               </Button>
               {shoppingList.length > 0 && (
                 <div className="mt-6">

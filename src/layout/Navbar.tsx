@@ -132,6 +132,10 @@ export default function Navbar() {
             exit={{ x: "100%", opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="md:hidden bg-appBackground-dark text-card-darkForeground shadow-card px-4 py-6 fixed top-16 right-0 w-3/4 max-w-xs h-[calc(100vh-4rem)] z-50"
+            style={{
+              backdropFilter: "blur(8px)",
+              backgroundColor: "rgba(30, 41, 59, 0.9)",
+            }}
           >
             <div className="flex flex-col gap-4">
               {navItems.map((item) => (

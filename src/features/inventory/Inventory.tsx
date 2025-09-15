@@ -919,6 +919,7 @@ const Inventory = () => {
                     />
                   </div>
                 </div>
+                {/* Category Select */}
                 <div className="relative">
                   <motion.label
                     className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
@@ -937,16 +938,22 @@ const Inventory = () => {
                       setForm({ ...form, category: value, newCategory: "" })
                     }
                   >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dropdown fade-in-down">
                       {predefinedCategories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
+                        <SelectItem
+                          key={cat}
+                          value={cat}
+                          className="dropdown-item"
+                        >
                           {cat}
                         </SelectItem>
                       ))}
-                      <SelectItem value="Add New">Add New</SelectItem>
+                      <SelectItem value="Add New" className="dropdown-item">
+                        Add New
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   {form.category === "Add New" && (
@@ -957,37 +964,15 @@ const Inventory = () => {
                       value={form.newCategory}
                       onChange={handleChange}
                       placeholder="New category name"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50 mt-2"
+                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
                     />
                   )}
                 </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="expirationDate"
-                    animate={
-                      form.expirationDate
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Expiration Date
-                  </motion.label>
-                  <motion.input
-                    id="expirationDate"
-                    type="date"
-                    name="expirationDate"
-                    value={form.expirationDate}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
+
+                {/* Location Select */}
                 <div className="relative">
                   <motion.label
                     className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
@@ -1006,16 +991,22 @@ const Inventory = () => {
                       setForm({ ...form, location: value, newLocation: "" })
                     }
                   >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select location" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dropdown fade-in-down">
                       {locations.map((loc) => (
-                        <SelectItem key={loc} value={loc}>
+                        <SelectItem
+                          key={loc}
+                          value={loc}
+                          className="dropdown-item"
+                        >
                           {loc}
                         </SelectItem>
                       ))}
-                      <SelectItem value="Add New">Add New</SelectItem>
+                      <SelectItem value="Add New" className="dropdown-item">
+                        Add New
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   {form.location === "Add New" && (
@@ -1026,13 +1017,15 @@ const Inventory = () => {
                       value={form.newLocation}
                       onChange={handleChange}
                       placeholder="New location name"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50 mt-2"
+                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
                     />
                   )}
                 </div>
+
+                {/* Status Select */}
                 <div className="relative">
                   <motion.label
                     className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
@@ -1052,13 +1045,19 @@ const Inventory = () => {
                       })
                     }
                   >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="in_stock">✅ In Stock</SelectItem>
-                      <SelectItem value="low">⚠️ Low</SelectItem>
-                      <SelectItem value="out">❌ Out</SelectItem>
+                    <SelectContent className="dropdown fade-in-down">
+                      <SelectItem value="in_stock" className="dropdown-item">
+                        ✅ In Stock
+                      </SelectItem>
+                      <SelectItem value="low" className="dropdown-item">
+                        ⚠️ Low
+                      </SelectItem>
+                      <SelectItem value="out" className="dropdown-item">
+                        ❌ Out
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1207,6 +1206,7 @@ const Inventory = () => {
                     />
                   </div>
                 </div>
+                {/* Category Select */}
                 <div className="relative">
                   <motion.label
                     className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
@@ -1225,16 +1225,22 @@ const Inventory = () => {
                       setForm({ ...form, category: value, newCategory: "" })
                     }
                   >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dropdown fade-in-down">
                       {predefinedCategories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
+                        <SelectItem
+                          key={cat}
+                          value={cat}
+                          className="dropdown-item"
+                        >
                           {cat}
                         </SelectItem>
                       ))}
-                      <SelectItem value="Add New">Add New</SelectItem>
+                      <SelectItem value="Add New" className="dropdown-item">
+                        Add New
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   {form.category === "Add New" && (
@@ -1245,62 +1251,15 @@ const Inventory = () => {
                       value={form.newCategory}
                       onChange={handleChange}
                       placeholder="New category name"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50 mt-2"
+                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
                     />
                   )}
                 </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="minQuantity"
-                    animate={
-                      form.minQuantity
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Min Quantity
-                  </motion.label>
-                  <motion.input
-                    id="minQuantity"
-                    type="text"
-                    name="minQuantity"
-                    value={form.minQuantity}
-                    onChange={handleChange}
-                    placeholder="Min quantity"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="expirationDate"
-                    animate={
-                      form.expirationDate
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Expiration Date
-                  </motion.label>
-                  <motion.input
-                    id="expirationDate"
-                    type="date"
-                    name="expirationDate"
-                    value={form.expirationDate}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
+
+                {/* Location Select */}
                 <div className="relative">
                   <motion.label
                     className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
@@ -1319,16 +1278,22 @@ const Inventory = () => {
                       setForm({ ...form, location: value, newLocation: "" })
                     }
                   >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select location" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dropdown fade-in-down">
                       {locations.map((loc) => (
-                        <SelectItem key={loc} value={loc}>
+                        <SelectItem
+                          key={loc}
+                          value={loc}
+                          className="dropdown-item"
+                        >
                           {loc}
                         </SelectItem>
                       ))}
-                      <SelectItem value="Add New">Add New</SelectItem>
+                      <SelectItem value="Add New" className="dropdown-item">
+                        Add New
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   {form.location === "Add New" && (
@@ -1339,13 +1304,15 @@ const Inventory = () => {
                       value={form.newLocation}
                       onChange={handleChange}
                       placeholder="New location name"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50 mt-2"
+                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
                     />
                   )}
                 </div>
+
+                {/* Status Select */}
                 <div className="relative">
                   <motion.label
                     className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
@@ -1365,13 +1332,19 @@ const Inventory = () => {
                       })
                     }
                   >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="in_stock">✅ In Stock</SelectItem>
-                      <SelectItem value="low">⚠️ Low</SelectItem>
-                      <SelectItem value="out">❌ Out</SelectItem>
+                    <SelectContent className="dropdown fade-in-down">
+                      <SelectItem value="in_stock" className="dropdown-item">
+                        ✅ In Stock
+                      </SelectItem>
+                      <SelectItem value="low" className="dropdown-item">
+                        ⚠️ Low
+                      </SelectItem>
+                      <SelectItem value="out" className="dropdown-item">
+                        ❌ Out
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

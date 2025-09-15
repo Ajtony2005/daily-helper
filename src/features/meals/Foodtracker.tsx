@@ -16,7 +16,6 @@ import {
   startOfWeek,
   endOfWeek,
   eachDayOfInterval,
-  isToday,
 } from "date-fns";
 import { CheckCircle, Plus, XCircle, Trash2 } from "lucide-react";
 import {
@@ -339,7 +338,6 @@ const FoodTracker = () => {
               >
                 Previous Day
               </Button>
-
               <Button
                 onClick={() => setSelectedDate(addDays(selectedDate, 1))}
                 className="bg-blue-600 text-white py-2 px-4 rounded-xl"
@@ -639,12 +637,16 @@ const FoodTracker = () => {
                       handleChange({ target: { name: "mealType", value } })
                     }
                   >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select meal type" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dropdown fade-in-down">
                       {mealTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
+                        <SelectItem
+                          key={type}
+                          value={type}
+                          className="dropdown-item"
+                        >
                           {type}
                         </SelectItem>
                       ))}
@@ -668,7 +670,7 @@ const FoodTracker = () => {
                     value={form.food}
                     onChange={handleChange}
                     placeholder="e.g., Scrambled eggs"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
+                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -692,12 +694,16 @@ const FoodTracker = () => {
                       handleChange({ target: { name: "category", value } })
                     }
                   >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dropdown fade-in-down">
                       {foodCategories.map((cat) => (
-                        <SelectItem key={cat.name} value={cat.name}>
+                        <SelectItem
+                          key={cat.name}
+                          value={cat.name}
+                          className="dropdown-item"
+                        >
                           <div className="flex items-center">
                             <span
                               className={`w-3 h-3 rounded-full ${cat.color} mr-2`}
@@ -728,7 +734,7 @@ const FoodTracker = () => {
                     value={form.quantity}
                     onChange={handleChange}
                     placeholder="e.g., 200"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
+                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -751,7 +757,7 @@ const FoodTracker = () => {
                     value={form.unit}
                     onChange={handleChange}
                     placeholder="e.g., g"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
+                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -776,7 +782,7 @@ const FoodTracker = () => {
                     value={form.calories}
                     onChange={handleChange}
                     placeholder="e.g., 250"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
+                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -799,7 +805,7 @@ const FoodTracker = () => {
                     value={form.protein}
                     onChange={handleChange}
                     placeholder="e.g., 20"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
+                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -822,7 +828,7 @@ const FoodTracker = () => {
                     value={form.fat}
                     onChange={handleChange}
                     placeholder="e.g., 10"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
+                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -845,7 +851,7 @@ const FoodTracker = () => {
                     value={form.carbs}
                     onChange={handleChange}
                     placeholder="e.g., 30"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
+                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -927,7 +933,7 @@ const FoodTracker = () => {
                       setHabitForm({ ...habitForm, name: e.target.value })
                     }
                     placeholder="e.g., Drink 8 glasses of water"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white border border-blue-600/40"
+                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
