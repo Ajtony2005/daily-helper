@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Save, Download, Trash2, ShoppingBag, Edit2 } from "lucide-react"; // Printer helyett Download ikon
+import { Plus, Save, Download, Trash2, ShoppingBag, Edit2 } from "lucide-react";
 import { Toast } from "@/components/ui/toast";
 import Loading from "@/pages/Loading";
 
@@ -50,8 +50,8 @@ type ItemsByStore = {
 
 const Shopping = () => {
   const [showToast, setShowToast] = useState(false);
-  const [showDownloadModal, setShowDownloadModal] = useState(false); // showPrintModal helyett
-  const [downloadStore, setDownloadStore] = useState<string>(""); // printStore helyett
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [downloadStore, setDownloadStore] = useState<string>("");
   const [stores, setStores] = useState<string[]>(["Lidl", "Tesco", "Market"]);
   const [itemsByStore, setItemsByStore] = useState<ItemsByStore>(
     stores.reduce((acc, store) => {
@@ -227,7 +227,6 @@ const Shopping = () => {
     return grouped;
   };
 
-  // Új függvény a .txt fájl letöltéséhez
   const handleDownloadList = () => {
     if (!downloadStore) return;
 
@@ -431,7 +430,7 @@ const Shopping = () => {
                           onChange={(e) =>
                             handleSearchChange(store, e.target.value)
                           }
-                          className="mb-4 bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                          className="glass mb-4 px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                         />
                         <div className="flex-1 overflow-y-auto">
                           {Object.keys(groupedItems).length > 0 ? (
@@ -587,12 +586,16 @@ const Shopping = () => {
                     value={downloadStore}
                     onValueChange={setDownloadStore}
                   >
-                    <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select store" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dropdown fade-in-down">
                       {stores.map((store) => (
-                        <SelectItem key={store} value={store}>
+                        <SelectItem
+                          key={store}
+                          value={store}
+                          className="dropdown-item"
+                        >
                           {store}
                         </SelectItem>
                       ))}
@@ -654,7 +657,7 @@ const Shopping = () => {
                     value={newStoreName}
                     onChange={(e) => setNewStoreName(e.target.value)}
                     placeholder="Enter store name"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50 mb-4"
+                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 mb-4 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -753,12 +756,16 @@ const Shopping = () => {
                         setForm({ ...form, store: value })
                       }
                     >
-                      <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                      <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                         <SelectValue placeholder="Select store" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="dropdown fade-in-down">
                         {stores.map((store) => (
-                          <SelectItem key={store} value={store}>
+                          <SelectItem
+                            key={store}
+                            value={store}
+                            className="dropdown-item"
+                          >
                             {store}
                           </SelectItem>
                         ))}
@@ -782,7 +789,7 @@ const Shopping = () => {
                       value={form.name}
                       onChange={handleChange}
                       placeholder="Item name"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -808,7 +815,7 @@ const Shopping = () => {
                         value={form.quantity}
                         onChange={handleChange}
                         placeholder="Quantity"
-                        className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                        className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                         variants={inputVariants}
                         whileFocus="focus"
                         initial="blur"
@@ -833,7 +840,7 @@ const Shopping = () => {
                         value={form.unit}
                         onChange={handleChange}
                         placeholder="Unit (kg, pcs, etc.)"
-                        className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                        className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                         variants={inputVariants}
                         whileFocus="focus"
                         initial="blur"
@@ -857,7 +864,7 @@ const Shopping = () => {
                       value={form.note}
                       onChange={handleChange}
                       placeholder="Special note"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -884,12 +891,16 @@ const Shopping = () => {
                         })
                       }
                     >
-                      <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                      <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                         <SelectValue placeholder="Select priority" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="dropdown fade-in-down">
                         {priorities.map((p) => (
-                          <SelectItem key={p.value} value={p.value}>
+                          <SelectItem
+                            key={p.value}
+                            value={p.value}
+                            className="dropdown-item"
+                          >
                             {p.label}
                           </SelectItem>
                         ))}
@@ -914,12 +925,16 @@ const Shopping = () => {
                         setForm({ ...form, category: value })
                       }
                     >
-                      <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                      <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="dropdown fade-in-down">
                         {predefinedCategories.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
+                          <SelectItem
+                            key={cat}
+                            value={cat}
+                            className="dropdown-item"
+                          >
                             {cat}
                           </SelectItem>
                         ))}
@@ -1013,12 +1028,16 @@ const Shopping = () => {
                         setForm({ ...form, store: value })
                       }
                     >
-                      <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                      <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                         <SelectValue placeholder="Select store" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="dropdown fade-in-down">
                         {stores.map((store) => (
-                          <SelectItem key={store} value={store}>
+                          <SelectItem
+                            key={store}
+                            value={store}
+                            className="dropdown-item"
+                          >
                             {store}
                           </SelectItem>
                         ))}
@@ -1042,7 +1061,7 @@ const Shopping = () => {
                       value={form.name}
                       onChange={handleChange}
                       placeholder="Item name"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -1068,7 +1087,7 @@ const Shopping = () => {
                         value={form.quantity}
                         onChange={handleChange}
                         placeholder="Quantity"
-                        className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                        className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                         variants={inputVariants}
                         whileFocus="focus"
                         initial="blur"
@@ -1093,7 +1112,7 @@ const Shopping = () => {
                         value={form.unit}
                         onChange={handleChange}
                         placeholder="Unit (kg, pcs, etc.)"
-                        className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                        className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                         variants={inputVariants}
                         whileFocus="focus"
                         initial="blur"
@@ -1117,7 +1136,7 @@ const Shopping = () => {
                       value={form.note}
                       onChange={handleChange}
                       placeholder="Special note"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -1144,12 +1163,16 @@ const Shopping = () => {
                         })
                       }
                     >
-                      <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                      <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                         <SelectValue placeholder="Select priority" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="dropdown fade-in-down">
                         {priorities.map((p) => (
-                          <SelectItem key={p.value} value={p.value}>
+                          <SelectItem
+                            key={p.value}
+                            value={p.value}
+                            className="dropdown-item"
+                          >
                             {p.label}
                           </SelectItem>
                         ))}
@@ -1174,12 +1197,16 @@ const Shopping = () => {
                         setForm({ ...form, category: value })
                       }
                     >
-                      <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
+                      <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="dropdown fade-in-down">
                         {predefinedCategories.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
+                          <SelectItem
+                            key={cat}
+                            value={cat}
+                            className="dropdown-item"
+                          >
                             {cat}
                           </SelectItem>
                         ))}
@@ -1269,7 +1296,7 @@ const Shopping = () => {
                   onChange={(e) =>
                     handleSearchChange(shoppingModeStore, e.target.value)
                   }
-                  className="mb-4 bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+                  className="glass mb-4 px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                 />
                 <div className="flex-1 overflow-y-auto">
                   {Object.keys(

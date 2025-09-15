@@ -222,6 +222,13 @@ export default defineConfig({
           "backdrop-filter": "blur(20px)",
           border: "1px solid rgba(30, 30, 30, 0.4)",
         },
+        ".dropdown-bg": {
+          background: "rgba(24, 24, 27, 0.98)",
+          color: "#e5e7eb",
+          "border-radius": "1rem",
+          "box-shadow": "0 4px 24px rgba(0,0,0,0.25)",
+          "backdrop-filter": "blur(8px)",
+        },
         ".neon-border": {
           borderImage:
             "linear-gradient(90deg, #FF6F00, #00C853, #00E5FF, #FF3D00) 1",
