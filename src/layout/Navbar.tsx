@@ -18,6 +18,7 @@ const navItems = [
   { name: "Shopping", path: "/shopping", icon: <FaShoppingCart /> },
   { name: "Meals", path: "/meals", icon: <FaUtensils /> },
   { name: "To-Do", path: "/todo", icon: <FaClipboardList /> },
+  { name: "Wishlist", path: "/wishlist", icon: <FaShoppingCart /> },
   { name: "Recipes", path: "/recipes", icon: <FaBook /> },
   { name: "Wellness", path: "/wellness", icon: <FaHeartbeat /> },
   { name: "Login", path: "/login", icon: <FaSignInAlt /> },

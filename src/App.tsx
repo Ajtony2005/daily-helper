@@ -13,6 +13,7 @@ import FoodTracker from "./features/meals/Foodtracker";
 import Wellness from "./features/wellness/Wellness";
 import Recipes from "./features/recipes/Recipes";
 import ToDo from "./features/todo/ToDo";
+import Wislist from "./features/wishlist/Wishlist";
 
 export default function App() {
   const [isDark] = useState(() => {
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="/todo" element={<ToDo />} />
           <Route path="/wellness" element={<Wellness />} />
           <Route path="/recipes" element={<Recipes />} />
+          <Route path="/wishlist" element={<Wislist />} />
         </Routes>
       </main>
     </Router>
