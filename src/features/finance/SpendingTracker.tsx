@@ -206,7 +206,7 @@ const SpendingTracker = () => {
         <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden mb-8 w-full">
           <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
           <CardContent className="p-10 relative z-10">
-            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
               Spending Tracker
             </CardTitle>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -216,7 +216,7 @@ const SpendingTracker = () => {
                 transition={{ duration: 0.3, delay: 0.1 }}
                 className="bg-gray-800/30 p-4 rounded-xl text-center border border-blue-600/40 shadow-inner"
               >
-                <div className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500">
+                <div className="font-bold text-lg text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500">
                   Total Balance
                 </div>
                 <div className="text-xl mt-2 text-white">
@@ -229,7 +229,7 @@ const SpendingTracker = () => {
                 transition={{ duration: 0.3, delay: 0.2 }}
                 className="bg-gray-800/30 p-4 rounded-xl text-center border border-blue-600/40 shadow-inner"
               >
-                <div className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500">
+                <div className="font-bold text-lg text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500">
                   Monthly Income
                 </div>
                 <div className="text-xl mt-2 text-white">
@@ -242,7 +242,7 @@ const SpendingTracker = () => {
                 transition={{ duration: 0.3, delay: 0.3 }}
                 className="bg-gray-800/30 p-4 rounded-xl text-center border border-blue-600/40 shadow-inner"
               >
-                <div className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500">
+                <div className="font-bold text-lg text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500">
                   Monthly Spend
                 </div>
                 <div className="text-xl mt-2 text-white">
@@ -255,7 +255,7 @@ const SpendingTracker = () => {
                 transition={{ duration: 0.3, delay: 0.4 }}
                 className="bg-gray-800/30 p-4 rounded-xl text-center border border-blue-600/40 shadow-inner"
               >
-                <div className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500">
+                <div className="font-bold text-lg text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500">
                   Daily Spend
                 </div>
                 <div className="text-xl mt-2 text-white">
@@ -291,7 +291,7 @@ const SpendingTracker = () => {
         <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full">
           <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
           <CardContent className="p-10 relative z-10">
-            <CardTitle className="text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+            <CardTitle className="text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
               Transactions
             </CardTitle>
             <div className="overflow-x-auto">
@@ -335,7 +335,7 @@ const SpendingTracker = () => {
         <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden mt-8 w-full">
           <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
           <CardContent className="p-10 relative z-10">
-            <CardTitle className="text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+            <CardTitle className="text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
               Accounts
             </CardTitle>
             <motion.div
@@ -368,7 +368,7 @@ const SpendingTracker = () => {
                   transition={{ duration: 0.3, delay: i * 0.1 }}
                   className="bg-gray-800/30 p-4 rounded-xl min-w-[120px] text-center border border-blue-600/40 shadow-inner"
                 >
-                  <div className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500">
+                  <div className="font-bold text-lg text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500">
                     {acc.name}
                   </div>
                   <div className="text-xl mt-2 text-white">
@@ -396,7 +396,7 @@ const SpendingTracker = () => {
           >
             <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
             <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                 Add Transaction
               </CardTitle>
               <motion.form onSubmit={handleSubmit} className="space-y-6">
@@ -615,7 +615,7 @@ const SpendingTracker = () => {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                    className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                       isLoading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >
@@ -661,7 +661,7 @@ const SpendingTracker = () => {
           >
             <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
             <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                 Add Account
               </CardTitle>
               <motion.label
@@ -702,7 +702,7 @@ const SpendingTracker = () => {
                   type="button"
                   disabled={isLoading}
                   onClick={handleAddAccount}
-                  className={`flex-1 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                  className={`flex-1 bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                     isLoading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >

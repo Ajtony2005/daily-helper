@@ -317,7 +317,7 @@ const ToDo = () => {
         <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden mb-8">
           <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
           <CardContent className="p-10 relative z-10">
-            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
               To-Do List
             </CardTitle>
             <motion.div
@@ -330,7 +330,7 @@ const ToDo = () => {
                 type="button"
                 disabled={isLoading}
                 onClick={() => setShowAddTask(true)}
-                className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                   isLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
@@ -346,13 +346,13 @@ const ToDo = () => {
                 placeholder="Search tasks..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                className="flex-1 glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
               />
               <Select
                 value={selectedCategory}
                 onValueChange={setSelectedCategory}
               >
-                <SelectTrigger className="w-48 glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                <SelectTrigger className="w-48 glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                   <SelectValue placeholder="Filter by category" />
                 </SelectTrigger>
                 <SelectContent className="dropdown fade-in-down">
@@ -375,7 +375,7 @@ const ToDo = () => {
                   setViewMode(value)
                 }
               >
-                <SelectTrigger className="w-48 glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                <SelectTrigger className="w-48 glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                   <SelectValue placeholder="View mode" />
                 </SelectTrigger>
                 <SelectContent className="dropdown fade-in-down">
@@ -391,7 +391,7 @@ const ToDo = () => {
             <div className="flex gap-4 mb-6">
               <Button
                 onClick={() => handleSortTasks("priority")}
-                className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+                className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
                   Sort by Priority
@@ -400,7 +400,7 @@ const ToDo = () => {
               </Button>
               <Button
                 onClick={() => handleSortTasks("deadline")}
-                className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+                className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
                   Sort by Deadline
@@ -409,7 +409,7 @@ const ToDo = () => {
               </Button>
               <Button
                 onClick={() => setSelectedCategory("All Tasks")}
-                className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+                className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
                   All Tasks
@@ -645,7 +645,7 @@ const ToDo = () => {
           >
             <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
             <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                 Add Task
               </CardTitle>
               <motion.form
@@ -672,7 +672,7 @@ const ToDo = () => {
                     value={form.name}
                     onChange={handleChange}
                     placeholder="Enter task name"
-                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -696,7 +696,7 @@ const ToDo = () => {
                     name="deadline"
                     value={form.deadline}
                     onChange={handleChange}
-                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in"
+                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -720,7 +720,7 @@ const ToDo = () => {
                       setForm({ ...form, category: value, newCategory: "" })
                     }
                   >
-                    <SelectTrigger className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                    <SelectTrigger className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent className="dropdown fade-in-down">
@@ -746,7 +746,7 @@ const ToDo = () => {
                       value={form.newCategory}
                       onChange={handleChange}
                       placeholder="New category name"
-                      className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
+                      className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -774,7 +774,7 @@ const ToDo = () => {
                       })
                     }
                   >
-                    <SelectTrigger className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                    <SelectTrigger className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
                     <SelectContent className="dropdown fade-in-down">
@@ -808,7 +808,7 @@ const ToDo = () => {
                     value={form.subtasks}
                     onChange={handleChange}
                     placeholder="Enter subtasks, one per line"
-                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
+                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -830,7 +830,7 @@ const ToDo = () => {
                     value={form.notes}
                     onChange={handleChange}
                     placeholder="Enter notes"
-                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
+                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -852,7 +852,7 @@ const ToDo = () => {
                     id="attachment"
                     type="file"
                     onChange={handleFileChange}
-                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in"
+                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -874,7 +874,7 @@ const ToDo = () => {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                    className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                       isLoading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >
@@ -920,7 +920,7 @@ const ToDo = () => {
           >
             <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
             <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                 Edit Task
               </CardTitle>
               <motion.form
@@ -947,7 +947,7 @@ const ToDo = () => {
                     value={form.name}
                     onChange={handleChange}
                     placeholder="Enter task name"
-                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -971,7 +971,7 @@ const ToDo = () => {
                     name="deadline"
                     value={form.deadline}
                     onChange={handleChange}
-                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in"
+                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -995,7 +995,7 @@ const ToDo = () => {
                       setForm({ ...form, category: value, newCategory: "" })
                     }
                   >
-                    <SelectTrigger className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                    <SelectTrigger className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent className="dropdown fade-in-down">
@@ -1021,7 +1021,7 @@ const ToDo = () => {
                       value={form.newCategory}
                       onChange={handleChange}
                       placeholder="New category name"
-                      className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
+                      className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -1049,7 +1049,7 @@ const ToDo = () => {
                       })
                     }
                   >
-                    <SelectTrigger className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                    <SelectTrigger className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
                     <SelectContent className="dropdown fade-in-down">
@@ -1083,7 +1083,7 @@ const ToDo = () => {
                     value={form.subtasks}
                     onChange={handleChange}
                     placeholder="Enter subtasks, one per line"
-                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
+                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -1105,7 +1105,7 @@ const ToDo = () => {
                     value={form.notes}
                     onChange={handleChange}
                     placeholder="Enter notes"
-                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
+                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -1127,7 +1127,7 @@ const ToDo = () => {
                     id="attachment"
                     type="file"
                     onChange={handleFileChange}
-                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in"
+                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -1149,7 +1149,7 @@ const ToDo = () => {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                    className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                       isLoading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >

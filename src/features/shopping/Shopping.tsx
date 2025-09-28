@@ -339,7 +339,7 @@ const Shopping = () => {
         <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden mb-8">
           <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
           <CardContent className="p-10 relative z-10">
-            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
               Shopping Lists
             </CardTitle>
             <motion.div
@@ -352,7 +352,7 @@ const Shopping = () => {
                 type="button"
                 disabled={isLoading}
                 onClick={() => setShowAddStore(true)}
-                className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                   isLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
@@ -373,7 +373,7 @@ const Shopping = () => {
                 type="button"
                 disabled={isLoading}
                 onClick={() => setShowAddItem(true)}
-                className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                   isLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
@@ -398,14 +398,14 @@ const Shopping = () => {
                       <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
                       <CardContent className="p-6 relative z-10 h-full flex flex-col">
                         <div className="flex justify-between items-center mb-4">
-                          <CardTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
+                          <CardTitle className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
                             {store}
                           </CardTitle>
                           <div className="flex gap-2">
                             <Button
                               type="button"
                               onClick={() => handleEnterShoppingMode(store)}
-                              className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white p-2 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+                              className="bg-linear-to-r from-blue-600 to-emerald-500 text-white p-2 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
                             >
                               <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
                                 <ShoppingBag className="w-4 h-4" />
@@ -430,7 +430,7 @@ const Shopping = () => {
                           onChange={(e) =>
                             handleSearchChange(store, e.target.value)
                           }
-                          className="glass mb-4 px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                          className="glass mb-4 px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                         />
                         <div className="flex-1 overflow-y-auto">
                           {Object.keys(groupedItems).length > 0 ? (
@@ -548,7 +548,7 @@ const Shopping = () => {
           <Button
             type="button"
             onClick={() => setShowDownloadModal(true)}
-            className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+            className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
           >
             <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
               <Download className="w-5 h-5" />
@@ -572,7 +572,7 @@ const Shopping = () => {
             >
               <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
               <CardContent className="p-10 relative z-10">
-                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                   Download Shopping List
                 </CardTitle>
                 <div className="mb-6">
@@ -586,7 +586,7 @@ const Shopping = () => {
                     value={downloadStore}
                     onValueChange={setDownloadStore}
                   >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select store" />
                     </SelectTrigger>
                     <SelectContent className="dropdown fade-in-down">
@@ -607,7 +607,7 @@ const Shopping = () => {
                     type="button"
                     disabled={!downloadStore}
                     onClick={handleDownloadList}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
+                    className="flex-1 bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
                   >
                     Download
                   </Button>
@@ -638,7 +638,7 @@ const Shopping = () => {
             >
               <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
               <CardContent className="p-10 relative z-10">
-                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                   Add Store
                 </CardTitle>
                 <div className="relative">
@@ -657,7 +657,7 @@ const Shopping = () => {
                     value={newStoreName}
                     onChange={(e) => setNewStoreName(e.target.value)}
                     placeholder="Enter store name"
-                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 mb-4 fade-in"
+                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 mb-4 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -681,7 +681,7 @@ const Shopping = () => {
                       type="button"
                       disabled={isLoading}
                       onClick={handleAddStore}
-                      className={`flex-1 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                      className={`flex-1 bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                         isLoading ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                     >
@@ -730,7 +730,7 @@ const Shopping = () => {
             >
               <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
               <CardContent className="p-10 relative z-10">
-                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                   Add Shopping Item
                 </CardTitle>
                 <motion.form
@@ -756,7 +756,7 @@ const Shopping = () => {
                         setForm({ ...form, store: value })
                       }
                     >
-                      <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                      <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                         <SelectValue placeholder="Select store" />
                       </SelectTrigger>
                       <SelectContent className="dropdown fade-in-down">
@@ -789,7 +789,7 @@ const Shopping = () => {
                       value={form.name}
                       onChange={handleChange}
                       placeholder="Item name"
-                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -815,7 +815,7 @@ const Shopping = () => {
                         value={form.quantity}
                         onChange={handleChange}
                         placeholder="Quantity"
-                        className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                        className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                         variants={inputVariants}
                         whileFocus="focus"
                         initial="blur"
@@ -840,7 +840,7 @@ const Shopping = () => {
                         value={form.unit}
                         onChange={handleChange}
                         placeholder="Unit (kg, pcs, etc.)"
-                        className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                        className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                         variants={inputVariants}
                         whileFocus="focus"
                         initial="blur"
@@ -864,7 +864,7 @@ const Shopping = () => {
                       value={form.note}
                       onChange={handleChange}
                       placeholder="Special note"
-                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -891,7 +891,7 @@ const Shopping = () => {
                         })
                       }
                     >
-                      <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                      <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                         <SelectValue placeholder="Select priority" />
                       </SelectTrigger>
                       <SelectContent className="dropdown fade-in-down">
@@ -925,7 +925,7 @@ const Shopping = () => {
                         setForm({ ...form, category: value })
                       }
                     >
-                      <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                      <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent className="dropdown fade-in-down">
@@ -957,7 +957,7 @@ const Shopping = () => {
                     <Button
                       type="submit"
                       disabled={isLoading}
-                      className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                      className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                         isLoading ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                     >
@@ -1002,7 +1002,7 @@ const Shopping = () => {
             >
               <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
               <CardContent className="p-10 relative z-10">
-                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                   Edit Shopping Item
                 </CardTitle>
                 <motion.form
@@ -1028,7 +1028,7 @@ const Shopping = () => {
                         setForm({ ...form, store: value })
                       }
                     >
-                      <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                      <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                         <SelectValue placeholder="Select store" />
                       </SelectTrigger>
                       <SelectContent className="dropdown fade-in-down">
@@ -1061,7 +1061,7 @@ const Shopping = () => {
                       value={form.name}
                       onChange={handleChange}
                       placeholder="Item name"
-                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -1087,7 +1087,7 @@ const Shopping = () => {
                         value={form.quantity}
                         onChange={handleChange}
                         placeholder="Quantity"
-                        className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                        className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                         variants={inputVariants}
                         whileFocus="focus"
                         initial="blur"
@@ -1112,7 +1112,7 @@ const Shopping = () => {
                         value={form.unit}
                         onChange={handleChange}
                         placeholder="Unit (kg, pcs, etc.)"
-                        className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                        className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                         variants={inputVariants}
                         whileFocus="focus"
                         initial="blur"
@@ -1136,7 +1136,7 @@ const Shopping = () => {
                       value={form.note}
                       onChange={handleChange}
                       placeholder="Special note"
-                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -1163,7 +1163,7 @@ const Shopping = () => {
                         })
                       }
                     >
-                      <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                      <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                         <SelectValue placeholder="Select priority" />
                       </SelectTrigger>
                       <SelectContent className="dropdown fade-in-down">
@@ -1197,7 +1197,7 @@ const Shopping = () => {
                         setForm({ ...form, category: value })
                       }
                     >
-                      <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                      <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent className="dropdown fade-in-down">
@@ -1229,7 +1229,7 @@ const Shopping = () => {
                     <Button
                       type="submit"
                       disabled={isLoading}
-                      className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                      className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                         isLoading ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                     >
@@ -1287,7 +1287,7 @@ const Shopping = () => {
             >
               <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
               <CardContent className="p-10 relative z-10 h-full flex flex-col">
-                <CardTitle className="text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+                <CardTitle className="text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                   Shopping Mode - {shoppingModeStore}
                 </CardTitle>
                 <Input
@@ -1296,7 +1296,7 @@ const Shopping = () => {
                   onChange={(e) =>
                     handleSearchChange(shoppingModeStore, e.target.value)
                   }
-                  className="glass mb-4 px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                  className="glass mb-4 px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                 />
                 <div className="flex-1 overflow-y-auto">
                   {Object.keys(

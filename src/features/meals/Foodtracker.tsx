@@ -306,7 +306,7 @@ const FoodTracker = () => {
         <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden mb-8">
           <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
           <CardContent className="p-10 relative z-10">
-            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
               Food Tracker
             </CardTitle>
 
@@ -452,7 +452,7 @@ const FoodTracker = () => {
                 <Button
                   type="button"
                   onClick={() => setShowAddMeal(true)}
-                  className="w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 mb-6"
+                  className="w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 mb-6"
                 >
                   <span className="flex items-center justify-center gap-2">
                     <Plus className="w-5 h-5" />
@@ -468,7 +468,7 @@ const FoodTracker = () => {
                     );
                     return (
                       <div key={mealType}>
-                        <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 mb-4">
+                        <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 mb-4">
                           {mealType}
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -615,7 +615,7 @@ const FoodTracker = () => {
           >
             <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
             <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                 Add Meal
               </CardTitle>
               <motion.div className="space-y-6">
@@ -637,7 +637,7 @@ const FoodTracker = () => {
                       handleChange({ target: { name: "mealType", value } })
                     }
                   >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select meal type" />
                     </SelectTrigger>
                     <SelectContent className="dropdown fade-in-down">
@@ -670,7 +670,7 @@ const FoodTracker = () => {
                     value={form.food}
                     onChange={handleChange}
                     placeholder="e.g., Scrambled eggs"
-                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -694,7 +694,7 @@ const FoodTracker = () => {
                       handleChange({ target: { name: "category", value } })
                     }
                   >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent className="dropdown fade-in-down">
@@ -734,7 +734,7 @@ const FoodTracker = () => {
                     value={form.quantity}
                     onChange={handleChange}
                     placeholder="e.g., 200"
-                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -757,7 +757,7 @@ const FoodTracker = () => {
                     value={form.unit}
                     onChange={handleChange}
                     placeholder="e.g., g"
-                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -782,7 +782,7 @@ const FoodTracker = () => {
                     value={form.calories}
                     onChange={handleChange}
                     placeholder="e.g., 250"
-                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -805,7 +805,7 @@ const FoodTracker = () => {
                     value={form.protein}
                     onChange={handleChange}
                     placeholder="e.g., 20"
-                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -828,7 +828,7 @@ const FoodTracker = () => {
                     value={form.fat}
                     onChange={handleChange}
                     placeholder="e.g., 10"
-                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -851,7 +851,7 @@ const FoodTracker = () => {
                     value={form.carbs}
                     onChange={handleChange}
                     placeholder="e.g., 30"
-                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -873,7 +873,7 @@ const FoodTracker = () => {
                 <Button
                   type="button"
                   onClick={handleAddMeal}
-                  className="w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
+                  className="w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
                 >
                   <span className="flex items-center justify-center gap-2">
                     <Plus className="w-5 h-5" />
@@ -908,7 +908,7 @@ const FoodTracker = () => {
           >
             <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
             <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                 Add Habit
               </CardTitle>
               <motion.div className="space-y-6">
@@ -933,7 +933,7 @@ const FoodTracker = () => {
                       setHabitForm({ ...habitForm, name: e.target.value })
                     }
                     placeholder="e.g., Drink 8 glasses of water"
-                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -955,7 +955,7 @@ const FoodTracker = () => {
                 <Button
                   type="button"
                   onClick={handleAddHabit}
-                  className="w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
+                  className="w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
                 >
                   <span className="flex items-center justify-center gap-2">
                     <Plus className="w-5 h-5" />

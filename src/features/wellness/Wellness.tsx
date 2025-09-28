@@ -333,7 +333,7 @@ const Wellness = () => {
         <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden mb-8">
           <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
           <CardContent className="p-10 relative z-10">
-            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
               Wellness Dashboard - {format(selectedDate, "MMMM d, yyyy")}
             </CardTitle>
 
@@ -341,7 +341,7 @@ const Wellness = () => {
             <div className="flex justify-between items-center mb-6">
               <Button
                 onClick={() => setSelectedDate(subDays(selectedDate, 1))}
-                className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+                className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
                   Previous Day
@@ -350,7 +350,7 @@ const Wellness = () => {
               </Button>
               <Button
                 onClick={() => setSelectedDate(addDays(selectedDate, 1))}
-                className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+                className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
                   Next Day
@@ -457,7 +457,7 @@ const Wellness = () => {
                           handleExerciseDetailsChange({ name: "type", value })
                         }
                       >
-                        <SelectTrigger className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                        <SelectTrigger className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                         <SelectContent className="dropdown fade-in-down">
@@ -483,7 +483,7 @@ const Wellness = () => {
                         name="time"
                         value={currentData.exercise.time || ""}
                         onChange={handleExerciseDetailsChange}
-                        className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in"
+                        className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in"
                       />
                     </div>
                     <div>
@@ -494,7 +494,7 @@ const Wellness = () => {
                         value={currentData.exercise.location || ""}
                         onChange={handleExerciseDetailsChange}
                         placeholder="e.g., Park, Gym"
-                        className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                        className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                       />
                     </div>
                   </div>
@@ -509,7 +509,7 @@ const Wellness = () => {
               </h3>
               <Button
                 onClick={() => setShowAddVitamin(true)}
-                className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group mb-4"
+                className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group mb-4"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
                   <Plus className="w-5 h-5 mr-2" /> Add Vitamin
@@ -560,7 +560,7 @@ const Wellness = () => {
                   value={waterQuantityInput}
                   onChange={(e) => setWaterQuantityInput(e.target.value)}
                   placeholder="ml"
-                  className="w-32 glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                  className="w-32 glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                 />
                 <Button
                   onClick={() => {
@@ -573,7 +573,7 @@ const Wellness = () => {
                       );
                     }
                   }}
-                  className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+                  className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
                 >
                   <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
                     Add Water
@@ -617,7 +617,7 @@ const Wellness = () => {
                       handleMoodEnergyChange({ name: "mood", value })
                     }
                   >
-                    <SelectTrigger className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                    <SelectTrigger className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select mood" />
                     </SelectTrigger>
                     <SelectContent className="dropdown fade-in-down">
@@ -644,7 +644,7 @@ const Wellness = () => {
                       handleMoodEnergyChange({ name: "energy", value })
                     }
                   >
-                    <SelectTrigger className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                    <SelectTrigger className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select energy level" />
                     </SelectTrigger>
                     <SelectContent className="dropdown fade-in-down">
@@ -681,7 +681,7 @@ const Wellness = () => {
           >
             <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
             <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                 Add Vitamin/Supplement
               </CardTitle>
               <motion.div className="space-y-6">
@@ -704,7 +704,7 @@ const Wellness = () => {
                     value={vitaminForm.name}
                     onChange={handleVitaminFormChange}
                     placeholder="e.g., D-vitamin"
-                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -729,7 +729,7 @@ const Wellness = () => {
                     value={vitaminForm.time}
                     onChange={handleVitaminFormChange}
                     placeholder="e.g., Morning"
-                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -754,7 +754,7 @@ const Wellness = () => {
                     value={vitaminForm.frequency}
                     onChange={handleVitaminFormChange}
                     placeholder="e.g., 1 for daily"
-                    className="w-full glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -777,7 +777,7 @@ const Wellness = () => {
                 <Button
                   type="button"
                   onClick={handleAddVitamin}
-                  className="w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+                  className="w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
                 >
                   <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
                     <Plus className="w-5 h-5" />

@@ -94,7 +94,7 @@ const Register = () => {
             className="relative z-10"
           >
             <CardContent className="p-10">
-              <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+              <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                 Create Account
               </CardTitle>
               <div className="mb-6 relative">
@@ -188,7 +188,7 @@ const Register = () => {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                  className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                     isLoading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >

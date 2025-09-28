@@ -387,7 +387,7 @@ const Inventory = () => {
         <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden mb-8">
           <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
           <CardContent className="p-10 relative z-10">
-            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
               Inventory
             </CardTitle>
             <motion.div
@@ -400,7 +400,7 @@ const Inventory = () => {
                 type="button"
                 disabled={isLoading}
                 onClick={() => setShowAddItem(true)}
-                className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                   isLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
@@ -502,7 +502,7 @@ const Inventory = () => {
                           setEditCategoryIndex(null);
                           setCategoryInput("");
                         }}
-                        className="mt-4 w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-2 rounded-xl"
+                        className="mt-4 w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-2 rounded-xl"
                       >
                         + Add Category
                       </Button>
@@ -594,7 +594,7 @@ const Inventory = () => {
                           setEditLocationIndex(null);
                           setLocationInput("");
                         }}
-                        className="mt-4 w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-2 rounded-xl"
+                        className="mt-4 w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-2 rounded-xl"
                       >
                         + Add Location
                       </Button>
@@ -607,7 +607,7 @@ const Inventory = () => {
             <div className="space-y-8">
               {Object.keys(getGroupedItems()).map((category) => (
                 <div key={category}>
-                  <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 mb-4">
+                  <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 mb-4">
                     {category}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -722,7 +722,7 @@ const Inventory = () => {
                   onClick={(e) => e.stopPropagation()}
                 >
                   <CardContent className="p-10 relative z-10">
-                    <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow animate-gradient-x">
+                    <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow animate-gradient-x">
                       {editCategoryIndex !== null
                         ? "Edit Category"
                         : "Add Category"}
@@ -742,7 +742,7 @@ const Inventory = () => {
                             ? handleEditCategory
                             : handleAddCategory
                         }
-                        className="flex-1 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl"
+                        className="flex-1 bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl"
                       >
                         {editCategoryIndex !== null ? "Save" : "Add"}
                       </Button>
@@ -777,7 +777,7 @@ const Inventory = () => {
                   onClick={(e) => e.stopPropagation()}
                 >
                   <CardContent className="p-10 relative z-10">
-                    <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow animate-gradient-x">
+                    <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow animate-gradient-x">
                       {editLocationIndex !== null
                         ? "Edit Location"
                         : "Add Location"}
@@ -797,7 +797,7 @@ const Inventory = () => {
                             ? handleEditLocation
                             : handleAddLocation
                         }
-                        className="flex-1 bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl"
+                        className="flex-1 bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl"
                       >
                         {editLocationIndex !== null ? "Save" : "Add"}
                       </Button>
@@ -836,7 +836,7 @@ const Inventory = () => {
           >
             <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
             <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                 Add Inventory Item
               </CardTitle>
               <motion.form
@@ -938,7 +938,7 @@ const Inventory = () => {
                       setForm({ ...form, category: value, newCategory: "" })
                     }
                   >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent className="dropdown fade-in-down">
@@ -964,7 +964,7 @@ const Inventory = () => {
                       value={form.newCategory}
                       onChange={handleChange}
                       placeholder="New category name"
-                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
+                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -991,7 +991,7 @@ const Inventory = () => {
                       setForm({ ...form, location: value, newLocation: "" })
                     }
                   >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select location" />
                     </SelectTrigger>
                     <SelectContent className="dropdown fade-in-down">
@@ -1017,7 +1017,7 @@ const Inventory = () => {
                       value={form.newLocation}
                       onChange={handleChange}
                       placeholder="New location name"
-                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
+                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -1045,7 +1045,7 @@ const Inventory = () => {
                       })
                     }
                   >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent className="dropdown fade-in-down">
@@ -1077,7 +1077,7 @@ const Inventory = () => {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                    className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                       isLoading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >
@@ -1123,7 +1123,7 @@ const Inventory = () => {
           >
             <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
             <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                 Edit Inventory Item
               </CardTitle>
               <motion.form
@@ -1225,7 +1225,7 @@ const Inventory = () => {
                       setForm({ ...form, category: value, newCategory: "" })
                     }
                   >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent className="dropdown fade-in-down">
@@ -1251,7 +1251,7 @@ const Inventory = () => {
                       value={form.newCategory}
                       onChange={handleChange}
                       placeholder="New category name"
-                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
+                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -1278,7 +1278,7 @@ const Inventory = () => {
                       setForm({ ...form, location: value, newLocation: "" })
                     }
                   >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select location" />
                     </SelectTrigger>
                     <SelectContent className="dropdown fade-in-down">
@@ -1304,7 +1304,7 @@ const Inventory = () => {
                       value={form.newLocation}
                       onChange={handleChange}
                       placeholder="New location name"
-                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
+                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -1332,7 +1332,7 @@ const Inventory = () => {
                       })
                     }
                   >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent className="dropdown fade-in-down">
@@ -1364,7 +1364,7 @@ const Inventory = () => {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                    className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                       isLoading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >

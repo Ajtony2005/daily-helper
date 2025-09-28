@@ -353,7 +353,7 @@ const Recipes = () => {
         <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden mb-8">
           <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
           <CardContent className="p-10 relative z-10">
-            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
               Recipes
             </CardTitle>
             <motion.div
@@ -366,7 +366,7 @@ const Recipes = () => {
                 type="button"
                 disabled={isLoading}
                 onClick={() => setShowAddRecipe(true)}
-                className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                   isLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
@@ -382,10 +382,10 @@ const Recipes = () => {
                 placeholder="Search recipes or ingredients..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="glass flex-1 px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                className="glass flex-1 px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
               />
               <Select value={filterMealType} onValueChange={setFilterMealType}>
-                <SelectTrigger className="glass w-48 px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                <SelectTrigger className="glass w-48 px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                   <SelectValue placeholder="Filter by meal type" />
                 </SelectTrigger>
                 <SelectContent className="dropdown fade-in-down">
@@ -407,7 +407,7 @@ const Recipes = () => {
                 value={filterRecipeType}
                 onValueChange={setFilterRecipeType}
               >
-                <SelectTrigger className="glass w-48 px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                <SelectTrigger className="glass w-48 px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                   <SelectValue placeholder="Filter by recipe type" />
                 </SelectTrigger>
                 <SelectContent className="dropdown fade-in-down">
@@ -546,7 +546,7 @@ const Recipes = () => {
           >
             <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
             <CardContent className="p-6 sm:p-10 relative z-10">
-              <CardTitle className="text-2xl sm:text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+              <CardTitle className="text-2xl sm:text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                 {showAddRecipe ? "Add Recipe" : "Edit Recipe"}
               </CardTitle>
               <motion.form className="space-y-4 sm:space-y-6">
@@ -567,7 +567,7 @@ const Recipes = () => {
                     value={form.name}
                     onChange={handleChange}
                     placeholder="Recipe name"
-                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -631,21 +631,21 @@ const Recipes = () => {
                       value={form.newIngredientQuantity}
                       onChange={handleChange}
                       placeholder="Quantity"
-                      className="glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                      className="glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     />
                     <Input
                       name="newIngredientUnit"
                       value={form.newIngredientUnit}
                       onChange={handleChange}
                       placeholder="Unit"
-                      className="glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                      className="glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     />
                     <Input
                       name="newIngredientName"
                       value={form.newIngredientName}
                       onChange={handleChange}
                       placeholder="Name"
-                      className="glass px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                      className="glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     />
                   </div>
                   <Button
@@ -674,7 +674,7 @@ const Recipes = () => {
                     value={form.instructions}
                     onChange={handleChange}
                     placeholder="Step-by-step instructions"
-                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in min-h-[150px]"
+                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in min-h-[150px]"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -700,7 +700,7 @@ const Recipes = () => {
                       value={form.prepTime}
                       onChange={handleChange}
                       placeholder="e.g., 15 min"
-                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -725,7 +725,7 @@ const Recipes = () => {
                       value={form.cookTime}
                       onChange={handleChange}
                       placeholder="e.g., 30 min"
-                      className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                       variants={inputVariants}
                       whileFocus="focus"
                       initial="blur"
@@ -751,7 +751,7 @@ const Recipes = () => {
                     value={form.servings}
                     onChange={handleChange}
                     placeholder="e.g., 4"
-                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
+                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -773,7 +773,7 @@ const Recipes = () => {
                     value={form.notes}
                     onChange={handleChange}
                     placeholder="Additional notes or variations"
-                    className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in min-h-[100px]"
+                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in min-h-[100px]"
                     variants={inputVariants}
                     whileFocus="focus"
                     initial="blur"
@@ -796,7 +796,7 @@ const Recipes = () => {
                     type="button"
                     disabled={isLoading}
                     onClick={showAddRecipe ? handleAddRecipe : handleEditRecipe}
-                    className={`w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
+                    className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
                       isLoading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >
@@ -846,7 +846,7 @@ const Recipes = () => {
           >
             <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
             <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                 Weekly Menu Planner
               </CardTitle>
               <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
@@ -869,7 +869,7 @@ const Recipes = () => {
                           handleAddToMenu(day, meal, value)
                         }
                       >
-                        <SelectTrigger className="glass w-full px-4 py-3 text-[var(--color-card-darkForeground)] border-[var(--color-border)] focus:outline-none transition-all duration-300 fade-in">
+                        <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
                           <SelectValue placeholder={meal} />
                         </SelectTrigger>
                         <SelectContent className="dropdown fade-in-down">

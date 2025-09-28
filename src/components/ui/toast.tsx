@@ -33,15 +33,15 @@ export const Toast: React.FC<ToastProps> = ({
 
   const styles = {
     success: {
-      color: "bg-gradient-to-r from-green-500 to-emerald-500",
+      color: "bg-linear-to-r from-green-500 to-emerald-500",
       defaultIcon: <span className="text-xl">✅</span>,
     },
     error: {
-      color: "bg-gradient-to-r from-red-500 to-rose-500",
+      color: "bg-linear-to-r from-red-500 to-rose-500",
       defaultIcon: <span className="text-xl">❌</span>,
     },
     info: {
-      color: "bg-gradient-to-r from-blue-500 to-indigo-500",
+      color: "bg-linear-to-r from-blue-500 to-indigo-500",
       defaultIcon: <span className="text-xl">ℹ️</span>,
     },
   };
@@ -67,7 +67,7 @@ export const Toast: React.FC<ToastProps> = ({
           style={{ marginBottom: "1rem" }}
         >
           <div className="flex items-center gap-3">
-            {displayIcon && <div className="flex-shrink-0">{displayIcon}</div>}
+            {displayIcon && <div className="shrink-0">{displayIcon}</div>}
             <div className="flex-1">{message}</div>
             <button
               onClick={() => {
@@ -90,7 +90,7 @@ export const Toast: React.FC<ToastProps> = ({
 export const ToastContainer: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => (
-  <div className="fixed top-6 right-6 z-[9999] flex flex-col items-end gap-4">
+  <div className="fixed top-6 right-6 z-9999 flex flex-col items-end gap-4">
     {children}
   </div>
 );

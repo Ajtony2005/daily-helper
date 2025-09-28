@@ -9,49 +9,49 @@ const features = [
     path: "/finance",
     desc: "Track expenses, visualize spending, and get weekly/monthly insights to manage your budget like a pro.",
     icon: "💸",
-    accent: "bg-gradient-to-br from-teal-500 to-teal-700",
+    accent: "bg-linear-to-br from-teal-500 to-teal-700",
   },
   {
     name: "Inventory",
     path: "/inventory",
     desc: "Keep tabs on dorm essentials, avoid overstocking, and streamline your supplies.",
     icon: "📦",
-    accent: "bg-gradient-to-br from-purple-500 to-purple-700",
+    accent: "bg-linear-to-br from-purple-500 to-purple-700",
   },
   {
     name: "Shopping",
     path: "/shopping",
     desc: "Smart shopping lists synced with your inventory for hassle-free grocery runs.",
     icon: "🛒",
-    accent: "bg-gradient-to-br from-pink-500 to-pink-700",
+    accent: "bg-linear-to-br from-pink-500 to-pink-700",
   },
   {
     name: "Meals",
     path: "/meals",
     desc: "Plan breakfast, lunch, dinner, and snacks for the week with nutrition tracking.",
     icon: "🍽️",
-    accent: "bg-gradient-to-br from-orange-500 to-orange-700",
+    accent: "bg-linear-to-br from-orange-500 to-orange-700",
   },
   {
     name: "To-Do",
     path: "/todo",
     desc: "Organize tasks with priorities and deadlines to stay on top of your studies.",
     icon: "✅",
-    accent: "bg-gradient-to-br from-green-500 to-green-700",
+    accent: "bg-linear-to-br from-green-500 to-green-700",
   },
   {
     name: "Recipes",
     path: "/recipes",
     desc: "Store and explore recipes to cook delicious meals tailored to your ingredients.",
     icon: "📖",
-    accent: "bg-gradient-to-br from-blue-500 to-blue-700",
+    accent: "bg-linear-to-br from-blue-500 to-blue-700",
   },
   {
     name: "Wellness",
     path: "/wellness",
     desc: "Track vitamins, workouts, and get weather-based daily prep tips.",
     icon: "💪",
-    accent: "bg-gradient-to-br from-red-500 to-red-700",
+    accent: "bg-linear-to-br from-red-500 to-red-700",
   },
 ];
 
@@ -84,7 +84,7 @@ export default function Home() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="relative z-10"
         >
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
             DailyHelper
           </h1>
           <p className="mt-4 text-lg sm:text-xl md:text-2xl max-w-2xl mx-auto text-blue-300">
@@ -95,7 +95,7 @@ export default function Home() {
             <Button
               asChild
               onClick={handleButtonClick}
-              className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-6 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+              className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-6 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
             >
               <a href="/dashboard">
                 <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
@@ -110,7 +110,7 @@ export default function Home() {
 
       {/* Features Section */}
       <section className="px-4 py-12 w-full">
-        <h2 className="text-3xl sm:text-4xl font-extrabold mb-12 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+        <h2 className="text-3xl sm:text-4xl font-extrabold mb-12 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
           Everything You Need to Succeed
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
@@ -130,7 +130,7 @@ export default function Home() {
                   >
                     {feature.icon}
                   </span>
-                  <CardTitle className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+                  <CardTitle className="text-xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
                     {feature.name}
                   </CardTitle>
                 </CardHeader>
@@ -140,7 +140,7 @@ export default function Home() {
                   </p>
                   <Button
                     asChild
-                    className="w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+                    className="w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
                   >
                     <a href={feature.path}>
                       <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
@@ -161,7 +161,7 @@ export default function Home() {
         <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden">
           <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
           <CardHeader className="p-6 relative z-10">
-            <CardTitle className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+            <CardTitle className="text-2xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
               Why DailyHelper?
             </CardTitle>
           </CardHeader>
@@ -180,7 +180,7 @@ export default function Home() {
               </li>
             </ul>
             <Button
-              className="mt-6 w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+              className="mt-6 w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
               asChild
             >
               <a href="/about">
@@ -196,7 +196,7 @@ export default function Home() {
 
       {/* Call to Action */}
       <section className="px-4 py-16 text-center w-full">
-        <h2 className="text-3xl sm:text-4xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
+        <h2 className="text-3xl sm:text-4xl font-extrabold mb-6 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
           Ready to Simplify Your Student Life?
         </h2>
         <p className="text-lg max-w-2xl mx-auto mb-8 text-blue-300 opacity-80">
@@ -207,7 +207,7 @@ export default function Home() {
           <Button
             asChild
             onClick={handleButtonClick}
-            className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+            className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
           >
             <a href="/res">
               <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
