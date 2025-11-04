@@ -113,7 +113,11 @@ export default function RecipesManager() {
 
   const openEdit = (r: Recipe) => {
     setEditingId(r.id);
-    setForm({ ...r, ingredients: r.ingredients.map((i) => ({ ...i })) });
+    setForm({
+      ...r,
+      imageUrl: r.imageUrl || "",
+      ingredients: r.ingredients.map((i) => ({ ...i })),
+    });
     setIsEditorOpen(true);
   };
 

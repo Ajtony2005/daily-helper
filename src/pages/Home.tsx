@@ -104,7 +104,7 @@ const item = {
     opacity: 1,
     y: 0,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 10,
     },
@@ -225,7 +225,7 @@ export default function HomePage() {
                   whileHover={{ y: -4 }}
                   className="group relative"
                 >
-                  <Link href={feature.href}>
+                  <Link to={feature.href}>
                     <div className="relative h-full rounded-xl border border-border bg-card/50 backdrop-blur-sm p-6 transition-all duration-300 hover:bg-card hover:border-accent/50 cursor-pointer overflow-hidden">
                       {/* Gradient background on hover */}
                       <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

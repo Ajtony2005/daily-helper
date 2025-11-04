@@ -5,7 +5,8 @@ import type React from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, LogIn } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface LoginFormProps {
   onSubmit?: (email: string, password: string) => Promise<void>;
@@ -278,4 +279,29 @@ export function LoginForm({ onSubmit, onGoogleLogin }: LoginFormProps) {
   );
 }
 
-export default LoginForm;
+export default function Login() {
+  const { login, loginWithGoogle } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (email: string, password: string) => {
+    try {
+      await login(email, password);
+      navigate("/dashboard");
+    } catch (error: any) {
+      throw new Error(error.message || "Login failed");
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle();
+      navigate("/dashboard");
+    } catch (error: any) {
+      throw new Error(error.message || "Google login failed");
+    }
+  };
+
+  return (
+    <LoginForm onSubmit={handleSubmit} onGoogleLogin={handleGoogleLogin} />
+  );
+}

@@ -88,7 +88,7 @@ export default function ShoppingManager() {
     quantity: 1,
     unit: "piece",
     category: "Pantry",
-    priority: "medium" as const,
+    priority: "medium" as "low" | "medium" | "high",
     store: "Walmart",
     note: "",
   });

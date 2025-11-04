@@ -173,7 +173,9 @@ export default function Notifications() {
                   <Label className="flex items-center gap-2 cursor-pointer">
                     <Checkbox
                       checked={enabled}
-                      onCheckedChange={(checked) => setEnabled(checked as boolean)}
+                      onCheckedChange={(checked) =>
+                        setEnabled(checked as boolean)
+                      }
                     />
                     <span className="text-sm">Enabled</span>
                   </Label>
@@ -312,7 +314,9 @@ export default function Notifications() {
                 <Label className="flex items-center gap-2 mb-3 cursor-pointer">
                   <Checkbox
                     checked={modalEnabled}
-                    onCheckedChange={(checked) => setModalEnabled(checked as boolean)}
+                    onCheckedChange={(checked) =>
+                      setModalEnabled(checked as boolean)
+                    }
                   />
                   Enabled
                 </Label>

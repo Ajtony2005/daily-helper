@@ -85,7 +85,7 @@ export default function TodoManager({ initialTasks = [] }: TodoManagerProps) {
     deadline: null as Date | null,
     category: "",
     newCategory: "",
-    priority: "medium" as const,
+    priority: "medium" as "low" | "medium" | "high",
     subtasks: "",
     notes: "",
     attachment: null as File | null,

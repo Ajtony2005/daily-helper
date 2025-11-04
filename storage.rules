@@ -1,0 +1,36 @@
+rules_version = '2';
+
+// Craft rules based on data in your Firestore database
+// allow write: if firestore.get(
+//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
+service firebase.storage {
+  match /b/{bucket}/o {
+    // User uploads (avatars, photos, etc.)
+    match /users/{userId}/{allPaths=**} {
+      // Allow authenticated users to read/write their own files
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Public files (if needed)
+    match /public/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Meal photos
+    match /meals/{userId}/{mealId}/{fileName} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024 // 5MB max
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Recipe photos
+    match /recipes/{userId}/{recipeId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+  }
+}

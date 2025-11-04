@@ -1,0 +1,124 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidTimestamp() {
+      return request.resource.data.createdAt is timestamp 
+        && request.resource.data.updatedAt is timestamp;
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidTimestamp();
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+
+    // Finance - Accounts
+    match /accounts/{accountId} {
+      allow read, write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Finance - Transactions
+    match /transactions/{transactionId} {
+      allow read, write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // ToDo - Tasks
+    match /tasks/{taskId} {
+      allow read, write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Inventory - Items
+    match /inventory/{itemId} {
+      allow read, write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Inventory - Categories
+    match /inventoryCategories/{categoryId} {
+      allow read, write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Inventory - Locations
+    match /inventoryLocations/{locationId} {
+      allow read, write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Shopping Lists
+    match /shopping/{itemId} {
+      allow read, write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Meals
+    match /meals/{mealId} {
+      allow read, write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Recipes
+    match /recipes/{recipeId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Wellness - Exercises
+    match /exercises/{exerciseId} {
+      allow read, write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Wellness - Water Intake
+    match /waterIntake/{intakeId} {
+      allow read, write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Wishlist
+    match /wishlist/{itemId} {
+      allow read, write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Goals
+    match /goals/{goalId} {
+      allow read, write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Habits
+    match /habits/{habitId} {
+      allow read, write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Journal Entries
+    match /journal/{entryId} {
+      allow read, write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Notifications/Reminders
+    match /reminders/{reminderId} {
+      allow read, write: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+  }
+}

@@ -2,6 +2,9 @@ import type React from "react";
 import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { JotaiProvider } from "@/store/JotaiProvider";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Header from "@/layout/Header";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
@@ -49,169 +52,179 @@ export default function App() {
   const toggleTheme = () => setIsDark((prev) => !prev);
 
   return (
-    <div className="min-h-screen w-screen bg-background text-on-background transition-colors duration-300">
-      <Header isDark={isDark} toggleTheme={toggleTheme} />
+    <JotaiProvider>
+      <AuthProvider>
+        <div className="min-h-screen w-screen bg-background text-on-background transition-colors duration-300">
+          <Header isDark={isDark} toggleTheme={toggleTheme} />
 
-      {/* Ensure main content sits below the fixed header */}
-      <main className="pt-20 md:pt-24 pb-12">
-        <AnimatePresence mode="wait">
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <PageWrapper>
-                  <Home />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/dashboard"
-              element={
-                <PageWrapper>
-                  <Dashboard />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/login"
-              element={
-                <PageWrapper>
-                  <Login />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/register"
-              element={
-                <PageWrapper>
-                  <Register />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/finance"
-              element={
-                <PageWrapper>
-                  <SpendingTracker />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/shopping"
-              element={
-                <PageWrapper>
-                  <Shopping />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/inventory"
-              element={
-                <PageWrapper>
-                  <Inventory />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/meals"
-              element={
-                <PageWrapper>
-                  <FoodTracker />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/todo"
-              element={
-                <PageWrapper>
-                  <ToDo />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/wellness"
-              element={
-                <PageWrapper>
-                  <Wellness />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/recipes"
-              element={
-                <PageWrapper>
-                  <Recipes />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/goals"
-              element={
-                <PageWrapper>
-                  <GoalsHabits />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/analytics"
-              element={
-                <PageWrapper>
-                  <Analytics />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/journal"
-              element={
-                <PageWrapper>
-                  <Journal />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/onboarding"
-              element={
-                <PageWrapper>
-                  <Onboarding />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/notifications"
-              element={
-                <PageWrapper>
-                  <Notifications />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <PageWrapper>
-                  <Profile />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/wishlist"
-              element={
-                <PageWrapper>
-                  <Wishlist />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="*"
-              element={
-                <PageWrapper>
-                  <NotFound />
-                </PageWrapper>
-              }
-            />
-          </Routes>
-        </AnimatePresence>
-      </main>
-    </div>
+          {/* Ensure main content sits below the fixed header */}
+          <main className="pt-20 md:pt-24 pb-12">
+            <AnimatePresence mode="wait">
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    <PageWrapper>
+                      <Home />
+                    </PageWrapper>
+                  }
+                />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <PageWrapper>
+                        <Dashboard />
+                      </PageWrapper>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/login"
+                  element={
+                    <PageWrapper>
+                      <Login />
+                    </PageWrapper>
+                  }
+                />
+                <Route
+                  path="/register"
+                  element={
+                    <PageWrapper>
+                      <Register />
+                    </PageWrapper>
+                  }
+                />
+                <Route
+                  path="/finance"
+                  element={
+                    <ProtectedRoute>
+                      <PageWrapper>
+                        <SpendingTracker />
+                      </PageWrapper>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/shopping"
+                  element={
+                    <PageWrapper>
+                      <Shopping />
+                    </PageWrapper>
+                  }
+                />
+                <Route
+                  path="/inventory"
+                  element={
+                    <PageWrapper>
+                      <Inventory />
+                    </PageWrapper>
+                  }
+                />
+                <Route
+                  path="/meals"
+                  element={
+                    <PageWrapper>
+                      <FoodTracker />
+                    </PageWrapper>
+                  }
+                />
+                <Route
+                  path="/todo"
+                  element={
+                    <PageWrapper>
+                      <ToDo />
+                    </PageWrapper>
+                  }
+                />
+                <Route
+                  path="/wellness"
+                  element={
+                    <PageWrapper>
+                      <Wellness />
+                    </PageWrapper>
+                  }
+                />
+                <Route
+                  path="/recipes"
+                  element={
+                    <PageWrapper>
+                      <Recipes />
+                    </PageWrapper>
+                  }
+                />
+                <Route
+                  path="/goals"
+                  element={
+                    <PageWrapper>
+                      <GoalsHabits />
+                    </PageWrapper>
+                  }
+                />
+                <Route
+                  path="/analytics"
+                  element={
+                    <PageWrapper>
+                      <Analytics />
+                    </PageWrapper>
+                  }
+                />
+                <Route
+                  path="/journal"
+                  element={
+                    <PageWrapper>
+                      <Journal />
+                    </PageWrapper>
+                  }
+                />
+                <Route
+                  path="/onboarding"
+                  element={
+                    <PageWrapper>
+                      <Onboarding />
+                    </PageWrapper>
+                  }
+                />
+                <Route
+                  path="/notifications"
+                  element={
+                    <PageWrapper>
+                      <Notifications />
+                    </PageWrapper>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <PageWrapper>
+                        <Profile />
+                      </PageWrapper>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/wishlist"
+                  element={
+                    <PageWrapper>
+                      <Wishlist />
+                    </PageWrapper>
+                  }
+                />
+                <Route
+                  path="*"
+                  element={
+                    <PageWrapper>
+                      <NotFound />
+                    </PageWrapper>
+                  }
+                />
+              </Routes>
+            </AnimatePresence>
+          </main>
+        </div>
+      </AuthProvider>
+    </JotaiProvider>
   );
 }
 

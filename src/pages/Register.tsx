@@ -6,10 +6,12 @@ import { Label } from "@/components/ui/label";
 import { FiUserPlus } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import Loading from "@/pages/Loading";
 
 export default function Register() {
   const navigate = useNavigate();
+  const { signup, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -39,22 +41,25 @@ export default function Register() {
     }
 
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await signup(email, password);
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed");
       setIsLoading(false);
-      // On success, navigate to login or dashboard
-      navigate("/login");
-    }, 1200);
+    }
   };
 
-  const handleGoogle = () => {
+  const handleGoogle = async () => {
     setError(null);
     setIsGoogleLoading(true);
-    // Simulate OAuth flow
-    setTimeout(() => {
-      setIsGoogleLoading(false);
+    try {
+      await loginWithGoogle();
       navigate("/dashboard");
-    }, 1200);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-in failed");
+      setIsGoogleLoading(false);
+    }
   };
 
   const inputMotion = {

@@ -83,7 +83,7 @@ export function WishlistManager() {
   const [formData, setFormData] = useState({
     name: "",
     category: "Electronics",
-    priority: "medium" as const,
+    priority: "medium" as "low" | "medium" | "high",
     estimatedPrice: 0,
     store: "",
     reminderDate: "",
