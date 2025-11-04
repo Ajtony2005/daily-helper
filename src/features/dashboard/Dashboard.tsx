@@ -106,7 +106,9 @@ export default function Dashboard() {
                         <Checkbox
                           id="task-check"
                           checked={taskChecked}
-                          onCheckedChange={(checked) => setTaskChecked(checked as boolean)}
+                          onCheckedChange={(checked) =>
+                            setTaskChecked(checked as boolean)
+                          }
                         />
                         <span
                           className={cn(

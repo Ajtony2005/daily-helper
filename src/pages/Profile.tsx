@@ -396,7 +396,9 @@ export default function Profile() {
               <Label className="flex items-center gap-3 cursor-pointer">
                 <Checkbox
                   checked={darkByDefault}
-                  onCheckedChange={(checked) => setDarkByDefault(checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    setDarkByDefault(checked as boolean)
+                  }
                 />
                 <span className="text-on-surface">{t("dark_by_default")}</span>
               </Label>
@@ -404,7 +406,9 @@ export default function Profile() {
               <Label className="flex items-center gap-3 cursor-pointer">
                 <Checkbox
                   checked={notifications}
-                  onCheckedChange={(checked) => setNotifications(checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    setNotifications(checked as boolean)
+                  }
                 />
                 <span className="text-on-surface">
                   {t("enable_notifications")}
