@@ -1,8 +1,19 @@
-import React, { useState } from "react";
-import { motion, useAnimation } from "framer-motion";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+"use client";
+
+import React, { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { Plus, Save, Edit2, Trash2, Search as SearchIcon } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -10,1392 +21,587 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Save, Edit2, Trash2 } from "lucide-react";
-import Loading from "@/pages/Loading";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { InventoryItemSchema } from "@/lib/schemas";
+import { z } from "zod";
 
-const initialCategories = [
-  "Food",
-  "Drinks",
-  "Cleaning Supplies",
-  "Spices",
-  "Other",
-];
+type Category = { id: string; name: string };
+type Location = { id: string; name: string };
+type Status = "in_stock" | "low" | "out";
 
-const initialLocations = [
-  "Kitchen Shelf",
-  "Fridge",
-  "Freezer",
-  "Pantry",
-  "Other",
-];
-
-type InventoryItem = {
+type Item = {
   id: string;
   name: string;
-  quantity: number;
+  qty: number;
   unit: string;
-  category: string;
-  expirationDate: string;
-  location: string;
-  status: "in_stock" | "low" | "out";
+  categoryId: string | null;
+  locationId: string | null;
+  expires?: string; // ISO date
+  status: Status;
 };
 
-const Inventory = () => {
-  // Dropdown open state for cards
-  const [categoryOpen, setCategoryOpen] = useState(false);
-  const [locationOpen, setLocationOpen] = useState(false);
-  // Category management
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [editCategoryIndex, setEditCategoryIndex] = useState<number | null>(
-    null
+function uid(prefix = "") {
+  return (
+    prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
   );
-  const [categoryInput, setCategoryInput] = useState("");
+}
 
-  // Location management
-  const [showLocationModal, setShowLocationModal] = useState(false);
-  const [editLocationIndex, setEditLocationIndex] = useState<number | null>(
-    null
+export default function InventoryManager() {
+  const { toast } = useToast();
+
+  const [categories, setCategories] = useState<Category[]>([
+    { id: uid("c_"), name: "Produce" },
+    { id: uid("c_"), name: "Dairy" },
+  ]);
+  const [locations, setLocations] = useState<Location[]>([
+    { id: uid("l_"), name: "Fridge" },
+    { id: uid("l_"), name: "Pantry" },
+  ]);
+
+  const [items, setItems] = useState<Item[]>([]);
+
+  const [search, setSearch] = useState("");
+
+  // modals state
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+
+  const [isLocationOpen, setIsLocationOpen] = useState(false);
+  const [editingLocation, setEditingLocation] = useState<Location | null>(null);
+
+  const [isItemOpen, setIsItemOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
+
+  // form states
+  const [catName, setCatName] = useState("");
+  const [locName, setLocName] = useState("");
+
+  const [itemName, setItemName] = useState("");
+  const [itemQty, setItemQty] = useState<number>(1);
+  const [itemUnit, setItemUnit] = useState("pcs");
+  const [itemCategoryId, setItemCategoryId] = useState<string | null>(null);
+  const [itemLocationId, setItemLocationId] = useState<string | null>(null);
+  const [itemExpires, setItemExpires] = useState<string | undefined>(undefined);
+  const [itemStatus, setItemStatus] = useState<Status>("in_stock");
+
+  const filteredItems = useMemo(
+    () =>
+      items.filter((it) =>
+        it.name.toLowerCase().includes(search.toLowerCase())
+      ),
+    [items, search]
   );
-  const [locationInput, setLocationInput] = useState("");
 
   // Category handlers
-  const handleAddCategory = () => {
-    if (!categoryInput.trim()) return;
-    if (predefinedCategories.includes(categoryInput.trim())) return;
-    setPredefinedCategories([...predefinedCategories, categoryInput.trim()]);
-    setCategoryInput("");
-    setShowCategoryModal(false);
-    setEditCategoryIndex(null);
-  };
-  const handleEditCategory = () => {
-    if (editCategoryIndex === null || !categoryInput.trim()) return;
-    const updated = [...predefinedCategories];
-    updated[editCategoryIndex] = categoryInput.trim();
-    setPredefinedCategories(updated);
-    setCategoryInput("");
-    setShowCategoryModal(false);
-    setEditCategoryIndex(null);
-  };
-  const handleDeleteCategory = (idx: number) => {
-    setPredefinedCategories(predefinedCategories.filter((_, i) => i !== idx));
-  };
-  const openEditCategory = (idx: number) => {
-    setEditCategoryIndex(idx);
-    setCategoryInput(predefinedCategories[idx]);
-    setShowCategoryModal(true);
-  };
+  function openAddCategory() {
+    setEditingCategory(null);
+    setCatName("");
+    setIsCategoryOpen(true);
+  }
+  function openEditCategory(c: Category) {
+    setEditingCategory(c);
+    setCatName(c.name);
+    setIsCategoryOpen(true);
+  }
+  function saveCategory() {
+    if (!catName.trim()) return toast({ title: "Name required" });
+    if (editingCategory) {
+      setCategories((cs) =>
+        cs.map((x) =>
+          x.id === editingCategory.id ? { ...x, name: catName.trim() } : x
+        )
+      );
+      toast({ title: "Category updated" });
+    } else {
+      setCategories((cs) => [{ id: uid("c_"), name: catName.trim() }, ...cs]);
+      toast({ title: "Category added" });
+    }
+    setIsCategoryOpen(false);
+  }
+  function deleteCategory(id: string) {
+    setCategories((cs) => cs.filter((c) => c.id !== id));
+    setItems((it) =>
+      it.map((i) => (i.categoryId === id ? { ...i, categoryId: null } : i))
+    );
+  }
 
   // Location handlers
-  const handleAddLocation = () => {
-    if (!locationInput.trim()) return;
-    if (locations.includes(locationInput.trim())) return;
-    setLocations([...locations, locationInput.trim()]);
-    setLocationInput("");
-    setShowLocationModal(false);
-    setEditLocationIndex(null);
-  };
-  const handleEditLocation = () => {
-    if (editLocationIndex === null || !locationInput.trim()) return;
-    const updated = [...locations];
-    updated[editLocationIndex] = locationInput.trim();
-    setLocations(updated);
-    setLocationInput("");
-    setShowLocationModal(false);
-    setEditLocationIndex(null);
-  };
-  const handleDeleteLocation = (idx: number) => {
-    setLocations(locations.filter((_, i) => i !== idx));
-  };
-  const openEditLocation = (idx: number) => {
-    setEditLocationIndex(idx);
-    setLocationInput(locations[idx]);
-    setShowLocationModal(true);
-  };
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [predefinedCategories, setPredefinedCategories] =
-    useState<string[]>(initialCategories);
-  const [locations, setLocations] = useState<string[]>(initialLocations);
-  const [showAddItem, setShowAddItem] = useState(false);
-  const [showEditItem, setShowEditItem] = useState(false);
-  const [editItem, setEditItem] = useState<InventoryItem | null>(null);
-  const [form, setForm] = useState({
-    name: "",
-    quantity: "",
-    unit: "",
-    category: predefinedCategories[0],
-    newCategory: "",
-    expirationDate: "",
-    location: locations[0],
-    newLocation: "",
-    status: "in_stock" as "in_stock" | "low" | "out",
-  });
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const buttonControls = useAnimation();
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setError("");
-  };
-
-  const handleAddItem = async () => {
-    if (!form.name.trim() || !form.quantity.trim()) {
-      setError("Name and quantity are required.");
-      return;
+  function openAddLocation() {
+    setEditingLocation(null);
+    setLocName("");
+    setIsLocationOpen(true);
+  }
+  function openEditLocation(l: Location) {
+    setEditingLocation(l);
+    setLocName(l.name);
+    setIsLocationOpen(true);
+  }
+  function saveLocation() {
+    if (!locName.trim()) return toast({ title: "Name required" });
+    if (editingLocation) {
+      setLocations((ls) =>
+        ls.map((x) =>
+          x.id === editingLocation.id ? { ...x, name: locName.trim() } : x
+        )
+      );
+      toast({ title: "Location updated" });
+    } else {
+      setLocations((ls) => [{ id: uid("l_"), name: locName.trim() }, ...ls]);
+      toast({ title: "Location added" });
     }
-    const quantityNum = parseFloat(form.quantity);
-    if (isNaN(quantityNum)) {
-      setError("Quantity must be a number.");
-      return;
-    }
-    let selectedCategory = form.category;
-    if (form.newCategory.trim() && form.category === "Add New") {
-      if (predefinedCategories.includes(form.newCategory.trim())) {
-        setError("Category already exists.");
+    setIsLocationOpen(false);
+  }
+  function deleteLocation(id: string) {
+    setLocations((ls) => ls.filter((l) => l.id !== id));
+    setItems((it) =>
+      it.map((i) => (i.locationId === id ? { ...i, locationId: null } : i))
+    );
+  }
+
+  // Item handlers
+  function openAddItem() {
+    setEditingItem(null);
+    setItemName("");
+    setItemQty(1);
+    setItemUnit("pcs");
+    setItemCategoryId(categories[0]?.id ?? null);
+    setItemLocationId(locations[0]?.id ?? null);
+    setItemExpires(undefined);
+    setItemStatus("in_stock");
+    setIsItemOpen(true);
+  }
+  function openEditItem(it: Item) {
+    setEditingItem(it);
+    setItemName(it.name);
+    setItemQty(it.qty);
+    setItemUnit(it.unit);
+    setItemCategoryId(it.categoryId);
+    setItemLocationId(it.locationId);
+    setItemExpires(it.expires);
+    setItemStatus(it.status);
+    setIsItemOpen(true);
+  }
+  function saveItem() {
+    if (!itemName.trim()) return toast({ title: "Name required" });
+    // validate with Zod
+    try {
+      InventoryItemSchema.parse({
+        id: editingItem?.id ?? uid("i_"),
+        name: itemName.trim(),
+        quantity: itemQty,
+        unit: itemUnit,
+        // map sentinel to undefined so schema receives true "none"
+        location:
+          itemLocationId === "__none__"
+            ? undefined
+            : (itemLocationId ?? undefined),
+        notes: undefined,
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const msg = err.issues?.[0]?.message || "Validation failed";
+        toast({ title: msg });
         return;
       }
-      selectedCategory = form.newCategory.trim();
-      setPredefinedCategories([...predefinedCategories, selectedCategory]);
+      throw err;
     }
-    let selectedLocation = form.location;
-    if (form.newLocation.trim() && form.location === "Add New") {
-      if (locations.includes(form.newLocation.trim())) {
-        setError("Location already exists.");
-        return;
-      }
-      selectedLocation = form.newLocation.trim();
-      setLocations([...locations, selectedLocation]);
+    if (editingItem) {
+      setItems((is) =>
+        is.map((i) =>
+          i.id === editingItem.id
+            ? {
+                ...i,
+                name: itemName.trim(),
+                qty: itemQty,
+                unit: itemUnit,
+                categoryId: itemCategoryId,
+                locationId: itemLocationId,
+                expires: itemExpires,
+                status: itemStatus,
+              }
+            : i
+        )
+      );
+      toast({ title: "Item updated" });
+    } else {
+      setItems((is) => [
+        {
+          id: uid("i_"),
+          name: itemName.trim(),
+          qty: itemQty,
+          unit: itemUnit,
+          categoryId: itemCategoryId,
+          locationId: itemLocationId,
+          expires: itemExpires,
+          status: itemStatus,
+        },
+        ...is,
+      ]);
+      toast({ title: "Item added" });
     }
-    setIsLoading(true);
-    await buttonControls.start({
-      scale: [1, 1.1, 1],
-      transition: { duration: 0.3 },
-    });
-    const newItem: InventoryItem = {
-      id: Date.now().toString(),
-      name: form.name.trim(),
-      quantity: quantityNum,
-      unit: form.unit.trim(),
-      category: selectedCategory,
-      expirationDate: form.expirationDate,
-      location: selectedLocation,
-      status: form.status,
-    };
-    if (newItem.quantity === 0) {
-      newItem.status = "out";
-    }
-    setItems([...items, newItem]);
-    // Automatic transfer to shopping list if low or out
-    if (newItem.status === "low" || newItem.status === "out") {
-      transferToShopping(newItem);
-    }
-    setForm({
-      name: "",
-      quantity: "",
-      unit: "",
-      category: predefinedCategories[0],
-      newCategory: "",
-      expirationDate: "",
-      location: locations[0],
-      newLocation: "",
-      status: "in_stock",
-    });
-    setShowAddItem(false);
-    setError("");
-    setIsLoading(false);
-  };
+    setIsItemOpen(false);
+  }
+  function deleteItem(id: string) {
+    setItems((is) => is.filter((i) => i.id !== id));
+  }
 
-  const handleEditItem = async () => {
-    if (!editItem || !form.name.trim() || !form.quantity.trim()) {
-      setError("Name and quantity are required.");
-      return;
-    }
-    const quantityNum = parseFloat(form.quantity);
-    if (isNaN(quantityNum)) {
-      setError("Quantity must be a number.");
-      return;
-    }
-    let selectedCategory = form.category;
-    if (form.newCategory.trim() && form.category === "Add New") {
-      if (predefinedCategories.includes(form.newCategory.trim())) {
-        setError("Category already exists.");
-        return;
-      }
-      selectedCategory = form.newCategory.trim();
-      setPredefinedCategories([...predefinedCategories, selectedCategory]);
-    }
-    let selectedLocation = form.location;
-    if (form.newLocation.trim() && form.location === "Add New") {
-      if (locations.includes(form.newLocation.trim())) {
-        setError("Location already exists.");
-        return;
-      }
-      selectedLocation = form.newLocation.trim();
-      setLocations([...locations, selectedLocation]);
-    }
-    setIsLoading(true);
-    await buttonControls.start({
-      scale: [1, 1.1, 1],
-      transition: { duration: 0.3 },
-    });
-    const updatedItem = {
-      ...editItem,
-      name: form.name.trim(),
-      quantity: quantityNum,
-      unit: form.unit.trim(),
-      category: selectedCategory,
-      expirationDate: form.expirationDate,
-      location: selectedLocation,
-      status: form.status,
-    };
-    if (updatedItem.quantity === 0) {
-      updatedItem.status = "out";
-    }
-    setItems(
-      items.map((item) => (item.id === editItem.id ? updatedItem : item))
-    );
-    // Automatic transfer to shopping list if low or out
-    if (updatedItem.status === "low" || updatedItem.status === "out") {
-      transferToShopping(updatedItem);
-    }
-    setForm({
-      name: "",
-      quantity: "",
-      unit: "",
-      category: predefinedCategories[0],
-      newCategory: "",
-      expirationDate: "",
-      location: locations[0],
-      newLocation: "",
-      status: "in_stock",
-    });
-    setEditItem(null);
-    setShowEditItem(false);
-    setError("");
-    setIsLoading(false);
-  };
-
-  const handleOpenEditItem = (item: InventoryItem) => {
-    setEditItem(item);
-    setForm({
-      name: item.name,
-      quantity: item.quantity.toString(),
-      unit: item.unit,
-      category: item.category,
-      newCategory: "",
-      expirationDate: item.expirationDate,
-      location: item.location,
-      newLocation: "",
-      status: item.status,
-    });
-    setShowEditItem(true);
-  };
-
-  const handleDeleteItem = (itemId: string) => {
-    setItems(items.filter((item) => item.id !== itemId));
-  };
-
-  const handleStatusChange = (
-    itemId: string,
-    newStatus: "in_stock" | "low" | "out"
-  ) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === itemId ? { ...item, status: newStatus } : item
-      )
-    );
-    const updatedItem = items.find((item) => item.id === itemId);
-    if (updatedItem && (newStatus === "low" || newStatus === "out")) {
-      transferToShopping(updatedItem);
-    }
-  };
-
-  const transferToShopping = (item: InventoryItem) => {
-    // Placeholder for transferring to shopping list
-    console.log(
-      `Added to shopping list: ${item.name} - Quantity: ${item.quantity} ${item.unit}`
-    );
-    // In a real app, this would update the shopping list state or API
-  };
-
-  const getFilteredItems = () => {
-    const search = searchQuery.toLowerCase();
-    return items.filter(
-      (item) =>
-        item.name.toLowerCase().includes(search) ||
-        item.category.toLowerCase().includes(search) ||
-        item.location.toLowerCase().includes(search)
-    );
-  };
-
-  const getGroupedItems = () => {
-    const filtered = getFilteredItems();
-    const grouped = filtered.reduce((acc, item) => {
-      if (!acc[item.category]) {
-        acc[item.category] = [];
-      }
-      acc[item.category].push(item);
-      return acc;
-    }, {} as { [key: string]: InventoryItem[] });
-    return grouped;
-  };
-
-  const isExpirationSoon = (date: string) => {
-    if (!date) return false;
-    const expDate = new Date(date);
-    const today = new Date();
-    const diffDays = Math.ceil(
-      (expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    return diffDays <= 7;
-  };
-
-  const inputVariants = {
-    focus: {
-      scale: 1.02,
-      boxShadow: "0 0 10px rgba(37, 99, 235, 0.5)",
-      transition: { duration: 0.2 },
-    },
-    blur: {
-      scale: 1,
-      boxShadow: "none",
-      transition: { duration: 0.2 },
-    },
-  };
-
-  const errorVariants = {
-    hidden: { opacity: 0, y: -10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-  };
-
-  const modalVariants = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
-  };
+  function statusBadge(s: Status) {
+    if (s === "in_stock")
+      return <Badge className="bg-green-600/10 text-green-600">In stock</Badge>;
+    if (s === "low")
+      return <Badge className="bg-amber-600/10 text-amber-600">Low</Badge>;
+    return <Badge className="bg-rose-600/10 text-rose-600">Out</Badge>;
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden font-sans">
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="w-full max-w-4xl relative z-10"
-      >
-        <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden mb-8">
-          <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-          <CardContent className="p-10 relative z-10">
-            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-              Inventory
-            </CardTitle>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-              className="mb-6"
-            >
-              <Button
-                type="button"
-                disabled={isLoading}
-                onClick={() => setShowAddItem(true)}
-                className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
-                  isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                  <Plus className="w-5 h-5" />
-                  Add Item
-                </span>
-                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-              </Button>
-            </motion.div>
+    <div className="p-4 sm:p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold">Inventory</h2>
+            <p className="text-sm text-muted-foreground">
+              Manage categories, locations and stock items.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
             <Input
               placeholder="Search items..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="mb-6 bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
+              value={search}
+              onChange={(e: any) => setSearch(e.target.value)}
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-              {/* Category Card with Arrow Toggle */}
-              <Card className="bg-gray-800/30 border border-blue-600/40 shadow-inner rounded-xl">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <CardTitle className="text-2xl font-bold text-blue-400">
-                      Categories
-                    </CardTitle>
-                    <button
-                      type="button"
-                      className="text-blue-400 focus:outline-none"
-                      onClick={() => setCategoryOpen((open) => !open)}
-                      aria-label={
-                        categoryOpen ? "Hide categories" : "Show categories"
-                      }
-                    >
-                      {categoryOpen ? (
-                        <svg
-                          width="24"
-                          height="24"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            d="M8 14l4-4 4 4"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          width="24"
-                          height="24"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            d="M8 10l4 4 4-4"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                  {categoryOpen && (
-                    <>
-                      <div className="space-y-2">
-                        {predefinedCategories.map((cat, idx) => (
-                          <div
-                            key={cat}
-                            className="flex items-center justify-between bg-gray-900/30 rounded-lg px-4 py-2"
-                          >
-                            <span className="text-white font-medium">
-                              {cat}
-                            </span>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                onClick={() => openEditCategory(idx)}
-                                className="bg-blue-600 text-white p-1 rounded-xl"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => handleDeleteCategory(idx)}
-                                className="bg-red-500 text-white p-1 rounded-xl"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <Button
-                        onClick={() => {
-                          setShowCategoryModal(true);
-                          setEditCategoryIndex(null);
-                          setCategoryInput("");
-                        }}
-                        className="mt-4 w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-2 rounded-xl"
-                      >
-                        + Add Category
-                      </Button>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-              {/* Location Card with Arrow Toggle */}
-              <Card className="bg-gray-800/30 border border-blue-600/40 shadow-inner rounded-xl">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <CardTitle className="text-2xl font-bold text-blue-400">
-                      Locations
-                    </CardTitle>
-                    <button
-                      type="button"
-                      className="text-blue-400 focus:outline-none"
-                      onClick={() => setLocationOpen((open) => !open)}
-                      aria-label={
-                        locationOpen ? "Hide locations" : "Show locations"
-                      }
-                    >
-                      {locationOpen ? (
-                        <svg
-                          width="24"
-                          height="24"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            d="M8 14l4-4 4 4"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          width="24"
-                          height="24"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            d="M8 10l4 4 4-4"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                  {locationOpen && (
-                    <>
-                      <div className="space-y-2">
-                        {locations.map((loc, idx) => (
-                          <div
-                            key={loc}
-                            className="flex items-center justify-between bg-gray-900/30 rounded-lg px-4 py-2"
-                          >
-                            <span className="text-white font-medium">
-                              {loc}
-                            </span>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                onClick={() => openEditLocation(idx)}
-                                className="bg-blue-600 text-white p-1 rounded-xl"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => handleDeleteLocation(idx)}
-                                className="bg-red-500 text-white p-1 rounded-xl"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <Button
-                        onClick={() => {
-                          setShowLocationModal(true);
-                          setEditLocationIndex(null);
-                          setLocationInput("");
-                        }}
-                        className="mt-4 w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-2 rounded-xl"
-                      >
-                        + Add Location
-                      </Button>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+            <Button onClick={openAddItem} className="flex items-center gap-2">
+              <Plus /> Add Item
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold">Categories</h3>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={openAddCategory}>
+                  <Plus />
+                </Button>
+              </div>
             </div>
-            {/* ...existing code for inventory items... */}
-            <div className="space-y-8">
-              {Object.keys(getGroupedItems()).map((category) => (
-                <div key={category}>
-                  <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 mb-4">
-                    {category}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {getGroupedItems()[category].map((item) => (
-                      // ...existing code for inventory item card...
-                      <motion.div
-                        key={item.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.3 }}
-                        className="bg-gray-800/30 p-4 rounded-xl border border-blue-600/40 shadow-inner"
-                      >
-                        {/* ...existing code for inventory item details and actions... */}
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="font-bold text-lg text-white">
-                            {item.name}
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              type="button"
-                              onClick={() => handleOpenEditItem(item)}
-                              className="bg-blue-600 text-white p-1 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                            >
-                              <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                                <Edit2 className="w-4 h-4" />
-                              </span>
-                              <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                            </Button>
-                            <Button
-                              type="button"
-                              onClick={() => handleDeleteItem(item.id)}
-                              className="bg-red-500 text-white p-1 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                            >
-                              <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                                <Trash2 className="w-4 h-4" />
-                              </span>
-                              <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="text-sm text-gray-300 mb-2">
-                          Quantity: {item.quantity} {item.unit}
-                          {item.quantity === 0 && (
-                            <span className="text-red-500 ml-2">(Out)</span>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-300 mb-2">
-                          Expiration: {item.expirationDate || "N/A"}
-                          {isExpirationSoon(item.expirationDate) && (
-                            <span className="text-red-500 ml-2">
-                              (Expiring soon)
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-300 mb-2">
-                          Location: {item.location}
-                        </div>
-                        <div className="flex gap-2 mt-2">
-                          <Button
-                            type="button"
-                            onClick={() =>
-                              handleStatusChange(item.id, "in_stock")
-                            }
-                            className={`flex-1 ${
-                              item.status === "in_stock"
-                                ? "bg-green-500"
-                                : "bg-gray-800/30"
-                            } text-white py-1 rounded-xl`}
-                          >
-                            ✅ In Stock
-                          </Button>
-                          <Button
-                            type="button"
-                            onClick={() => handleStatusChange(item.id, "low")}
-                            className={`flex-1 ${
-                              item.status === "low"
-                                ? "bg-yellow-500"
-                                : "bg-gray-800/30"
-                            } text-white py-1 rounded-xl`}
-                          >
-                            ⚠️ Low
-                          </Button>
-                          <Button
-                            type="button"
-                            onClick={() => handleStatusChange(item.id, "out")}
-                            className={`flex-1 ${
-                              item.status === "out"
-                                ? "bg-red-500"
-                                : "bg-gray-800/30"
-                            } text-white py-1 rounded-xl`}
-                          >
-                            ❌ Out
-                          </Button>
-                        </div>
-                      </motion.div>
-                    ))}
+            <div className="space-y-2">
+              {categories.map((c) => (
+                <motion.div
+                  key={c.id}
+                  layout
+                  className="flex items-center justify-between"
+                >
+                  <div>{c.name}</div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => openEditCategory(c)}
+                    >
+                      <Edit2 />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        if (confirm("Delete category?")) deleteCategory(c.id);
+                      }}
+                    >
+                      <Trash2 />
+                    </Button>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
-            {/* Category Modal */}
-            {showCategoryModal && (
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={modalVariants}
-                className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-                onClick={() => setShowCategoryModal(false)}
-              >
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold">Locations</h3>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={openAddLocation}>
+                  <Plus />
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {locations.map((l) => (
                 <motion.div
-                  className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
-                  onClick={(e) => e.stopPropagation()}
+                  key={l.id}
+                  layout
+                  className="flex items-center justify-between"
                 >
-                  <CardContent className="p-10 relative z-10">
-                    <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow animate-gradient-x">
-                      {editCategoryIndex !== null
-                        ? "Edit Category"
-                        : "Add Category"}
-                    </CardTitle>
-                    <Input
-                      type="text"
-                      value={categoryInput}
-                      onChange={(e) => setCategoryInput(e.target.value)}
-                      placeholder="Category name"
-                      className="mb-6 bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner"
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        onClick={
-                          editCategoryIndex !== null
-                            ? handleEditCategory
-                            : handleAddCategory
-                        }
-                        className="flex-1 bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl"
-                      >
-                        {editCategoryIndex !== null ? "Save" : "Add"}
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          setShowCategoryModal(false);
-                          setCategoryInput("");
-                          setEditCategoryIndex(null);
-                        }}
-                        className="flex-1 bg-gray-800/30 text-white font-bold py-3 rounded-xl"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </CardContent>
-                </motion.div>
-              </motion.div>
-            )}
-
-            {/* Location Modal */}
-            {showLocationModal && (
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={modalVariants}
-                className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-                onClick={() => setShowLocationModal(false)}
-              >
-                <motion.div
-                  className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <CardContent className="p-10 relative z-10">
-                    <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow animate-gradient-x">
-                      {editLocationIndex !== null
-                        ? "Edit Location"
-                        : "Add Location"}
-                    </CardTitle>
-                    <Input
-                      type="text"
-                      value={locationInput}
-                      onChange={(e) => setLocationInput(e.target.value)}
-                      placeholder="Location name"
-                      className="mb-6 bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner"
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        onClick={
-                          editLocationIndex !== null
-                            ? handleEditLocation
-                            : handleAddLocation
-                        }
-                        className="flex-1 bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl"
-                      >
-                        {editLocationIndex !== null ? "Save" : "Add"}
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          setShowLocationModal(false);
-                          setLocationInput("");
-                          setEditLocationIndex(null);
-                        }}
-                        className="flex-1 bg-gray-800/30 text-white font-bold py-3 rounded-xl"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </CardContent>
-                </motion.div>
-              </motion.div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Add Item Modal */}
-      {showAddItem && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={modalVariants}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-          onClick={() => setShowAddItem(false)}
-        >
-          <motion.div
-            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-            <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                Add Inventory Item
-              </CardTitle>
-              <motion.form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleAddItem();
-                }}
-                className="space-y-6"
-              >
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="name"
-                    animate={
-                      form.name ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Name
-                  </motion.label>
-                  <motion.input
-                    id="name"
-                    type="text"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    placeholder="Item name"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="quantity"
-                      animate={
-                        form.quantity
-                          ? { y: -25, scale: 0.9 }
-                          : { y: 0, scale: 1 }
-                      }
+                  <div>{l.name}</div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => openEditLocation(l)}
                     >
-                      Quantity
-                    </motion.label>
-                    <motion.input
-                      id="quantity"
-                      type="text"
-                      name="quantity"
-                      value={form.quantity}
-                      onChange={handleChange}
-                      placeholder="Quantity"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="unit"
-                      animate={
-                        form.unit ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                      }
+                      <Edit2 />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        if (confirm("Delete location?")) deleteLocation(l.id);
+                      }}
                     >
-                      Unit
-                    </motion.label>
-                    <motion.input
-                      id="unit"
-                      type="text"
-                      name="unit"
-                      value={form.unit}
-                      onChange={handleChange}
-                      placeholder="Unit (kg, pcs, etc.)"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
+                      <Trash2 />
+                    </Button>
                   </div>
-                </div>
-                {/* Category Select */}
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="category"
-                    animate={
-                      form.category
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Category
-                  </motion.label>
-                  <Select
-                    value={form.category}
-                    onValueChange={(value) =>
-                      setForm({ ...form, category: value, newCategory: "" })
-                    }
-                  >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent className="dropdown fade-in-down">
-                      {predefinedCategories.map((cat) => (
-                        <SelectItem
-                          key={cat}
-                          value={cat}
-                          className="dropdown-item"
-                        >
-                          {cat}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="Add New" className="dropdown-item">
-                        Add New
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {form.category === "Add New" && (
-                    <motion.input
-                      id="newCategory"
-                      type="text"
-                      name="newCategory"
-                      value={form.newCategory}
-                      onChange={handleChange}
-                      placeholder="New category name"
-                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  )}
-                </div>
-
-                {/* Location Select */}
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="location"
-                    animate={
-                      form.location
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Location
-                  </motion.label>
-                  <Select
-                    value={form.location}
-                    onValueChange={(value) =>
-                      setForm({ ...form, location: value, newLocation: "" })
-                    }
-                  >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                      <SelectValue placeholder="Select location" />
-                    </SelectTrigger>
-                    <SelectContent className="dropdown fade-in-down">
-                      {locations.map((loc) => (
-                        <SelectItem
-                          key={loc}
-                          value={loc}
-                          className="dropdown-item"
-                        >
-                          {loc}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="Add New" className="dropdown-item">
-                        Add New
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {form.location === "Add New" && (
-                    <motion.input
-                      id="newLocation"
-                      type="text"
-                      name="newLocation"
-                      value={form.newLocation}
-                      onChange={handleChange}
-                      placeholder="New location name"
-                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  )}
-                </div>
-
-                {/* Status Select */}
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="status"
-                    animate={
-                      form.status ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Status
-                  </motion.label>
-                  <Select
-                    value={form.status}
-                    onValueChange={(value) =>
-                      setForm({
-                        ...form,
-                        status: value as "in_stock" | "low" | "out",
-                      })
-                    }
-                  >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent className="dropdown fade-in-down">
-                      <SelectItem value="in_stock" className="dropdown-item">
-                        ✅ In Stock
-                      </SelectItem>
-                      <SelectItem value="low" className="dropdown-item">
-                        ⚠️ Low
-                      </SelectItem>
-                      <SelectItem value="out" className="dropdown-item">
-                        ❌ Out
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {error && (
-                  <motion.p
-                    id="form-error"
-                    aria-live="assertive"
-                    className="text-red-400 mb-6 text-center font-medium drop-shadow animate-pulse"
-                    variants={errorVariants}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    {error}
-                  </motion.p>
-                )}
-                <motion.div animate={buttonControls}>
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
-                      isLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {isLoading ? (
-                      <Loading />
-                    ) : (
-                      <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                        <Plus className="w-5 h-5" />
-                        Add Item
-                      </span>
-                    )}
-                    <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                  </Button>
                 </motion.div>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="p-4 lg:col-span-2">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold">Items</h3>
+              <div className="text-sm text-muted-foreground">
+                {filteredItems.length} results
+              </div>
+            </div>
+            <div className="overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Qty</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Expires</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredItems.map((it) => (
+                    <TableRow key={it.id}>
+                      <TableCell>{it.name}</TableCell>
+                      <TableCell>
+                        {it.qty} {it.unit}
+                      </TableCell>
+                      <TableCell>
+                        {categories.find((c) => c.id === it.categoryId)?.name ??
+                          "-"}
+                      </TableCell>
+                      <TableCell>
+                        {locations.find((l) => l.id === it.locationId)?.name ??
+                          "-"}
+                      </TableCell>
+                      <TableCell>{it.expires ?? "-"}</TableCell>
+                      <TableCell>{statusBadge(it.status)}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openEditItem(it)}
+                          >
+                            <Edit2 />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              if (confirm("Delete item?")) deleteItem(it.id);
+                            }}
+                          >
+                            <Trash2 />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </Card>
+        </div>
+
+        {/* Category Modal */}
+        <Dialog open={isCategoryOpen} onOpenChange={setIsCategoryOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {editingCategory ? "Edit Category" : "Add Category"}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Label>Name</Label>
+              <Input
+                value={catName}
+                onChange={(e: any) => setCatName(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
                 <Button
-                  type="button"
-                  disabled={isLoading}
-                  onClick={() => setShowAddItem(false)}
-                  className={`w-full bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 ${
-                    isLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  variant="outline"
+                  onClick={() => setIsCategoryOpen(false)}
                 >
                   Cancel
                 </Button>
-              </motion.form>
-            </CardContent>
-          </motion.div>
-        </motion.div>
-      )}
+                <Button onClick={saveCategory}>
+                  <Save /> Save
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-      {/* Edit Item Modal */}
-      {showEditItem && editItem && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={modalVariants}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-          onClick={() => setShowEditItem(false)}
-        >
-          <motion.div
-            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-            <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                Edit Inventory Item
-              </CardTitle>
-              <motion.form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleEditItem();
-                }}
-                className="space-y-6"
-              >
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="name"
-                    animate={
-                      form.name ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Name
-                  </motion.label>
-                  <motion.input
-                    id="name"
-                    type="text"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    placeholder="Item name"
-                    className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="quantity"
-                      animate={
-                        form.quantity
-                          ? { y: -25, scale: 0.9 }
-                          : { y: 0, scale: 1 }
-                      }
-                    >
-                      Quantity
-                    </motion.label>
-                    <motion.input
-                      id="quantity"
-                      type="text"
-                      name="quantity"
-                      value={form.quantity}
-                      onChange={handleChange}
-                      placeholder="Quantity"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="unit"
-                      animate={
-                        form.unit ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                      }
-                    >
-                      Unit
-                    </motion.label>
-                    <motion.input
-                      id="unit"
-                      type="text"
-                      name="unit"
-                      value={form.unit}
-                      onChange={handleChange}
-                      placeholder="Unit (kg, pcs, etc.)"
-                      className="w-full px-4 py-3 rounded-xl bg-gray-800/30 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300 placeholder-gray-400/50"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-                </div>
-                {/* Category Select */}
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="category"
-                    animate={
-                      form.category
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Category
-                  </motion.label>
-                  <Select
-                    value={form.category}
-                    onValueChange={(value) =>
-                      setForm({ ...form, category: value, newCategory: "" })
-                    }
-                  >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent className="dropdown fade-in-down">
-                      {predefinedCategories.map((cat) => (
-                        <SelectItem
-                          key={cat}
-                          value={cat}
-                          className="dropdown-item"
-                        >
-                          {cat}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="Add New" className="dropdown-item">
-                        Add New
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {form.category === "Add New" && (
-                    <motion.input
-                      id="newCategory"
-                      type="text"
-                      name="newCategory"
-                      value={form.newCategory}
-                      onChange={handleChange}
-                      placeholder="New category name"
-                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  )}
-                </div>
-
-                {/* Location Select */}
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="location"
-                    animate={
-                      form.location
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Location
-                  </motion.label>
-                  <Select
-                    value={form.location}
-                    onValueChange={(value) =>
-                      setForm({ ...form, location: value, newLocation: "" })
-                    }
-                  >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                      <SelectValue placeholder="Select location" />
-                    </SelectTrigger>
-                    <SelectContent className="dropdown fade-in-down">
-                      {locations.map((loc) => (
-                        <SelectItem
-                          key={loc}
-                          value={loc}
-                          className="dropdown-item"
-                        >
-                          {loc}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="Add New" className="dropdown-item">
-                        Add New
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {form.location === "Add New" && (
-                    <motion.input
-                      id="newLocation"
-                      type="text"
-                      name="newLocation"
-                      value={form.newLocation}
-                      onChange={handleChange}
-                      placeholder="New location name"
-                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  )}
-                </div>
-
-                {/* Status Select */}
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="status"
-                    animate={
-                      form.status ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Status
-                  </motion.label>
-                  <Select
-                    value={form.status}
-                    onValueChange={(value) =>
-                      setForm({
-                        ...form,
-                        status: value as "in_stock" | "low" | "out",
-                      })
-                    }
-                  >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent className="dropdown fade-in-down">
-                      <SelectItem value="in_stock" className="dropdown-item">
-                        ✅ In Stock
-                      </SelectItem>
-                      <SelectItem value="low" className="dropdown-item">
-                        ⚠️ Low
-                      </SelectItem>
-                      <SelectItem value="out" className="dropdown-item">
-                        ❌ Out
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {error && (
-                  <motion.p
-                    id="form-error"
-                    aria-live="assertive"
-                    className="text-red-400 mb-6 text-center font-medium drop-shadow animate-pulse"
-                    variants={errorVariants}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    {error}
-                  </motion.p>
-                )}
-                <motion.div animate={buttonControls}>
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
-                      isLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {isLoading ? (
-                      <Loading />
-                    ) : (
-                      <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                        <Save className="w-5 h-5" />
-                        Save Changes
-                      </span>
-                    )}
-                    <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                  </Button>
-                </motion.div>
+        {/* Location Modal */}
+        <Dialog open={isLocationOpen} onOpenChange={setIsLocationOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {editingLocation ? "Edit Location" : "Add Location"}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Label>Name</Label>
+              <Input
+                value={locName}
+                onChange={(e: any) => setLocName(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
                 <Button
-                  type="button"
-                  disabled={isLoading}
-                  onClick={() => setShowEditItem(false)}
-                  className={`w-full bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 ${
-                    isLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  variant="outline"
+                  onClick={() => setIsLocationOpen(false)}
                 >
                   Cancel
                 </Button>
-              </motion.form>
-            </CardContent>
-          </motion.div>
-        </motion.div>
-      )}
+                <Button onClick={saveLocation}>
+                  <Save /> Save
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Item Modal */}
+        <Dialog open={isItemOpen} onOpenChange={setIsItemOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {editingItem ? "Edit Item" : "Add Item"}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label>Name</Label>
+                  <Input
+                    value={itemName}
+                    onChange={(e: any) => setItemName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label>Qty</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      value={itemQty}
+                      onChange={(e: any) => setItemQty(Number(e.target.value))}
+                    />
+                    <Input
+                      value={itemUnit}
+                      onChange={(e: any) => setItemUnit(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <Label>Category</Label>
+                  <Select
+                    onValueChange={(v) =>
+                      setItemCategoryId(v === "__none__" ? null : v)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">-- none --</SelectItem>
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Location</Label>
+                  <Select
+                    onValueChange={(v) =>
+                      setItemLocationId(v === "__none__" ? null : v)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">-- none --</SelectItem>
+                      {locations.map((l) => (
+                        <SelectItem key={l.id} value={l.id}>
+                          {l.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Expires</Label>
+                  <Input
+                    type="date"
+                    value={itemExpires ?? ""}
+                    onChange={(e: any) =>
+                      setItemExpires(e.target.value || undefined)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label>Status</Label>
+                  <Select onValueChange={(v) => setItemStatus(v as Status)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="in_stock">In stock</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="out">Out</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setIsItemOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={saveItem}>
+                  <Save /> Save
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
-};
-
-export default Inventory;
+}

@@ -1,9 +1,25 @@
-import React, { useState } from "react";
-import { motion, useAnimation } from "framer-motion";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+"use client";
+
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  LayoutGrid,
+  List,
+  Search,
+  X,
+  Heart,
+  MapPin,
+  DollarSign,
+  LinkIcon,
+  Calendar,
+  StickyNote,
+  ShoppingBag,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -11,656 +27,598 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import {
-  Plus,
-  Save,
-  Edit2,
-  Trash2,
-  ShoppingBag,
-  Filter,
-  Grid,
-  List,
-  Star,
-  Calendar,
-  DollarSign,
-  Link,
-  Image,
-  Heart,
-} from "lucide-react";
-import { Toast } from "@/components/ui/toast";
-import Loading from "@/pages/Loading";
+import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
-const initialCategories = [
-  "Electronics",
-  "Kitchen",
-  "Clothing",
-  "Books",
-  "Home",
-  "Sports",
-  "Travel",
-  "Other",
-];
-
-const priorities = [
-  { value: "low", label: "Low", color: "bg-green-500" },
-  { value: "medium", label: "Medium", color: "bg-yellow-500" },
-  { value: "high", label: "High", color: "bg-red-500" },
-];
-
-type WishlistItem = {
+interface WishlistItem {
   id: string;
   name: string;
   category: string;
   priority: "low" | "medium" | "high";
   estimatedPrice: number;
-  link?: string;
-  store?: string;
-  image?: string;
+  store: string;
+  reminderDate: string;
+  link: string;
+  imageUrl: string;
   note: string;
-  dateAdded: string;
   purchased: boolean;
-  purchaseDate?: string;
-  actualPrice?: number;
-  reminderDate?: string;
+}
+
+const categoryOptions = [
+  "Electronics",
+  "Fashion",
+  "Home",
+  "Books",
+  "Sports",
+  "Beauty",
+  "Gaming",
+  "Music",
+  "Other",
+];
+
+const priorityColors = {
+  low: "bg-blue-500/20 text-blue-600 border-blue-200",
+  medium: "bg-amber-500/20 text-amber-600 border-amber-200",
+  high: "bg-red-500/20 text-red-600 border-red-200",
 };
 
-const Wishlist = () => {
+const priorityBgColors = {
+  low: "bg-blue-50",
+  medium: "bg-amber-50",
+  high: "bg-red-50",
+};
+
+export function WishlistManager() {
   const [items, setItems] = useState<WishlistItem[]>([]);
-  const [categories, setCategories] = useState<string[]>(initialCategories);
-  const [showAddItem, setShowAddItem] = useState(false);
-  const [showEditItem, setShowEditItem] = useState(false);
-  const [editItem, setEditItem] = useState<WishlistItem | null>(null);
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [viewMode, setViewMode] = useState<"card" | "list">("card");
-  const [filterCategory, setFilterCategory] = useState<string>("All");
-  const [filterPriority, setFilterPriority] = useState<string>("All");
-  const [filterPurchased, setFilterPurchased] = useState<string>("All");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
-  const [form, setForm] = useState({
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("Electronics");
+  const [priorityFilter, setPriorityFilter] = useState("medium");
+  const [purchasedFilter, setPurchasedFilter] = useState("all");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [quickAddValue, setQuickAddValue] = useState("");
+  const { toast } = useToast();
+
+  const [formData, setFormData] = useState({
     name: "",
-    category: categories[0],
-    priority: "medium" as "low" | "medium" | "high",
-    estimatedPrice: "",
-    link: "",
+    category: "Electronics",
+    priority: "medium" as const,
+    estimatedPrice: 0,
     store: "",
-    image: "",
-    note: "",
     reminderDate: "",
+    link: "",
+    imageUrl: "",
+    note: "",
   });
-  const [quickAddName, setQuickAddName] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const buttonControls = useAnimation();
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setError("");
-  };
-
-  const handleAddItem = async () => {
-    if (!form.name.trim()) {
-      setError("Item name is required.");
+  const handleAddItem = () => {
+    if (!formData.name.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter an item name",
+        variant: "destructive",
+      });
       return;
     }
-    setIsLoading(true);
-    await buttonControls.start({
-      scale: [1, 1.1, 1],
-      transition: { duration: 0.3 },
-    });
 
     const newItem: WishlistItem = {
-      id: Date.now().toString(),
-      name: form.name.trim(),
-      category: form.category,
-      priority: form.priority,
-      estimatedPrice: parseFloat(form.estimatedPrice) || 0,
-      link: form.link.trim(),
-      store: form.store.trim(),
-      image: form.image.trim(),
-      note: form.note.trim(),
-      dateAdded: new Date().toISOString().split("T")[0],
+      id: editingId || Date.now().toString(),
+      ...formData,
       purchased: false,
-      reminderDate: form.reminderDate || undefined,
     };
 
-    setItems((prev) => [newItem, ...prev]);
-    setForm({
+    if (editingId) {
+      setItems(items.map((item) => (item.id === editingId ? newItem : item)));
+      toast({
+        title: "Success",
+        description: "Item updated successfully",
+      });
+      setEditingId(null);
+    } else {
+      setItems([...items, newItem]);
+      toast({
+        title: "Success",
+        description: "Item added to your wishlist",
+      });
+    }
+
+    setFormData({
       name: "",
-      category: categories[0],
+      category: "Electronics",
       priority: "medium",
-      estimatedPrice: "",
-      link: "",
+      estimatedPrice: 0,
       store: "",
-      image: "",
-      note: "",
       reminderDate: "",
+      link: "",
+      imageUrl: "",
+      note: "",
     });
-    setShowAddItem(false);
-    setError("");
-    setIsLoading(false);
-    setToastMessage("Item added to wishlist!");
-    setShowToast(true);
+    setShowAddForm(false);
   };
 
-  const handleQuickAdd = async () => {
-    if (!quickAddName.trim()) return;
+  const handleQuickAdd = () => {
+    if (!quickAddValue.trim()) return;
 
     const newItem: WishlistItem = {
       id: Date.now().toString(),
-      name: quickAddName.trim(),
+      name: quickAddValue,
       category: "Other",
       priority: "medium",
       estimatedPrice: 0,
+      store: "",
+      reminderDate: "",
+      link: "",
+      imageUrl: "",
       note: "",
-      dateAdded: new Date().toISOString().split("T")[0],
       purchased: false,
     };
 
-    setItems((prev) => [newItem, ...prev]);
-    setQuickAddName("");
-    setShowQuickAdd(false);
-    setToastMessage("Item quickly added!");
-    setShowToast(true);
+    setItems([...items, newItem]);
+    setQuickAddValue("");
+    toast({
+      title: "Success",
+      description: "Item added quickly to your wishlist",
+    });
   };
 
-  const handleEditItem = async () => {
-    if (!editItem || !form.name.trim()) {
-      setError("Item name is required.");
-      return;
-    }
-    setIsLoading(true);
-    await buttonControls.start({
-      scale: [1, 1.1, 1],
-      transition: { duration: 0.3 },
+  const handleDeleteItem = (id: string) => {
+    setItems(items.filter((item) => item.id !== id));
+    toast({
+      title: "Deleted",
+      description: "Item removed from your wishlist",
     });
+  };
 
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === editItem.id
-          ? {
-              ...item,
-              name: form.name.trim(),
-              category: form.category,
-              priority: form.priority,
-              estimatedPrice: parseFloat(form.estimatedPrice) || 0,
-              link: form.link.trim(),
-              store: form.store.trim(),
-              image: form.image.trim(),
-              note: form.note.trim(),
-              reminderDate: form.reminderDate || undefined,
-            }
-          : item
+  const handleTogglePurchased = (id: string) => {
+    setItems(
+      items.map((item) =>
+        item.id === id ? { ...item, purchased: !item.purchased } : item
       )
     );
-
-    setForm({
-      name: "",
-      category: categories[0],
-      priority: "medium",
-      estimatedPrice: "",
-      link: "",
-      store: "",
-      image: "",
-      note: "",
-      reminderDate: "",
-    });
-    setEditItem(null);
-    setShowEditItem(false);
-    setError("");
-    setIsLoading(false);
-    setToastMessage("Item updated!");
-    setShowToast(true);
   };
 
-  const handleOpenEditItem = (item: WishlistItem) => {
-    setEditItem(item);
-    setForm({
+  const handleEditItem = (item: WishlistItem) => {
+    setFormData({
       name: item.name,
       category: item.category,
       priority: item.priority,
-      estimatedPrice: item.estimatedPrice.toString(),
-      link: item.link || "",
-      store: item.store || "",
-      image: item.image || "",
+      estimatedPrice: item.estimatedPrice,
+      store: item.store,
+      reminderDate: item.reminderDate,
+      link: item.link,
+      imageUrl: item.imageUrl,
       note: item.note,
-      reminderDate: item.reminderDate || "",
     });
-    setShowEditItem(true);
+    setEditingId(item.id);
+    setShowAddForm(true);
   };
 
-  const handleTogglePurchased = (itemId: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === itemId
-          ? {
-              ...item,
-              purchased: !item.purchased,
-              purchaseDate: !item.purchased
-                ? new Date().toISOString().split("T")[0]
-                : undefined,
-              actualPrice: !item.purchased ? item.estimatedPrice : undefined,
-            }
-          : item
-      )
+  const filteredItems = items.filter((item) => {
+    const matchesSearch = item.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesCategory = !categoryFilter || item.category === categoryFilter;
+    const matchesPriority = !priorityFilter || item.priority === priorityFilter;
+    const matchesPurchased =
+      purchasedFilter === "all" ||
+      (purchasedFilter === "purchased" && item.purchased) ||
+      (purchasedFilter === "unpurchased" && !item.purchased);
+
+    return (
+      matchesSearch && matchesCategory && matchesPriority && matchesPurchased
     );
-    setToastMessage("Item status updated!");
-    setShowToast(true);
-  };
-
-  const handleDeleteItem = (itemId: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== itemId));
-    setToastMessage("Item deleted!");
-    setShowToast(true);
-  };
-
-  const getFilteredItems = () => {
-    return items.filter((item) => {
-      const matchesSearch =
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.note.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory =
-        filterCategory === "All" || item.category === filterCategory;
-      const matchesPriority =
-        filterPriority === "All" || item.priority === filterPriority;
-      const matchesPurchased =
-        filterPurchased === "All" ||
-        (filterPurchased === "Purchased" && item.purchased) ||
-        (filterPurchased === "Not Purchased" && !item.purchased);
-
-      return (
-        matchesSearch && matchesCategory && matchesPriority && matchesPurchased
-      );
-    });
-  };
-
-  const inputVariants = {
-    focus: {
-      scale: 1.02,
-      boxShadow: "0 0 10px rgba(37, 99, 235, 0.5)",
-      transition: { duration: 0.2 },
-    },
-    blur: {
-      scale: 1,
-      boxShadow: "none",
-      transition: { duration: 0.2 },
-    },
-  };
-
-  const errorVariants = {
-    hidden: { opacity: 0, y: -10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-  };
-
-  const modalVariants = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
-  };
+  });
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden font-sans">
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="w-full max-w-6xl relative z-10"
-      >
-        <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden mb-8">
-          <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-          <CardContent className="p-10 relative z-10">
-            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-              <Heart className="inline-block w-10 h-10 mr-4" />
-              My Wishlist
-            </CardTitle>
-
-            {/* Quick Add Bar */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-              className="mb-6 flex gap-2"
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background/80 p-4 md:p-8">
+      <div className="mx-auto max-w-7xl">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+                My Wishlist
+              </h1>
+              <p className="text-muted-foreground">
+                Manage and organize your wishlist items
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                setShowAddForm(true);
+                setEditingId(null);
+                setFormData({
+                  name: "",
+                  category: "Electronics",
+                  priority: "medium",
+                  estimatedPrice: 0,
+                  store: "",
+                  reminderDate: "",
+                  link: "",
+                  imageUrl: "",
+                  note: "",
+                });
+              }}
+              className="gap-2 bg-primary hover:bg-primary/90"
             >
+              <Plus className="h-4 w-4" />
+              Add Item
+            </Button>
+          </div>
+
+          {/* Quick Add Input */}
+          <div className="flex gap-2">
+            <div className="flex-1 relative">
               <Input
                 placeholder="Quick add item..."
-                value={quickAddName}
-                onChange={(e) => setQuickAddName(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleQuickAdd()}
-                className="flex-1 glass px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300 placeholder-gray-400/50"
+                value={quickAddValue}
+                onChange={(e) => setQuickAddValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleQuickAdd();
+                }}
+                className="pl-4"
               />
-              <Button
-                onClick={handleQuickAdd}
-                disabled={!quickAddName.trim()}
-                className="bg-linear-to-r from-blue-600 to-emerald-500 text-white px-6 py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
-              >
-                <Plus className="w-5 h-5" />
-              </Button>
+            </div>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={handleQuickAdd}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* Search and Filters */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8 grid grid-cols-1 md:grid-cols-5 gap-3"
+        >
+          <div className="relative md:col-span-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search items..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categoryOptions.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Priorities</SelectItem>
+              <SelectItem value="low">Low</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={purchasedFilter} onValueChange={setPurchasedFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Items</SelectItem>
+              <SelectItem value="purchased">Purchased</SelectItem>
+              <SelectItem value="unpurchased">Not Purchased</SelectItem>
+            </SelectContent>
+          </Select>
+        </motion.div>
+
+        {/* View Toggle */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-6 flex gap-2"
+        >
+          <Button
+            size="sm"
+            variant={viewMode === "grid" ? "default" : "outline"}
+            onClick={() => setViewMode("grid")}
+            className="gap-2"
+          >
+            <LayoutGrid className="h-4 w-4" />
+            Grid
+          </Button>
+          <Button
+            size="sm"
+            variant={viewMode === "list" ? "default" : "outline"}
+            onClick={() => setViewMode("list")}
+            className="gap-2"
+          >
+            <List className="h-4 w-4" />
+            List
+          </Button>
+        </motion.div>
+
+        {/* Items Display */}
+        <AnimatePresence>
+          {filteredItems.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-center py-16"
+            >
+              <Heart className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+              <p className="text-muted-foreground text-lg">
+                {items.length === 0
+                  ? "Start adding items to your wishlist!"
+                  : "No items match your filters"}
+              </p>
             </motion.div>
-
-            {/* Controls */}
-            <div className="flex flex-wrap gap-4 mb-6">
-              <Button
-                onClick={() => setShowAddItem(true)}
-                className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-6 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Add Item
-              </Button>
-
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => setViewMode("card")}
-                  className={`px-4 py-3 rounded-xl transition-all duration-300 ${
-                    viewMode === "card"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-800/30 text-gray-300"
-                  }`}
-                >
-                  <Grid className="w-5 h-5" />
-                </Button>
-                <Button
-                  onClick={() => setViewMode("list")}
-                  className={`px-4 py-3 rounded-xl transition-all duration-300 ${
-                    viewMode === "list"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-800/30 text-gray-300"
-                  }`}
-                >
-                  <List className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-wrap gap-4 mb-6">
-              <Input
-                placeholder="Search items..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 glass px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300 placeholder-gray-400/50"
-              />
-
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-48 bg-gray-900 text-white border border-blue-600/40 shadow-inner rounded-xl">
-                  <SelectValue placeholder="Filter by category" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 text-white rounded-xl shadow-lg">
-                  <SelectItem value="All">All Categories</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={filterPriority} onValueChange={setFilterPriority}>
-                <SelectTrigger className="w-48 bg-gray-900 text-white border border-blue-600/40 shadow-inner rounded-xl">
-                  <SelectValue placeholder="Filter by priority" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 text-white rounded-xl shadow-lg">
-                  <SelectItem value="All">All Priorities</SelectItem>
-                  {priorities.map((p) => (
-                    <SelectItem key={p.value} value={p.value}>
-                      {p.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={filterPurchased}
-                onValueChange={setFilterPurchased}
-              >
-                <SelectTrigger className="w-48 bg-gray-900 text-white border border-blue-600/40 shadow-inner rounded-xl">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 text-white rounded-xl shadow-lg">
-                  <SelectItem value="All">All Items</SelectItem>
-                  <SelectItem value="Not Purchased">Not Purchased</SelectItem>
-                  <SelectItem value="Purchased">Purchased</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Items Display */}
-            <div
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className={
-                viewMode === "card"
+                viewMode === "grid"
                   ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                   : "space-y-4"
               }
             >
-              {getFilteredItems().map((item, index) => (
+              {filteredItems.map((item, index) => (
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={
+                    viewMode === "grid"
+                      ? ""
+                      : "flex items-start justify-between"
+                  }
                 >
-                  {viewMode === "card" ? (
-                    <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden">
-                      <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-                      <CardContent className="p-6 relative z-10">
-                        {item.image && (
-                          <div className="w-full h-32 bg-gray-800 rounded-xl mb-4 overflow-hidden">
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                              }}
-                            />
-                          </div>
-                        )}
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="text-xl font-bold text-white truncate flex-1">
-                            {item.name}
-                          </h3>
-                          <Badge
-                            className={`ml-2 ${priorities.find((p) => p.value === item.priority)?.color} text-white`}
+                  <Card
+                    className={`overflow-hidden border-0 shadow-lg relative group transition-all duration-300 ${
+                      item.purchased ? "opacity-60" : ""
+                    } ${viewMode === "list" ? "flex-1" : ""}`}
+                  >
+                    <div
+                      className={`absolute inset-0 -z-10 ${priorityBgColors[item.priority]}`}
+                    />
+
+                    <div
+                      className={
+                        viewMode === "list"
+                          ? "flex items-start gap-4 p-6"
+                          : "flex flex-col h-full"
+                      }
+                    >
+                      {/* Image Section */}
+                      {item.imageUrl && (
+                        <div className="relative overflow-hidden rounded-lg">
+                          <img
+                            src={item.imageUrl || "/placeholder.svg"}
+                            alt={item.name}
+                            className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                          {item.purchased && (
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                              <ShoppingBag className="h-8 w-8 text-white" />
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Content Section */}
+                      <div
+                        className={
+                          viewMode === "grid"
+                            ? "p-4 flex-1 flex flex-col"
+                            : "flex-1"
+                        }
+                      >
+                        {/* Priority Badge */}
+                        <div className="flex items-center justify-between mb-3">
+                          <span
+                            className={`text-xs font-semibold px-3 py-1 rounded-full border ${
+                              priorityColors[item.priority]
+                            }`}
                           >
-                            {item.priority}
-                          </Badge>
-                        </div>
-                        <p className="text-blue-300 mb-2">{item.category}</p>
-                        <p className="text-green-400 font-bold mb-2">
-                          ${item.estimatedPrice}
-                        </p>
-                        {item.note && (
-                          <p className="text-gray-300 text-sm mb-4">
-                            {item.note}
-                          </p>
-                        )}
-                        <div className="flex justify-between items-center">
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={() => handleTogglePurchased(item.id)}
-                              className={`px-3 py-2 rounded-xl transition-all duration-300 ${
-                                item.purchased
-                                  ? "bg-green-600 text-white"
-                                  : "bg-gray-800/30 text-gray-300 hover:bg-green-600/20"
-                              }`}
-                            >
-                              <ShoppingBag className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              onClick={() => handleOpenEditItem(item)}
-                              className="bg-blue-600/20 text-blue-300 px-3 py-2 rounded-xl hover:bg-blue-600/40 transition-all duration-300"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              onClick={() => handleDeleteItem(item.id)}
-                              className="bg-red-600/20 text-red-300 px-3 py-2 rounded-xl hover:bg-red-600/40 transition-all duration-300"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <span className="text-xs text-gray-400">
-                            {item.dateAdded}
+                            {item.priority.charAt(0).toUpperCase() +
+                              item.priority.slice(1)}{" "}
+                            Priority
                           </span>
+                          {item.purchased && (
+                            <span className="text-xs font-semibold text-green-600 bg-green-100 px-3 py-1 rounded-full">
+                              Purchased
+                            </span>
+                          )}
                         </div>
-                        {item.purchased && (
-                          <div className="mt-2 p-2 bg-green-600/20 rounded-xl">
-                            <p className="text-green-300 text-sm">
-                              Purchased on {item.purchaseDate}
-                            </p>
+
+                        {/* Title */}
+                        <h3
+                          className={`font-semibold text-foreground mb-2 ${item.purchased ? "line-through" : ""}`}
+                        >
+                          {item.name}
+                        </h3>
+
+                        {/* Category */}
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {item.category}
+                        </p>
+
+                        {/* Details Grid */}
+                        <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
+                          {item.estimatedPrice > 0 && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <DollarSign className="h-4 w-4" />
+                              <span>${item.estimatedPrice.toFixed(2)}</span>
+                            </div>
+                          )}
+                          {item.store && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <MapPin className="h-4 w-4" />
+                              <span>{item.store}</span>
+                            </div>
+                          )}
+                          {item.reminderDate && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Calendar className="h-4 w-4" />
+                              <span>{item.reminderDate}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Note */}
+                        {item.note && (
+                          <div className="mb-4 p-2 bg-muted/50 rounded text-sm text-muted-foreground border border-muted">
+                            <div className="flex gap-2 items-start">
+                              <StickyNote className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                              <span>{item.note}</span>
+                            </div>
                           </div>
                         )}
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden">
-                      <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-                      <CardContent className="p-4 relative z-10">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-4 mb-2">
-                              <h3 className="text-lg font-bold text-white">
-                                {item.name}
-                              </h3>
-                              <Badge
-                                className={`${priorities.find((p) => p.value === item.priority)?.color} text-white`}
-                              >
-                                {item.priority}
-                              </Badge>
-                              <span className="text-blue-300">
-                                {item.category}
-                              </span>
-                              <span className="text-green-400 font-bold">
-                                ${item.estimatedPrice}
-                              </span>
-                            </div>
-                            {item.note && (
-                              <p className="text-gray-300 text-sm mb-2">
-                                {item.note}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-4 text-xs text-gray-400">
-                              <span>Added: {item.dateAdded}</span>
-                              {item.store && <span>Store: {item.store}</span>}
-                              {item.reminderDate && (
-                                <span>Reminder: {item.reminderDate}</span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex gap-2 ml-4">
-                            <Button
-                              onClick={() => handleTogglePurchased(item.id)}
-                              className={`px-3 py-2 rounded-xl transition-all duration-300 ${
-                                item.purchased
-                                  ? "bg-green-600 text-white"
-                                  : "bg-gray-800/30 text-gray-300 hover:bg-green-600/20"
-                              }`}
-                            >
-                              <ShoppingBag className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              onClick={() => handleOpenEditItem(item)}
-                              className="bg-blue-600/20 text-blue-300 px-3 py-2 rounded-xl hover:bg-blue-600/40 transition-all duration-300"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              onClick={() => handleDeleteItem(item.id)}
-                              className="bg-red-600/20 text-red-300 px-3 py-2 rounded-xl hover:bg-red-600/40 transition-all duration-300"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        {item.purchased && (
-                          <div className="mt-2 p-2 bg-green-600/20 rounded-xl">
-                            <p className="text-green-300 text-sm">
-                              Purchased on {item.purchaseDate}
-                            </p>
-                          </div>
+
+                        {/* Link */}
+                        {item.link && (
+                          <a
+                            href={item.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-sm text-primary hover:underline mb-4"
+                          >
+                            <LinkIcon className="h-4 w-4" />
+                            View Product
+                          </a>
                         )}
-                      </CardContent>
-                    </Card>
-                  )}
+
+                        {/* Actions */}
+                        <div
+                          className={`flex gap-2 pt-4 border-t border-border ${
+                            viewMode === "list" ? "flex-col" : "flex-row"
+                          }`}
+                        >
+                          <Button
+                            size="sm"
+                            variant={item.purchased ? "secondary" : "default"}
+                            onClick={() => handleTogglePurchased(item.id)}
+                            className="flex-1 gap-2"
+                          >
+                            <Heart
+                              className={`h-4 w-4 ${item.purchased ? "fill-current" : ""}`}
+                            />
+                            {item.purchased ? "Undo" : "Mark Purchased"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditItem(item)}
+                            className="flex-1 gap-2"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteItem(item.id)}
+                            className="flex-1 gap-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
                 </motion.div>
               ))}
-            </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            {getFilteredItems().length === 0 && (
-              <div className="text-center py-12">
-                <Heart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-400 text-lg">
-                  No items in your wishlist yet
-                </p>
-                <p className="text-gray-500">
-                  Add your first item to get started!
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Add Item Modal */}
-        {showAddItem && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={modalVariants}
-            className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowAddItem(false)}
-          >
+        {/* Add/Edit Form Modal */}
+        <AnimatePresence>
+          {showAddForm && (
             <motion.div
-              className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAddForm(false)}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
             >
-              <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-              <CardContent className="p-10 relative z-10">
-                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                  Add Wishlist Item
-                </CardTitle>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleAddItem();
-                  }}
-                  className="space-y-6"
-                >
-                  <div className="relative">
-                    <Label className="block text-blue-300 mb-2 font-semibold">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-card rounded-xl border border-border shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              >
+                <div className="p-6 border-b border-border flex items-center justify-between sticky top-0 bg-card z-10">
+                  <h2 className="text-xl font-bold">
+                    {editingId ? "Edit Item" : "Add New Item"}
+                  </h2>
+                  <button
+                    onClick={() => setShowAddForm(false)}
+                    className="p-1 hover:bg-muted rounded-lg transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  {/* Name */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
                       Item Name *
-                    </Label>
-                    <motion.input
-                      type="text"
-                      name="name"
-                      value={form.name}
-                      onChange={handleChange}
-                      placeholder="What do you want?"
-                      className="glass w-full px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300 placeholder-gray-400/50"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
+                    </label>
+                    <Input
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      placeholder="Enter item name"
                     />
                   </div>
 
+                  {/* Category and Priority */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="block text-blue-300 mb-2 font-semibold">
+                      <label className="block text-sm font-medium mb-2">
                         Category
-                      </Label>
+                      </label>
                       <Select
-                        value={form.category}
+                        value={formData.category}
                         onValueChange={(value) =>
-                          setForm({ ...form, category: value })
+                          setFormData({ ...formData, category: value })
                         }
                       >
-                        <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-900 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
-                          <SelectValue placeholder="Select category" />
+                        <SelectTrigger>
+                          <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-gray-900 text-white rounded-xl shadow-lg">
-                          {categories.map((cat) => (
+                        <SelectContent>
+                          {categoryOptions.map((cat) => (
                             <SelectItem key={cat} value={cat}>
                               {cat}
                             </SelectItem>
@@ -670,445 +628,153 @@ const Wishlist = () => {
                     </div>
 
                     <div>
-                      <Label className="block text-blue-300 mb-2 font-semibold">
+                      <label className="block text-sm font-medium mb-2">
                         Priority
-                      </Label>
+                      </label>
                       <Select
-                        value={form.priority}
+                        value={formData.priority}
                         onValueChange={(value) =>
-                          setForm({
-                            ...form,
+                          setFormData({
+                            ...formData,
                             priority: value as "low" | "medium" | "high",
                           })
                         }
                       >
-                        <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-900 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
-                          <SelectValue placeholder="Select priority" />
+                        <SelectTrigger>
+                          <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-gray-900 text-white rounded-xl shadow-lg">
-                          {priorities.map((p) => (
-                            <SelectItem key={p.value} value={p.value}>
-                              {p.label}
-                            </SelectItem>
-                          ))}
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
 
-                  <div>
-                    <Label className="block text-blue-300 mb-2 font-semibold">
-                      Estimated Price
-                    </Label>
-                    <motion.input
-                      type="number"
-                      name="estimatedPrice"
-                      value={form.estimatedPrice}
-                      onChange={handleChange}
-                      placeholder="0.00"
-                      step="0.01"
-                      min="0"
-                      className="glass w-full px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300 placeholder-gray-400/50"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-
+                  {/* Price and Store */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="block text-blue-300 mb-2 font-semibold">
-                        Store
-                      </Label>
-                      <motion.input
-                        type="text"
-                        name="store"
-                        value={form.store}
-                        onChange={handleChange}
-                        placeholder="Where to buy"
-                        className="glass w-full px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300 placeholder-gray-400/50"
-                        variants={inputVariants}
-                        whileFocus="focus"
-                        initial="blur"
-                      />
-                    </div>
-
-                    <div>
-                      <Label className="block text-blue-300 mb-2 font-semibold">
-                        Reminder Date
-                      </Label>
-                      <motion.input
-                        type="date"
-                        name="reminderDate"
-                        value={form.reminderDate}
-                        onChange={handleChange}
-                        className="glass w-full px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300"
-                        variants={inputVariants}
-                        whileFocus="focus"
-                        initial="blur"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label className="block text-blue-300 mb-2 font-semibold">
-                      Link
-                    </Label>
-                    <motion.input
-                      type="url"
-                      name="link"
-                      value={form.link}
-                      onChange={handleChange}
-                      placeholder="https://..."
-                      className="glass w-full px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300 placeholder-gray-400/50"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="block text-blue-300 mb-2 font-semibold">
-                      Image URL
-                    </Label>
-                    <motion.input
-                      type="url"
-                      name="image"
-                      value={form.image}
-                      onChange={handleChange}
-                      placeholder="https://..."
-                      className="glass w-full px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300 placeholder-gray-400/50"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="block text-blue-300 mb-2 font-semibold">
-                      Note
-                    </Label>
-                    <motion.textarea
-                      name="note"
-                      value={form.note}
-                      onChange={handleChange}
-                      placeholder="Why do you want this? Any alternatives?"
-                      rows={3}
-                      className="glass w-full px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300 placeholder-gray-400/50 resize-none"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-
-                  {error && (
-                    <motion.p
-                      className="text-red-400 text-center font-medium"
-                      variants={errorVariants}
-                      initial="hidden"
-                      animate="visible"
-                    >
-                      {error}
-                    </motion.p>
-                  )}
-
-                  <div className="flex gap-2">
-                    <motion.div animate={buttonControls} className="flex-1">
-                      <Button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
-                      >
-                        {isLoading ? (
-                          <Loading />
-                        ) : (
-                          <>
-                            <Plus className="w-5 h-5 mr-2" />
-                            Add Item
-                          </>
-                        )}
-                      </Button>
-                    </motion.div>
-                    <Button
-                      type="button"
-                      onClick={() => setShowAddItem(false)}
-                      className="flex-1 bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {/* Edit Item Modal */}
-        {showEditItem && editItem && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={modalVariants}
-            className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowEditItem(false)}
-          >
-            <motion.div
-              className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-              <CardContent className="p-10 relative z-10">
-                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                  Edit Wishlist Item
-                </CardTitle>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleEditItem();
-                  }}
-                  className="space-y-6"
-                >
-                  <div className="relative">
-                    <Label className="block text-blue-300 mb-2 font-semibold">
-                      Item Name *
-                    </Label>
-                    <motion.input
-                      type="text"
-                      name="name"
-                      value={form.name}
-                      onChange={handleChange}
-                      placeholder="What do you want?"
-                      className="glass w-full px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300 placeholder-gray-400/50"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="block text-blue-300 mb-2 font-semibold">
-                        Category
-                      </Label>
-                      <Select
-                        value={form.category}
-                        onValueChange={(value) =>
-                          setForm({ ...form, category: value })
-                        }
-                      >
-                        <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-900 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-900 text-white rounded-xl shadow-lg">
-                          {categories.map((cat) => (
-                            <SelectItem key={cat} value={cat}>
-                              {cat}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label className="block text-blue-300 mb-2 font-semibold">
-                        Priority
-                      </Label>
-                      <Select
-                        value={form.priority}
-                        onValueChange={(value) =>
-                          setForm({
-                            ...form,
-                            priority: value as "low" | "medium" | "high",
+                      <label className="block text-sm font-medium mb-2">
+                        Estimated Price
+                      </label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.estimatedPrice}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            estimatedPrice:
+                              Number.parseFloat(e.target.value) || 0,
                           })
                         }
-                      >
-                        <SelectTrigger className="w-full px-4 py-3 rounded-xl bg-gray-900 text-white focus:outline-none border border-blue-600/40 shadow-inner transition-all duration-300">
-                          <SelectValue placeholder="Select priority" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-900 text-white rounded-xl shadow-lg">
-                          {priorities.map((p) => (
-                            <SelectItem key={p.value} value={p.value}>
-                              {p.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Store
+                      </label>
+                      <Input
+                        value={formData.store}
+                        onChange={(e) =>
+                          setFormData({ ...formData, store: e.target.value })
+                        }
+                        placeholder="e.g., Amazon"
+                      />
                     </div>
                   </div>
 
-                  <div>
-                    <Label className="block text-blue-300 mb-2 font-semibold">
-                      Estimated Price
-                    </Label>
-                    <motion.input
-                      type="number"
-                      name="estimatedPrice"
-                      value={form.estimatedPrice}
-                      onChange={handleChange}
-                      placeholder="0.00"
-                      step="0.01"
-                      min="0"
-                      className="glass w-full px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300 placeholder-gray-400/50"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-
+                  {/* Reminder Date and Link */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="block text-blue-300 mb-2 font-semibold">
-                        Store
-                      </Label>
-                      <motion.input
-                        type="text"
-                        name="store"
-                        value={form.store}
-                        onChange={handleChange}
-                        placeholder="Where to buy"
-                        className="glass w-full px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300 placeholder-gray-400/50"
-                        variants={inputVariants}
-                        whileFocus="focus"
-                        initial="blur"
+                      <label className="block text-sm font-medium mb-2">
+                        Reminder Date
+                      </label>
+                      <Input
+                        type="date"
+                        value={formData.reminderDate}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            reminderDate: e.target.value,
+                          })
+                        }
                       />
                     </div>
 
                     <div>
-                      <Label className="block text-blue-300 mb-2 font-semibold">
-                        Reminder Date
-                      </Label>
-                      <motion.input
-                        type="date"
-                        name="reminderDate"
-                        value={form.reminderDate}
-                        onChange={handleChange}
-                        className="glass w-full px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300"
-                        variants={inputVariants}
-                        whileFocus="focus"
-                        initial="blur"
+                      <label className="block text-sm font-medium mb-2">
+                        Product Link
+                      </label>
+                      <Input
+                        type="url"
+                        value={formData.link}
+                        onChange={(e) =>
+                          setFormData({ ...formData, link: e.target.value })
+                        }
+                        placeholder="https://..."
                       />
                     </div>
                   </div>
 
+                  {/* Image URL */}
                   <div>
-                    <Label className="block text-blue-300 mb-2 font-semibold">
-                      Link
-                    </Label>
-                    <motion.input
-                      type="url"
-                      name="link"
-                      value={form.link}
-                      onChange={handleChange}
-                      placeholder="https://..."
-                      className="glass w-full px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300 placeholder-gray-400/50"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="block text-blue-300 mb-2 font-semibold">
+                    <label className="block text-sm font-medium mb-2">
                       Image URL
-                    </Label>
-                    <motion.input
+                    </label>
+                    <Input
                       type="url"
-                      name="image"
-                      value={form.image}
-                      onChange={handleChange}
+                      value={formData.imageUrl}
+                      onChange={(e) =>
+                        setFormData({ ...formData, imageUrl: e.target.value })
+                      }
                       placeholder="https://..."
-                      className="glass w-full px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300 placeholder-gray-400/50"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
                     />
                   </div>
 
+                  {/* Note */}
                   <div>
-                    <Label className="block text-blue-300 mb-2 font-semibold">
+                    <label className="block text-sm font-medium mb-2">
                       Note
-                    </Label>
-                    <motion.textarea
-                      name="note"
-                      value={form.note}
-                      onChange={handleChange}
-                      placeholder="Why do you want this? Any alternatives?"
-                      rows={3}
-                      className="glass w-full px-4 py-3 text-white border-blue-600/40 focus:outline-none transition-all duration-300 placeholder-gray-400/50 resize-none"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
+                    </label>
+                    <textarea
+                      value={formData.note}
+                      onChange={(e) =>
+                        setFormData({ ...formData, note: e.target.value })
+                      }
+                      placeholder="Add any notes about this item..."
+                      className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring min-h-24"
                     />
                   </div>
 
-                  {error && (
-                    <motion.p
-                      className="text-red-400 text-center font-medium"
-                      variants={errorVariants}
-                      initial="hidden"
-                      animate="visible"
-                    >
-                      {error}
-                    </motion.p>
-                  )}
-
-                  <div className="flex gap-2">
-                    <motion.div animate={buttonControls} className="flex-1">
-                      <Button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
-                      >
-                        {isLoading ? (
-                          <Loading />
-                        ) : (
-                          <>
-                            <Save className="w-5 h-5 mr-2" />
-                            Save Changes
-                          </>
-                        )}
-                      </Button>
-                    </motion.div>
+                  {/* Actions */}
+                  <div className="flex gap-3 pt-4 border-t border-border">
                     <Button
-                      type="button"
-                      onClick={() => {
-                        setShowEditItem(false);
-                        setEditItem(null);
-                        setForm({
-                          name: "",
-                          category: categories[0],
-                          priority: "medium",
-                          estimatedPrice: "",
-                          link: "",
-                          store: "",
-                          image: "",
-                          note: "",
-                          reminderDate: "",
-                        });
-                        setError("");
-                      }}
-                      className="flex-1 bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
+                      onClick={handleAddItem}
+                      className="flex-1 bg-primary hover:bg-primary/90"
+                    >
+                      {editingId ? "Update Item" : "Add Item"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowAddForm(false)}
+                      className="flex-1"
                     >
                       Cancel
                     </Button>
                   </div>
-                </form>
-              </CardContent>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </motion.div>
-
-      {/* Toast Notification */}
-      {showToast && (
-        <Toast
-          message={toastMessage}
-          type="success"
-          onClose={() => setShowToast(false)}
-        />
-      )}
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
-};
+}
 
-export default Wishlist;
+export default WishlistManager;

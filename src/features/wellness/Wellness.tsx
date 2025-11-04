@@ -1,10 +1,26 @@
-import React, { useState, useEffect } from "react";
+"use client";
+
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Cloud,
+  Sun,
+  Wind,
+  Droplet,
+  Dumbbell,
+  Pill,
+  Flame,
+  Zap,
+  Plus,
+  Clock,
+  AlertCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -12,793 +28,697 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format, addDays, subDays } from "date-fns";
 import {
-  Droplet,
-  Sun,
-  CloudRain,
-  Wind,
-  CheckCircle,
-  XCircle,
-  Plus,
-} from "lucide-react";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 
-type WeatherData = {
-  temperature: number;
-  condition: "sunny" | "rainy" | "windy" | "cloudy";
-  windSpeed: number;
-};
-
-type Exercise = {
-  hasExercise: boolean;
-  type?: string;
-  time?: string;
-  location?: string;
-};
-
-type Vitamin = {
+interface Vitamin {
   id: string;
   name: string;
   time: string;
+  frequency: "daily" | "weekly" | "monthly";
   taken: boolean;
-  frequency: number; // Hány naponta kell szedni
-  createdAt: string; // Hozzáadás dátuma
-};
+}
 
-type WaterIntake = {
+interface WaterIntake {
   id: string;
-  quantity: number; // Vízmennyiség ml-ben
-  taken: boolean;
-};
+  timestamp: string;
+  amount: number;
+}
 
-type MoodEnergy = {
-  mood: string;
-  energy: string;
-};
-
-type DailyData = {
-  date: string;
-  weather: WeatherData | null;
-  exercise: Exercise;
-  vitamins: Vitamin[];
-  waterIntakes: WaterIntake[];
-  moodEnergy: MoodEnergy;
-};
-
-const Wellness = () => {
-  const [dailyData, setDailyData] = useState<DailyData[]>([]);
+const WellnessTracker = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showAddVitamin, setShowAddVitamin] = useState(false);
-  const [vitaminForm, setVitaminForm] = useState({
-    name: "",
-    time: "",
-    frequency: "1",
-  });
-  const [error, setError] = useState("");
-  const [waterQuantityInput, setWaterQuantityInput] = useState<string>("250");
+  const [exerciseType, setExerciseType] = useState("");
+  const [exerciseTime, setExerciseTime] = useState("");
+  const [exerciseLocation, setExerciseLocation] = useState("");
+  const [exerciseCompleted, setExerciseCompleted] = useState(false);
 
-  const getDailyData = (date: Date): DailyData => {
-    const dateKey = format(date, "yyyy-MM-dd");
-    let data = dailyData.find((d) => d.date === dateKey);
-    if (!data) {
-      data = {
-        date: dateKey,
-        weather: null,
-        exercise: { hasExercise: false },
-        vitamins: [
-          {
-            id: "1",
-            name: "D-vitamin",
-            time: "Morning",
-            taken: false,
-            frequency: 1,
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: "2",
-            name: "C-vitamin",
-            time: "After Lunch",
-            taken: false,
-            frequency: 1,
-            createdAt: new Date().toISOString(),
-          },
-        ],
-        waterIntakes: Array(8)
-          .fill(null)
-          .map((_, i) => ({
-            id: `water-${i}`,
-            quantity: 250,
-            taken: false,
-          })),
-        moodEnergy: { mood: "", energy: "" },
-      };
-      setDailyData([...dailyData, data]);
-    }
-    return data;
-  };
-
-  const currentData = getDailyData(selectedDate);
-
-  useEffect(() => {
-    const fetchWeather = async () => {
-      const mockWeather: WeatherData = {
-        temperature: 20,
-        condition: "sunny",
-        windSpeed: 5,
-      };
-      setDailyData((prev) =>
-        prev.map((d) =>
-          d.date === format(selectedDate, "yyyy-MM-dd")
-            ? { ...d, weather: mockWeather }
-            : d
-        )
-      );
-    };
-    fetchWeather();
-  }, [selectedDate]);
-
-  const getRecommendedClothing = (weather: WeatherData | null): string[] => {
-    if (!weather) return [];
-    const clothing = [];
-    if (weather.temperature < 10) clothing.push("Warm jacket", "Scarf");
-    else if (weather.temperature < 20)
-      clothing.push("Light jacket", "Long-sleeve shirt");
-    else clothing.push("T-shirt", "Shorts");
-    if (weather.condition === "rainy")
-      clothing.push("Umbrella", "Waterproof shoes");
-    if (weather.condition === "windy") clothing.push("Windbreaker");
-    if (
-      currentData.exercise.hasExercise &&
-      currentData.exercise.type === "Running"
-    )
-      clothing.push("Running shoes");
-    return clothing;
-  };
-
-  const getDailyStatus = (data: DailyData) => {
-    const allVitaminsTaken = data.vitamins.every(
-      (v) => v.taken || !isVitaminApplicable(v, selectedDate)
-    );
-    const allWaterTaken = data.waterIntakes.every((w) => w.taken);
-    const exerciseDone =
-      !data.exercise.hasExercise ||
-      (data.exercise.hasExercise && data.exercise.type !== undefined);
-    const moodEnergyLogged =
-      data.moodEnergy.mood !== "" && data.moodEnergy.energy !== "";
-    if (allVitaminsTaken && allWaterTaken && exerciseDone && moodEnergyLogged)
-      return "green";
-    if (
-      data.vitamins.some(
-        (v) => !v.taken && isVitaminApplicable(v, selectedDate)
-      ) ||
-      data.waterIntakes.some((w) => !w.taken) ||
-      !moodEnergyLogged
-    )
-      return "yellow";
-    return "red";
-  };
-
-  const isVitaminApplicable = (vitamin: Vitamin, date: Date): boolean => {
-    const createdDate = new Date(vitamin.createdAt);
-    const currentDate = new Date(date);
-    const diffInDays = Math.floor(
-      (currentDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    return diffInDays % vitamin.frequency === 0;
-  };
-
-  const handleAddVitamin = () => {
-    if (
-      !vitaminForm.name.trim() ||
-      !vitaminForm.time.trim() ||
-      !vitaminForm.frequency
-    ) {
-      setError("Vitamin name, time, and frequency are required.");
-      return;
-    }
-    setDailyData((prev) =>
-      prev.map((d) =>
-        d.date === format(selectedDate, "yyyy-MM-dd")
-          ? {
-              ...d,
-              vitamins: [
-                ...d.vitamins,
-                {
-                  id: Date.now().toString(),
-                  name: vitaminForm.name.trim(),
-                  time: vitaminForm.time.trim(),
-                  taken: false,
-                  frequency: parseInt(vitaminForm.frequency, 10),
-                  createdAt: new Date().toISOString(),
-                },
-              ],
-            }
-          : d
-      )
-    );
-    setVitaminForm({ name: "", time: "", frequency: "1" });
-    setShowAddVitamin(false);
-    setError("");
-  };
-
-  const handleToggleVitamin = (id: string) => {
-    setDailyData((prev) =>
-      prev.map((d) =>
-        d.date === format(selectedDate, "yyyy-MM-dd")
-          ? {
-              ...d,
-              vitamins: d.vitamins.map((v) =>
-                v.id === id ? { ...v, taken: !v.taken } : v
-              ),
-            }
-          : d
-      )
-    );
-  };
-
-  const handleToggleWater = (id: string, quantity?: number) => {
-    setDailyData((prev) =>
-      prev.map((d) =>
-        d.date === format(selectedDate, "yyyy-MM-dd")
-          ? {
-              ...d,
-              waterIntakes: d.waterIntakes.map((w) =>
-                w.id === id
-                  ? { ...w, taken: !w.taken, quantity: quantity || w.quantity }
-                  : w
-              ),
-            }
-          : d
-      )
-    );
-  };
-
-  const handleExerciseChange = (hasExercise: boolean) => {
-    setDailyData((prev) =>
-      prev.map((d) =>
-        d.date === format(selectedDate, "yyyy-MM-dd")
-          ? {
-              ...d,
-              exercise: {
-                hasExercise,
-                type: undefined,
-                time: undefined,
-                location: undefined,
-              },
-            }
-          : d
-      )
-    );
-  };
-
-  const handleExerciseDetailsChange = (
-    e:
-      | React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-      | { name: string; value: any }
-  ) => {
-    const { name, value } = "target" in e ? e.target : e;
-    setDailyData((prev) =>
-      prev.map((d) =>
-        d.date === format(selectedDate, "yyyy-MM-dd")
-          ? { ...d, exercise: { ...d.exercise, [name]: value } }
-          : d
-      )
-    );
-  };
-
-  const handleMoodEnergyChange = (
-    e: React.ChangeEvent<HTMLSelectElement> | { name: string; value: any }
-  ) => {
-    const { name, value } = "target" in e ? e.target : e;
-    setDailyData((prev) =>
-      prev.map((d) =>
-        d.date === format(selectedDate, "yyyy-MM-dd")
-          ? { ...d, moodEnergy: { ...d.moodEnergy, [name]: value } }
-          : d
-      )
-    );
-  };
-
-  const handleVitaminFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setVitaminForm({ ...vitaminForm, [e.target.name]: e.target.value });
-    setError("");
-  };
-
-  const totalWaterIntake = currentData.waterIntakes
-    .filter((w) => w.taken)
-    .reduce((sum, w) => sum + w.quantity, 0);
-
-  const inputVariants = {
-    focus: {
-      scale: 1.02,
-      boxShadow: "0 0 10px rgba(37, 99, 235, 0.5)",
-      transition: { duration: 0.2 },
+  const [vitamins, setVitamins] = useState<Vitamin[]>([
+    {
+      id: "1",
+      name: "Vitamin D",
+      time: "09:00",
+      frequency: "daily",
+      taken: false,
     },
-    blur: { scale: 1, boxShadow: "none", transition: { duration: 0.2 } },
+    {
+      id: "2",
+      name: "Vitamin C",
+      time: "12:00",
+      frequency: "daily",
+      taken: false,
+    },
+    {
+      id: "3",
+      name: "Multivitamin",
+      time: "08:00",
+      frequency: "daily",
+      taken: true,
+    },
+  ]);
+
+  const [vitaminFilter, setVitaminFilter] = useState<
+    "all" | "daily" | "weekly" | "monthly"
+  >("all");
+  const [waterIntakes, setWaterIntakes] = useState<WaterIntake[]>([
+    { id: "1", timestamp: "08:00", amount: 250 },
+    { id: "2", timestamp: "12:00", amount: 250 },
+  ]);
+
+  const [mood, setMood] = useState("happy");
+  const [energy, setEnergy] = useState("good");
+
+  const [vitaminName, setVitaminName] = useState("");
+  const [vitaminTime, setVitaminTime] = useState("");
+  const [vitaminFrequency, setVitaminFrequency] = useState<
+    "daily" | "weekly" | "monthly"
+  >("daily");
+
+  const [showVitaminModal, setShowVitaminModal] = useState(false);
+
+  const previousDay = () => {
+    setSelectedDate(new Date(selectedDate.getTime() - 24 * 60 * 60 * 1000));
   };
 
-  const modalVariants = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+  const nextDay = () => {
+    setSelectedDate(new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000));
+  };
+
+  const goToToday = () => {
+    setSelectedDate(new Date());
+  };
+
+  const filteredVitamins = vitamins.filter(
+    (vitamin) => vitaminFilter === "all" || vitamin.frequency === vitaminFilter
+  );
+
+  const toggleVitamin = (id: string) => {
+    setVitamins(
+      vitamins.map((v) => (v.id === id ? { ...v, taken: !v.taken } : v))
+    );
+  };
+
+  const addVitamin = () => {
+    if (vitaminName && vitaminTime) {
+      const newVitamin: Vitamin = {
+        id: Date.now().toString(),
+        name: vitaminName,
+        time: vitaminTime,
+        frequency: vitaminFrequency,
+        taken: false,
+      };
+      setVitamins([...vitamins, newVitamin]);
+      setVitaminName("");
+      setVitaminTime("");
+      setVitaminFrequency("daily");
+      setShowVitaminModal(false);
+    }
+  };
+
+  const addWater = () => {
+    const now = new Date();
+    const timeString = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+    setWaterIntakes([
+      ...waterIntakes,
+      { id: Date.now().toString(), timestamp: timeString, amount: 250 },
+    ]);
+  };
+
+  const waterProgress = (waterIntakes.length * 250) / 2000; // 2L goal
+  const vitaminProgress =
+    (vitamins.filter((v) => v.taken).length / vitamins.length) * 100;
+
+  const formattedDate = selectedDate.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
+
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 10,
+      },
+    },
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden font-sans bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/80 p-4 sm:p-6">
       <motion.div
-        initial={{ opacity: 0, y: 50 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="w-full max-w-4xl relative z-10"
+        transition={{ duration: 0.6 }}
+        className="mb-8"
       >
-        <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden mb-8">
-          <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-          <CardContent className="p-10 relative z-10">
-            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-              Wellness Dashboard - {format(selectedDate, "MMMM d, yyyy")}
-            </CardTitle>
+        <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
+          Wellness Tracker
+        </h1>
+        <p className="text-muted-foreground">
+          Monitor your health and wellness daily
+        </p>
+      </motion.div>
 
-            {/* Date Navigation */}
-            <div className="flex justify-between items-center mb-6">
-              <Button
-                onClick={() => setSelectedDate(subDays(selectedDate, 1))}
-                className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                  Previous Day
-                </span>
-                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-              </Button>
-              <Button
-                onClick={() => setSelectedDate(addDays(selectedDate, 1))}
-                className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                  Next Day
-                </span>
-                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-              </Button>
-            </div>
+      {/* Date Navigation */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+      >
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={previousDay}
+          className="hover:bg-accent hover:text-accent-foreground transition-colors bg-transparent"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
 
-            {/* Daily Status */}
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-white mb-2">
-                Daily Status
-              </h3>
-              <div
-                className={`p-4 rounded-xl text-center glass ${
-                  getDailyStatus(currentData) === "green"
-                    ? "bg-green-500/20 text-green-400"
-                    : getDailyStatus(currentData) === "yellow"
-                    ? "bg-yellow-500/20 text-yellow-400"
-                    : "bg-red-500/20 text-red-400"
-                }`}
-              >
-                {getDailyStatus(currentData) === "green"
-                  ? "All tasks completed!"
-                  : getDailyStatus(currentData) === "yellow"
-                  ? "Some tasks pending"
-                  : "Tasks overdue or missing"}
-              </div>
-            </div>
+        <div className="text-center">
+          <p className="text-lg font-semibold text-foreground">
+            {formattedDate}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {selectedDate.toDateString() === new Date().toDateString()
+              ? "Today"
+              : ""}
+          </p>
+        </div>
 
-            {/* Weather Forecast */}
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-white mb-2">
-                Weather Forecast
-              </h3>
-              {currentData.weather ? (
-                <div className="glass p-4 rounded-xl border border-blue-600/40">
-                  <div className="flex items-center gap-4">
-                    {currentData.weather.condition === "sunny" && (
-                      <Sun className="text-yellow-500 w-8 h-8" />
-                    )}
-                    {currentData.weather.condition === "rainy" && (
-                      <CloudRain className="text-blue-500 w-8 h-8" />
-                    )}
-                    {currentData.weather.condition === "windy" && (
-                      <Wind className="text-gray-400 w-8 h-8" />
-                    )}
+        <div className="flex gap-2">
+          {selectedDate.toDateString() !== new Date().toDateString() && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToToday}
+              className="hover:bg-accent hover:text-accent-foreground transition-colors bg-transparent"
+            >
+              Today
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={nextDay}
+            className="hover:bg-accent hover:text-accent-foreground transition-colors bg-transparent"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </motion.div>
+
+      {/* Main Grid */}
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto"
+      >
+        {/* Weather Card */}
+        <motion.div variants={item}>
+          <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-card/50">
+            <div className="absolute -right-12 -top-12 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-full blur-2xl" />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sun className="h-5 w-5 text-orange-400" />
+                Weather
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Cloud className="h-12 w-12 text-sky-400" />
                     <div>
-                      <div className="text-lg text-white">
-                        Temperature: {currentData.weather.temperature}°C
-                      </div>
-                      <div className="text-sm text-gray-300">
-                        Condition: {currentData.weather.condition}
-                      </div>
-                      <div className="text-sm text-gray-300">
-                        Wind Speed: {currentData.weather.windSpeed} km/h
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <h4 className="text-md font-semibold text-blue-300">
-                      Recommended Clothing:
-                    </h4>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {getRecommendedClothing(currentData.weather).map(
-                        (item, index) => (
-                          <span
-                            key={index}
-                            className="bg-gray-800/50 text-white px-3 py-1 rounded-xl"
-                          >
-                            {item}
-                          </span>
-                        )
-                      )}
+                      <p className="text-2xl font-bold text-foreground">24°C</p>
+                      <p className="text-sm text-muted-foreground">
+                        Partly Cloudy
+                      </p>
                     </div>
                   </div>
                 </div>
-              ) : (
-                <div className="text-gray-400">Loading weather...</div>
-              )}
-            </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="rounded-lg bg-secondary/50 p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Droplet className="h-4 w-4 text-blue-400" />
+                      <p className="text-xs text-muted-foreground">Humidity</p>
+                    </div>
+                    <p className="font-semibold text-foreground">65%</p>
+                  </div>
+                  <div className="rounded-lg bg-secondary/50 p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Wind className="h-4 w-4 text-cyan-400" />
+                      <p className="text-xs text-muted-foreground">Wind</p>
+                    </div>
+                    <p className="font-semibold text-foreground">12 km/h</p>
+                  </div>
+                  <div className="rounded-lg bg-secondary/50 p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Flame className="h-4 w-4 text-orange-400" />
+                      <p className="text-xs text-muted-foreground">UV Index</p>
+                    </div>
+                    <p className="font-semibold text-foreground">6</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-            {/* Exercise Tracking */}
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-white mb-2">
-                Daily Exercise
-              </h3>
-              <div className="glass p-4 rounded-xl border border-blue-600/40">
-                <div className="flex items-center gap-2 mb-4">
+        {/* Exercise Card */}
+        <motion.div variants={item}>
+          <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-card/50">
+            <div className="absolute -right-12 -top-12 w-32 h-32 bg-gradient-to-br from-red-500/10 to-pink-500/10 rounded-full blur-2xl" />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Dumbbell className="h-5 w-5 text-red-400" />
+                Exercise
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50">
                   <Checkbox
-                    checked={currentData.exercise.hasExercise}
-                    onCheckedChange={handleExerciseChange}
-                    className="text-green-500"
+                    checked={exerciseCompleted}
+                    onCheckedChange={(checked) =>
+                      setExerciseCompleted(checked as boolean)
+                    }
+                    className="h-5 w-5"
                   />
-                  <span className="text-white">Exercise today?</span>
+                  <label className="text-sm font-medium text-foreground cursor-pointer flex-1">
+                    Exercise Completed
+                  </label>
                 </div>
-                {currentData.exercise.hasExercise && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <Label className="text-blue-300">Type</Label>
-                      <Select
-                        value={currentData.exercise.type || ""}
-                        onValueChange={(value) =>
-                          handleExerciseDetailsChange({ name: "type", value })
-                        }
-                      >
-                        <SelectTrigger className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent className="dropdown fade-in-down">
-                          <SelectItem value="Running" className="dropdown-item">
-                            Running
-                          </SelectItem>
-                          <SelectItem value="Gym" className="dropdown-item">
-                            Gym
-                          </SelectItem>
-                          <SelectItem value="Yoga" className="dropdown-item">
-                            Yoga
-                          </SelectItem>
-                          <SelectItem value="Other" className="dropdown-item">
-                            Other
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-blue-300">Time</Label>
-                      <Input
-                        type="time"
-                        name="time"
-                        value={currentData.exercise.time || ""}
-                        onChange={handleExerciseDetailsChange}
-                        className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-blue-300">Location</Label>
-                      <Input
-                        type="text"
-                        name="location"
-                        value={currentData.exercise.location || ""}
-                        onChange={handleExerciseDetailsChange}
-                        placeholder="e.g., Park, Gym"
-                        className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
 
-            {/* Vitamin/Supplement Tracker */}
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-white mb-2">
-                Vitamin/Supplement Tracker
-              </h3>
-              <Button
-                onClick={() => setShowAddVitamin(true)}
-                className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group mb-4"
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                  <Plus className="w-5 h-5 mr-2" /> Add Vitamin
-                </span>
-                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-              </Button>
-              <div className="glass p-4 rounded-xl border border-blue-600/40">
-                {currentData.vitamins.filter((v) =>
-                  isVitaminApplicable(v, selectedDate)
-                ).length === 0 ? (
-                  <p className="text-gray-400">
-                    No vitamins scheduled for today.
-                  </p>
-                ) : (
-                  currentData.vitamins
-                    .filter((v) => isVitaminApplicable(v, selectedDate))
-                    .map((vitamin) => (
-                      <div
+                <div className="space-y-3">
+                  <div>
+                    <Label
+                      htmlFor="exercise-type"
+                      className="text-sm font-medium mb-2 block"
+                    >
+                      Type
+                    </Label>
+                    <Select
+                      value={exerciseType}
+                      onValueChange={setExerciseType}
+                    >
+                      <SelectTrigger
+                        id="exercise-type"
+                        className="bg-secondary/50"
+                      >
+                        <SelectValue placeholder="Select exercise type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="running">Running</SelectItem>
+                        <SelectItem value="cycling">Cycling</SelectItem>
+                        <SelectItem value="gym">Gym</SelectItem>
+                        <SelectItem value="yoga">Yoga</SelectItem>
+                        <SelectItem value="swimming">Swimming</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label
+                      htmlFor="exercise-time"
+                      className="text-sm font-medium mb-2 block"
+                    >
+                      Duration
+                    </Label>
+                    <Select
+                      value={exerciseTime}
+                      onValueChange={setExerciseTime}
+                    >
+                      <SelectTrigger
+                        id="exercise-time"
+                        className="bg-secondary/50"
+                      >
+                        <SelectValue placeholder="Select duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="15">15 minutes</SelectItem>
+                        <SelectItem value="30">30 minutes</SelectItem>
+                        <SelectItem value="45">45 minutes</SelectItem>
+                        <SelectItem value="60">60 minutes</SelectItem>
+                        <SelectItem value="90">90 minutes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label
+                      htmlFor="exercise-location"
+                      className="text-sm font-medium mb-2 block"
+                    >
+                      Location
+                    </Label>
+                    <Select
+                      value={exerciseLocation}
+                      onValueChange={setExerciseLocation}
+                    >
+                      <SelectTrigger
+                        id="exercise-location"
+                        className="bg-secondary/50"
+                      >
+                        <SelectValue placeholder="Select location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="home">Home</SelectItem>
+                        <SelectItem value="gym">Gym</SelectItem>
+                        <SelectItem value="park">Park</SelectItem>
+                        <SelectItem value="outdoor">Outdoor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Water Intake Card */}
+        <motion.div variants={item}>
+          <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-card/50">
+            <div className="absolute -right-12 -top-12 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-full blur-2xl" />
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Droplet className="h-5 w-5 text-blue-400" />
+                  Water Intake
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={addWater}
+                  className="h-8 w-8 p-0 hover:bg-blue-500/20 hover:text-blue-400"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <p className="text-sm font-medium text-foreground">
+                      Daily Goal
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {Math.round((waterProgress * 2000) / 100)}ml / 2000ml
+                    </p>
+                  </div>
+                  <Progress
+                    value={Math.min(waterProgress * 100, 100)}
+                    className="h-2"
+                  />
+                </div>
+
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {waterIntakes.map((intake) => (
+                    <motion.div
+                      key={intake.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="flex items-center justify-between p-2 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Droplet className="h-4 w-4 text-blue-400" />
+                        <p className="text-sm text-foreground">
+                          {intake.timestamp}
+                        </p>
+                      </div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        {intake.amount}ml
+                      </p>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Vitamins Card */}
+        <motion.div variants={item}>
+          <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-card/50">
+            <div className="absolute -right-12 -top-12 w-32 h-32 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-full blur-2xl" />
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Pill className="h-5 w-5 text-purple-400" />
+                  Vitamins
+                </div>
+                <Dialog
+                  open={showVitaminModal}
+                  onOpenChange={setShowVitaminModal}
+                >
+                  <DialogTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 hover:bg-purple-500/20 hover:text-purple-400"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Add Vitamin</DialogTitle>
+                      <DialogDescription>
+                        Add a new vitamin to your daily tracker.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label
+                          htmlFor="vitamin-name"
+                          className="text-sm font-medium"
+                        >
+                          Vitamin Name
+                        </Label>
+                        <Input
+                          id="vitamin-name"
+                          value={vitaminName}
+                          onChange={(e) => setVitaminName(e.target.value)}
+                          placeholder="e.g., Vitamin D"
+                          className="mt-1 bg-secondary/50"
+                        />
+                      </div>
+                      <div>
+                        <Label
+                          htmlFor="vitamin-time"
+                          className="text-sm font-medium"
+                        >
+                          Time
+                        </Label>
+                        <Input
+                          id="vitamin-time"
+                          type="time"
+                          value={vitaminTime}
+                          onChange={(e) => setVitaminTime(e.target.value)}
+                          className="mt-1 bg-secondary/50"
+                        />
+                      </div>
+                      <div>
+                        <Label
+                          htmlFor="vitamin-frequency"
+                          className="text-sm font-medium"
+                        >
+                          Frequency
+                        </Label>
+                        <Select
+                          value={vitaminFrequency}
+                          onValueChange={(value) =>
+                            setVitaminFrequency(
+                              value as "daily" | "weekly" | "monthly"
+                            )
+                          }
+                        >
+                          <SelectTrigger
+                            id="vitamin-frequency"
+                            className="bg-secondary/50"
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button
+                        onClick={addVitamin}
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                      >
+                        Add Vitamin
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <p className="text-sm font-medium text-foreground">
+                      Today's Progress
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {vitamins.filter((v) => v.taken).length} /{" "}
+                      {vitamins.length}
+                    </p>
+                  </div>
+                  <Progress value={vitaminProgress} className="h-2" />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex gap-2 mb-3">
+                    {["all", "daily", "weekly", "monthly"].map((freq) => (
+                      <Button
+                        key={freq}
+                        size="sm"
+                        variant={vitaminFilter === freq ? "default" : "outline"}
+                        onClick={() => setVitaminFilter(freq as any)}
+                        className="text-xs h-8"
+                      >
+                        {freq.charAt(0).toUpperCase() + freq.slice(1)}
+                      </Button>
+                    ))}
+                  </div>
+
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {filteredVitamins.map((vitamin) => (
+                      <motion.div
                         key={vitamin.id}
-                        className="flex items-center gap-2 mb-2"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="flex items-center gap-3 p-2 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors"
                       >
                         <Checkbox
                           checked={vitamin.taken}
-                          onCheckedChange={() =>
-                            handleToggleVitamin(vitamin.id)
-                          }
-                          className="text-green-500"
+                          onCheckedChange={() => toggleVitamin(vitamin.id)}
+                          className="h-5 w-5"
                         />
-                        <span className="text-white">
-                          {vitamin.name} ({vitamin.time}, every{" "}
-                          {vitamin.frequency} day
-                          {vitamin.frequency > 1 ? "s" : ""})
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className={`text-sm font-medium ${vitamin.taken ? "line-through text-muted-foreground" : "text-foreground"}`}
+                          >
+                            {vitamin.name}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {vitamin.time}
+                          </div>
+                        </div>
+                        <span className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-400">
+                          {vitamin.frequency}
                         </span>
-                      </div>
-                    ))
-                )}
-              </div>
-            </div>
-
-            {/* Water Intake Tracker */}
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-white mb-2">
-                Water Intake (Total: {totalWaterIntake} ml)
-              </h3>
-              <div className="flex items-center gap-4 mb-4">
-                <Input
-                  type="number"
-                  value={waterQuantityInput}
-                  onChange={(e) => setWaterQuantityInput(e.target.value)}
-                  placeholder="ml"
-                  className="w-32 glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                />
-                <Button
-                  onClick={() => {
-                    const quantity = parseInt(waterQuantityInput, 10);
-                    if (quantity > 0) {
-                      handleToggleWater(
-                        currentData.waterIntakes.find((w) => !w.taken)?.id ||
-                          "",
-                        quantity
-                      );
-                    }
-                  }}
-                  className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                >
-                  <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                    Add Water
-                  </span>
-                  <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                </Button>
-              </div>
-              <div className="glass p-4 rounded-xl border border-blue-600/40 grid grid-cols-4 md:grid-cols-8 gap-2">
-                {currentData.waterIntakes.map((water) => (
-                  <div key={water.id} className="flex flex-col items-center">
-                    <motion.div
-                      animate={{ scale: water.taken ? 1.2 : 1 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Droplet
-                        className={`w-8 h-8 cursor-pointer ${
-                          water.taken ? "text-blue-500" : "text-gray-400"
-                        }`}
-                        onClick={() => handleToggleWater(water.id)}
-                      />
-                    </motion.div>
-                    <span className="text-sm text-white">
-                      {water.quantity} ml
-                    </span>
+                      </motion.div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-            {/* Mood/Energy Diary */}
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-white mb-2">
-                Mood & Energy Diary
-              </h3>
-              <div className="glass p-4 rounded-xl border border-blue-600/40 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Mood & Energy Card */}
+        <motion.div variants={item}>
+          <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card to-card/50">
+            <div className="absolute -right-12 -top-12 w-32 h-32 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-full blur-2xl" />
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-yellow-400" />
+                Mood & Energy
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-5">
                 <div>
-                  <Label className="text-blue-300">Mood</Label>
-                  <Select
-                    value={currentData.moodEnergy.mood}
-                    onValueChange={(value) =>
-                      handleMoodEnergyChange({ name: "mood", value })
-                    }
+                  <Label
+                    htmlFor="mood"
+                    className="text-sm font-medium mb-3 block"
                   >
-                    <SelectTrigger className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                      <SelectValue placeholder="Select mood" />
+                    How are you feeling?
+                  </Label>
+                  <Select value={mood} onValueChange={setMood}>
+                    <SelectTrigger id="mood" className="bg-secondary/50">
+                      <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="dropdown fade-in-down">
-                      <SelectItem value="Happy" className="dropdown-item">
-                        Happy
-                      </SelectItem>
-                      <SelectItem value="Neutral" className="dropdown-item">
-                        Neutral
-                      </SelectItem>
-                      <SelectItem value="Sad" className="dropdown-item">
-                        Sad
-                      </SelectItem>
-                      <SelectItem value="Stressed" className="dropdown-item">
-                        Stressed
-                      </SelectItem>
+                    <SelectContent>
+                      <SelectItem value="great">Great 😄</SelectItem>
+                      <SelectItem value="happy">Happy 😊</SelectItem>
+                      <SelectItem value="okay">Okay 😐</SelectItem>
+                      <SelectItem value="sad">Sad 😢</SelectItem>
+                      <SelectItem value="stressed">Stressed 😰</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div>
-                  <Label className="text-blue-300">Energy Level</Label>
-                  <Select
-                    value={currentData.moodEnergy.energy}
-                    onValueChange={(value) =>
-                      handleMoodEnergyChange({ name: "energy", value })
-                    }
+                  <Label
+                    htmlFor="energy"
+                    className="text-sm font-medium mb-3 block"
                   >
-                    <SelectTrigger className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                      <SelectValue placeholder="Select energy level" />
+                    Energy Level
+                  </Label>
+                  <Select value={energy} onValueChange={setEnergy}>
+                    <SelectTrigger id="energy" className="bg-secondary/50">
+                      <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="dropdown fade-in-down">
-                      <SelectItem value="High" className="dropdown-item">
-                        High
-                      </SelectItem>
-                      <SelectItem value="Medium" className="dropdown-item">
-                        Medium
-                      </SelectItem>
-                      <SelectItem value="Low" className="dropdown-item">
-                        Low
-                      </SelectItem>
+                    <SelectContent>
+                      <SelectItem value="high">High ⚡</SelectItem>
+                      <SelectItem value="good">Good ✨</SelectItem>
+                      <SelectItem value="fair">Fair 😑</SelectItem>
+                      <SelectItem value="low">Low 💤</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="p-4 rounded-lg bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
+                  <p className="text-sm text-muted-foreground">
+                    <AlertCircle className="h-4 w-4 inline mr-2" />
+                    Your mood and energy are being tracked for insights.
+                  </p>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
       </motion.div>
 
-      {/* Add Vitamin Modal */}
-      {showAddVitamin && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={modalVariants}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-          onClick={() => setShowAddVitamin(false)}
-        >
-          <motion.div
-            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-            <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                Add Vitamin/Supplement
-              </CardTitle>
-              <motion.div className="space-y-6">
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold"
-                    htmlFor="name"
-                    animate={
-                      vitaminForm.name
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Vitamin Name
-                  </motion.label>
-                  <motion.input
-                    id="name"
-                    type="text"
-                    name="name"
-                    value={vitaminForm.name}
-                    onChange={handleVitaminFormChange}
-                    placeholder="e.g., D-vitamin"
-                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold"
-                    htmlFor="time"
-                    animate={
-                      vitaminForm.time
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Time of Day
-                  </motion.label>
-                  <motion.input
-                    id="time"
-                    type="text"
-                    name="time"
-                    value={vitaminForm.time}
-                    onChange={handleVitaminFormChange}
-                    placeholder="e.g., Morning"
-                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold"
-                    htmlFor="frequency"
-                    animate={
-                      vitaminForm.frequency
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Frequency (days)
-                  </motion.label>
-                  <motion.input
-                    id="frequency"
-                    type="number"
-                    name="frequency"
-                    value={vitaminForm.frequency}
-                    onChange={handleVitaminFormChange}
-                    placeholder="e.g., 1 for daily"
-                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                    min="1"
-                  />
-                </div>
-                {error && (
-                  <motion.p
-                    className="text-red-400 text-center font-medium"
-                    variants={{
-                      hidden: { opacity: 0 },
-                      visible: { opacity: 1 },
-                    }}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    {error}
-                  </motion.p>
-                )}
-                <Button
-                  type="button"
-                  onClick={handleAddVitamin}
-                  className="w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                >
-                  <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                    <Plus className="w-5 h-5" />
-                    Add Vitamin
-                  </span>
-                  <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => setShowAddVitamin(false)}
-                  className="w-full bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
-                >
-                  Cancel
-                </Button>
-              </motion.div>
-            </CardContent>
-          </motion.div>
-        </motion.div>
-      )}
+      {/* Background Gradient Accents */}
+      <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-accent/20 to-accent/5 rounded-full blur-3xl -z-10" />
+      <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-accent/10 to-accent/5 rounded-full blur-3xl -z-10" />
     </div>
   );
 };
 
-export default Wellness;
+export default WellnessTracker;

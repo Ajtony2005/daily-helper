@@ -1,11 +1,47 @@
-export default function Loading() {
+"use client";
+
+import { motion } from "framer-motion";
+
+export function Loading() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-fade-in">
-      <div className="w-16 h-16 border-4 border-panda-fur border-t-panda-orange rounded-full animate-spin mb-6"></div>
-      <h2 className="text-xl font-semibold text-panda-fur">Loading...</h2>
-      <p className="text-panda-black mt-2">
-        Please wait while we fetch your data.
-      </p>
+    <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="flex flex-col items-center justify-center gap-4"
+      >
+        {/* Spinning Circle */}
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{
+            duration: 2,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "linear",
+          }}
+          className="relative w-16 h-16"
+        >
+          <div className="absolute inset-0 rounded-full border-4 border-border" />
+          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary border-r-primary" />
+        </motion.div>
+
+        {/* Text Content */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="text-center"
+        >
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            Loading...
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Please wait while we fetch your data.
+          </p>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
+
+export default Loading;

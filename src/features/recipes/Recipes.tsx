@@ -1,9 +1,27 @@
-import React, { useState } from "react";
-import { motion, useAnimation } from "framer-motion";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+"use client";
+
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Plus,
+  Star,
+  StarOff,
+  Search,
+  Download,
+  Calendar,
+  Trash2,
+  Edit2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -12,914 +30,659 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Save, Edit2, Trash2, Heart, CalendarDays } from "lucide-react";
-import Loading from "@/pages/Loading";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
+import { useToast } from "@/hooks/use-toast";
+import { RecipeSchema } from "@/lib/schemas";
+import { z } from "zod";
 
-const mealTypes = ["Breakfast", "Lunch", "Dinner", "Snack"];
-const recipeTypes = [
-  "Soup",
-  "Main Dish",
-  "Meat-Free",
-  "Vegan",
-  "Gluten-Free",
-  "Other",
-];
-
-type Ingredient = {
-  id: string;
-  name: string;
-  quantity: string;
-  unit: string;
-};
+type Ingredient = { id: string; name: string; quantity: string; unit: string };
 
 type Recipe = {
   id: string;
   name: string;
-  mealTypes: string[];
-  recipeTypes: string[];
+  mealTypes: string[]; // breakfast, lunch, dinner, snack
+  recipeType: string; // e.g., Vegan, Dessert
   ingredients: Ingredient[];
   instructions: string;
-  prepTime: string;
-  cookTime: string;
+  prepTime: number;
+  cookTime: number;
   servings: number;
-  favorite: boolean;
   notes: string;
+  imageUrl?: string;
+  favorite?: boolean;
+  createdAt: string;
 };
 
-type WeeklyMenu = {
-  [day: string]: {
-    [meal: string]: string; // Recipe ID
-  };
-};
+const DEFAULT_MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
+const DEFAULT_RECIPE_TYPES = [
+  "All",
+  "Vegan",
+  "Vegetarian",
+  "Dessert",
+  "Main",
+  "Appetizer",
+];
 
-const Recipes = () => {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [showAddRecipe, setShowAddRecipe] = useState(false);
-  const [showEditRecipe, setShowEditRecipe] = useState(false);
-  const [editRecipe, setEditRecipe] = useState<Recipe | null>(null);
-  const [form, setForm] = useState({
+export default function RecipesManager() {
+  const [recipes, setRecipes] = useState<Recipe[]>(() => []);
+  const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("All");
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [plannerOpen, setPlannerOpen] = useState(false);
+  const { toast } = useToast();
+
+  const emptyForm = {
     name: "",
     mealTypes: [] as string[],
-    recipeTypes: [] as string[],
+    recipeType: "",
     ingredients: [] as Ingredient[],
-    newIngredientName: "",
-    newIngredientQuantity: "",
-    newIngredientUnit: "",
     instructions: "",
-    prepTime: "",
-    cookTime: "",
-    servings: "4",
+    prepTime: 0,
+    cookTime: 0,
+    servings: 1,
     notes: "",
-  });
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterMealType, setFilterMealType] = useState("All");
-  const [filterRecipeType, setFilterRecipeType] = useState("All");
-  const [weeklyMenu, setWeeklyMenu] = useState<WeeklyMenu>({});
-  const [showMenuPlanner, setShowMenuPlanner] = useState(false);
-  const [shoppingList, setShoppingList] = useState<Ingredient[]>([]);
-  const buttonControls = useAnimation();
+    imageUrl: "",
+  };
 
-  const handleChange = (
-    e:
-      | React.ChangeEvent<
-          HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-        >
-      | { name: string; value: any }
-  ) => {
-    if ("target" in e) {
-      setForm({ ...form, [e.target.name]: e.target.value });
+  const [form, setForm] = useState(() => ({ ...emptyForm }));
+
+  const filtered = useMemo(() => {
+    return recipes.filter((r) => {
+      if (favoritesOnly && !r.favorite) return false;
+      if (typeFilter !== "All" && r.recipeType !== typeFilter) return false;
+      if (query && !r.name.toLowerCase().includes(query.toLowerCase()))
+        return false;
+      return true;
+    });
+  }, [recipes, query, typeFilter, favoritesOnly]);
+
+  const openNew = () => {
+    setEditingId(null);
+    setForm({ ...emptyForm });
+    setIsEditorOpen(true);
+  };
+
+  const openEdit = (r: Recipe) => {
+    setEditingId(r.id);
+    setForm({ ...r, ingredients: r.ingredients.map((i) => ({ ...i })) });
+    setIsEditorOpen(true);
+  };
+
+  const saveRecipe = () => {
+    if (!form.name.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter a recipe name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate with Zod
+    try {
+      const candidate = {
+        id: editingId || Date.now().toString(),
+        title: form.name.trim(),
+        ingredients: form.ingredients.map((i) => ({
+          name: i.name,
+          quantity: i.quantity || undefined,
+        })),
+        steps: form.instructions
+          ? form.instructions
+              .split("\n")
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [],
+        tags: form.mealTypes || [],
+        timeMinutes: Number(form.prepTime || 0) + Number(form.cookTime || 0),
+        image: form.imageUrl || undefined,
+      };
+      RecipeSchema.parse(candidate);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const msg = err.issues?.[0]?.message || "Validation failed";
+        toast({ title: msg, variant: "destructive" });
+        return;
+      }
+      throw err;
+    }
+    if (editingId) {
+      setRecipes((s) =>
+        s.map((r) =>
+          r.id === editingId ? { ...(r as Recipe), ...form, id: editingId } : r
+        )
+      );
+      toast({ title: "Updated", description: "Recipe updated" });
     } else {
-      setForm({ ...form, [e.name]: e.value });
+      const newRecipe: Recipe = {
+        ...(form as any),
+        id: Date.now().toString(),
+        favorite: false,
+        createdAt: new Date().toISOString(),
+      };
+      setRecipes((s) => [newRecipe, ...s]);
+      toast({ title: "Saved", description: "Recipe created" });
     }
-    setError("");
+    setIsEditorOpen(false);
   };
 
-  const handleToggleMealType = (type: string) => {
-    setForm({
-      ...form,
-      mealTypes: form.mealTypes.includes(type)
-        ? form.mealTypes.filter((t) => t !== type)
-        : [...form.mealTypes, type],
-    });
-  };
-
-  const handleToggleRecipeType = (type: string) => {
-    setForm({
-      ...form,
-      recipeTypes: form.recipeTypes.includes(type)
-        ? form.recipeTypes.filter((t) => t !== type)
-        : [...form.recipeTypes, type],
-    });
-  };
-
-  const handleAddIngredient = () => {
-    if (!form.newIngredientName.trim() || !form.newIngredientQuantity.trim()) {
-      setError("Ingredient name and quantity are required.");
-      return;
-    }
-    const newIngredient: Ingredient = {
-      id: Date.now().toString(),
-      name: form.newIngredientName.trim(),
-      quantity: form.newIngredientQuantity.trim(),
-      unit: form.newIngredientUnit.trim(),
-    };
-    setForm({
-      ...form,
-      ingredients: [...form.ingredients, newIngredient],
-      newIngredientName: "",
-      newIngredientQuantity: "",
-      newIngredientUnit: "",
-    });
-  };
-
-  const handleDeleteIngredient = (id: string) => {
-    setForm({
-      ...form,
-      ingredients: form.ingredients.filter((ing) => ing.id !== id),
-    });
-  };
-
-  const handleAddRecipe = async () => {
-    if (
-      !form.name.trim() ||
-      form.ingredients.length === 0 ||
-      !form.instructions.trim()
-    ) {
-      setError("Name, ingredients, and instructions are required.");
-      return;
-    }
-    setIsLoading(true);
-    await buttonControls.start({
-      scale: [1, 1.1, 1],
-      transition: { duration: 0.3 },
-    });
-    const newRecipe: Recipe = {
-      id: Date.now().toString(),
-      name: form.name.trim(),
-      mealTypes: form.mealTypes,
-      recipeTypes: form.recipeTypes,
-      ingredients: form.ingredients,
-      instructions: form.instructions.trim(),
-      prepTime: form.prepTime.trim(),
-      cookTime: form.cookTime.trim(),
-      servings: parseInt(form.servings, 10),
-      favorite: false,
-      notes: form.notes.trim(),
-    };
-    setRecipes([...recipes, newRecipe]);
-    resetForm();
-    setShowAddRecipe(false);
-    setError("");
-    setIsLoading(false);
-  };
-
-  const handleEditRecipe = async () => {
-    if (
-      !editRecipe ||
-      !form.name.trim() ||
-      form.ingredients.length === 0 ||
-      !form.instructions.trim()
-    ) {
-      setError("Name, ingredients, and instructions are required.");
-      return;
-    }
-    setIsLoading(true);
-    await buttonControls.start({
-      scale: [1, 1.1, 1],
-      transition: { duration: 0.3 },
-    });
-    const updatedRecipe = {
-      ...editRecipe,
-      name: form.name.trim(),
-      mealTypes: form.mealTypes,
-      recipeTypes: form.recipeTypes,
-      ingredients: form.ingredients,
-      instructions: form.instructions.trim(),
-      prepTime: form.prepTime.trim(),
-      cookTime: form.cookTime.trim(),
-      servings: parseInt(form.servings, 10),
-      notes: form.notes.trim(),
-    };
-    setRecipes(
-      recipes.map((recipe) =>
-        recipe.id === editRecipe.id ? updatedRecipe : recipe
-      )
+  const toggleFavorite = (id: string) =>
+    setRecipes((s) =>
+      s.map((r) => (r.id === id ? { ...r, favorite: !r.favorite } : r))
     );
-    resetForm();
-    setEditRecipe(null);
-    setShowEditRecipe(false);
-    setError("");
-    setIsLoading(false);
+
+  const deleteRecipe = (id: string) => {
+    setRecipes((s) => s.filter((r) => r.id !== id));
+    toast({ title: "Deleted", description: "Recipe removed" });
   };
 
-  const resetForm = () => {
-    setForm({
-      name: "",
-      mealTypes: [],
-      recipeTypes: [],
-      ingredients: [],
-      newIngredientName: "",
-      newIngredientQuantity: "",
-      newIngredientUnit: "",
-      instructions: "",
-      prepTime: "",
-      cookTime: "",
-      servings: "4",
-      notes: "",
+  // Planner state: map day->meal->recipeId
+  const [planner, setPlanner] = useState<
+    Record<string, Record<string, string | null>>
+  >(() => {
+    const days = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
+    const meals = ["Breakfast", "Lunch", "Dinner", "Snack"];
+    const p: any = {};
+    days.forEach((d) => {
+      p[d] = {};
+      meals.forEach((m) => (p[d][m] = null));
     });
+    return p;
+  });
+
+  const assignToPlanner = (day: string, meal: string, recipeId?: string) => {
+    setPlanner((p) => ({
+      ...p,
+      [day]: { ...p[day], [meal]: recipeId || null },
+    }));
   };
 
-  const handleOpenEditRecipe = (recipe: Recipe) => {
-    setEditRecipe(recipe);
-    setForm({
-      name: recipe.name,
-      mealTypes: recipe.mealTypes,
-      recipeTypes: recipe.recipeTypes,
-      ingredients: recipe.ingredients,
-      newIngredientName: "",
-      newIngredientQuantity: "",
-      newIngredientUnit: "",
-      instructions: recipe.instructions,
-      prepTime: recipe.prepTime,
-      cookTime: recipe.cookTime,
-      servings: recipe.servings.toString(),
-      notes: recipe.notes,
-    });
-    setShowEditRecipe(true);
-  };
-
-  const handleDeleteRecipe = (id: string) => {
-    setRecipes(recipes.filter((recipe) => recipe.id !== id));
-  };
-
-  const handleToggleFavorite = (id: string) => {
-    setRecipes(
-      recipes.map((recipe) =>
-        recipe.id === id ? { ...recipe, favorite: !recipe.favorite } : recipe
-      )
-    );
-  };
-
-  const getFilteredRecipes = () => {
-    const search = searchQuery.toLowerCase();
-    return recipes.filter(
-      (recipe) =>
-        (filterMealType === "All" ||
-          recipe.mealTypes.includes(filterMealType)) &&
-        (filterRecipeType === "All" ||
-          recipe.recipeTypes.includes(filterRecipeType)) &&
-        (recipe.name.toLowerCase().includes(search) ||
-          recipe.ingredients.some((ing) =>
-            ing.name.toLowerCase().includes(search)
-          ))
-    );
-  };
-
-  const handlePlanMenu = () => {
-    setShowMenuPlanner(true);
-  };
-
-  const handleAddToMenu = (day: string, meal: string, recipeId: string) => {
-    setWeeklyMenu({
-      ...weeklyMenu,
-      [day]: {
-        ...(weeklyMenu[day] || {}),
-        [meal]: recipeId,
-      },
-    });
-  };
-
-  const generateShoppingList = () => {
-    const list: { [key: string]: { quantity: number; unit: string } } = {};
-    Object.values(weeklyMenu).forEach((dayMeals) => {
-      Object.values(dayMeals).forEach((recipeId) => {
-        const recipe = recipes.find((r) => r.id === recipeId);
-        if (recipe) {
-          recipe.ingredients.forEach((ing) => {
-            const scaledQuantity =
-              parseFloat(ing.quantity) * (recipe.servings / 4); // Scale based on servings (assuming base is 4)
-            if (list[ing.name]) {
-              list[ing.name].quantity += scaledQuantity;
-            } else {
-              list[ing.name] = { quantity: scaledQuantity, unit: ing.unit };
-            }
-          });
-        }
+  const generateShoppingList = (selectedDays: string[]) => {
+    // gather ingredients for recipes assigned to selectedDays
+    const aggregated: Record<string, { quantity: string; unit: string }[]> = {};
+    selectedDays.forEach((day) => {
+      Object.values(planner[day]).forEach((rid) => {
+        if (!rid) return;
+        const r = recipes.find((x) => x.id === rid);
+        if (!r) return;
+        r.ingredients.forEach((ing) => {
+          const key = ing.name.toLowerCase();
+          if (!aggregated[key]) aggregated[key] = [];
+          aggregated[key].push({ quantity: ing.quantity, unit: ing.unit });
+        });
       });
     });
-    setShoppingList(
-      Object.entries(list).map(([name, { quantity, unit }]) => ({
-        id: name,
-        name,
-        quantity: quantity.toString(),
-        unit,
-      }))
-    );
-  };
-
-  const inputVariants = {
-    focus: {
-      scale: 1.02,
-      boxShadow: "0 0 10px rgba(37, 99, 235, 0.5)",
-      transition: { duration: 0.2 },
-    },
-    blur: {
-      scale: 1,
-      boxShadow: "none",
-      transition: { duration: 0.2 },
-    },
-  };
-
-  const errorVariants = {
-    hidden: { opacity: 0, y: -10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-  };
-
-  const modalVariants = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+    return aggregated;
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden font-sans">
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="w-full max-w-6xl relative z-10"
-      >
-        <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden mb-8">
-          <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-          <CardContent className="p-10 relative z-10">
-            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-              Recipes
-            </CardTitle>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-              className="mb-6"
+    <div className="min-h-screen p-4 sm:p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-6 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Recipes</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage your recipes & plan weekly menus
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Search recipes..."
+              value={query}
+              onChange={(e: any) => setQuery(e.target.value)}
+              className="w-64"
+            />
+            <Select
+              value={typeFilter}
+              onValueChange={(v: any) => setTypeFilter(v)}
             >
-              <Button
-                type="button"
-                disabled={isLoading}
-                onClick={() => setShowAddRecipe(true)}
-                className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
-                  isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                  <Plus className="w-5 h-5" />
-                  Add Recipe
-                </span>
-                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-              </Button>
-            </motion.div>
-            <div className="flex gap-4 mb-6">
-              <Input
-                placeholder="Search recipes or ingredients..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="glass flex-1 px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-              />
-              <Select value={filterMealType} onValueChange={setFilterMealType}>
-                <SelectTrigger className="glass w-48 px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                  <SelectValue placeholder="Filter by meal type" />
-                </SelectTrigger>
-                <SelectContent className="dropdown fade-in-down">
-                  <SelectItem value="All" className="dropdown-item">
-                    All
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DEFAULT_RECIPE_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
                   </SelectItem>
-                  {mealTypes.map((type) => (
-                    <SelectItem
-                      key={type}
-                      value={type}
-                      className="dropdown-item"
-                    >
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={filterRecipeType}
-                onValueChange={setFilterRecipeType}
-              >
-                <SelectTrigger className="glass w-48 px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                  <SelectValue placeholder="Filter by recipe type" />
-                </SelectTrigger>
-                <SelectContent className="dropdown fade-in-down">
-                  <SelectItem value="All" className="dropdown-item">
-                    All
-                  </SelectItem>
-                  {recipeTypes.map((type) => (
-                    <SelectItem
-                      key={type}
-                      value={type}
-                      className="dropdown-item"
-                    >
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                ))}
+              </SelectContent>
+            </Select>
             <Button
-              onClick={handlePlanMenu}
-              className="w-full bg-blue-600 text-white py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 mb-6"
+              variant={favoritesOnly ? "default" : "outline"}
+              onClick={() => setFavoritesOnly((s) => !s)}
             >
-              <span className="flex items-center justify-center gap-2">
-                <CalendarDays className="w-5 h-5" />
-                Plan Weekly Menu
-              </span>
+              {favoritesOnly ? (
+                <Star className="h-4 w-4" />
+              ) : (
+                <StarOff className="h-4 w-4" />
+              )}{" "}
+              Favorites
             </Button>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {getFilteredRecipes().map((recipe) => (
-                <motion.div
-                  key={recipe.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-gray-800/30 p-4 rounded-xl border border-blue-600/40 shadow-inner"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="font-bold text-lg text-white">
-                      {recipe.name}
+            <Button
+              onClick={openNew}
+              className="gap-2 bg-primary text-primary-foreground"
+            >
+              <Plus className="h-4 w-4" /> New Recipe
+            </Button>
+            <Dialog open={plannerOpen} onOpenChange={setPlannerOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Calendar className="h-4 w-4" /> Weekly Planner
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[70vh] overflow-auto">
+                <DialogHeader>
+                  <DialogTitle>Weekly Menu Planner</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {Object.keys(planner).map((day) => (
+                    <div key={day} className="border p-3 rounded-md">
+                      <h4 className="font-semibold mb-2">{day}</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                        {Object.keys(planner[day]).map((meal) => (
+                          <div key={meal} className="flex items-center gap-2">
+                            <Label className="w-24">{meal}</Label>
+                            <Select
+                              value={planner[day][meal] || ""}
+                              onValueChange={(val: any) =>
+                                assignToPlanner(
+                                  day,
+                                  meal,
+                                  val === "__none__" ? undefined : val
+                                )
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select recipe" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__none__">
+                                  -- none --
+                                </SelectItem>
+                                {recipes.map((r) => (
+                                  <SelectItem key={r.id} value={r.id}>
+                                    {r.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        onClick={() => handleOpenEditRecipe(recipe)}
-                        className="bg-blue-600 text-white p-1 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                      >
-                        <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                          <Edit2 className="w-4 h-4" />
-                        </span>
-                        <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => handleDeleteRecipe(recipe.id)}
-                        className="bg-red-500 text-white p-1 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                      >
-                        <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                          <Trash2 className="w-4 h-4" />
-                        </span>
-                        <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => handleToggleFavorite(recipe.id)}
-                        className="bg-transparent text-red-500 p-1 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
-                      >
-                        <Heart
-                          className={`w-4 h-4 ${
-                            recipe.favorite ? "fill-red-500" : ""
-                          }`}
-                        />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-300 mb-2">
-                    Meal Types: {recipe.mealTypes.join(", ") || "None"}
-                  </div>
-                  <div className="text-sm text-gray-300 mb-2">
-                    Recipe Types: {recipe.recipeTypes.join(", ") || "None"}
-                  </div>
-                  <div className="text-sm text-gray-300 mb-2">
-                    Prep Time: {recipe.prepTime || "N/A"}
-                  </div>
-                  <div className="text-sm text-gray-300 mb-2">
-                    Cook Time: {recipe.cookTime || "N/A"}
-                  </div>
-                  <div className="text-sm text-gray-300 mb-2">
-                    Servings: {recipe.servings}
-                  </div>
-                  <div className="mt-4">
-                    <h4 className="text-md font-semibold text-blue-300 mb-2">
-                      Ingredients
-                    </h4>
-                    <ul className="list-disc pl-5 space-y-1 text-white">
-                      {recipe.ingredients.map((ing) => (
-                        <li key={ing.id}>
-                          {ing.quantity} {ing.unit} {ing.name}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="mt-4">
-                    <h4 className="text-md font-semibold text-blue-300 mb-2">
-                      Instructions
-                    </h4>
-                    <p className="text-white">{recipe.instructions}</p>
-                  </div>
-                  <div className="mt-4">
-                    <h4 className="text-md font-semibold text-blue-300 mb-2">
-                      Notes
-                    </h4>
-                    <p className="text-white">{recipe.notes || "No notes"}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+                  ))}
 
-      {/* Add/Edit Recipe Modal */}
-      {(showAddRecipe || showEditRecipe) && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={modalVariants}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm p-4"
-          onClick={() => {
-            setShowAddRecipe(false);
-            setShowEditRecipe(false);
-          }}
-        >
-          <motion.div
-            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-[90vw] sm:max-w-md max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-            <CardContent className="p-6 sm:p-10 relative z-10">
-              <CardTitle className="text-2xl sm:text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                {showAddRecipe ? "Add Recipe" : "Edit Recipe"}
-              </CardTitle>
-              <motion.form className="space-y-4 sm:space-y-6">
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="name"
-                    animate={
-                      form.name ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Name
-                  </motion.label>
-                  <motion.input
-                    id="name"
-                    type="text"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    placeholder="Recipe name"
-                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="relative">
-                  <Label className="text-blue-300">Meal Types</Label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {mealTypes.map((type) => (
-                      <div key={type} className="flex items-center gap-1">
-                        <Checkbox
-                          checked={form.mealTypes.includes(type)}
-                          onCheckedChange={() => handleToggleMealType(type)}
-                        />
-                        <span className="text-white">{type}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="relative">
-                  <Label className="text-blue-300">Recipe Types</Label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {recipeTypes.map((type) => (
-                      <div key={type} className="flex items-center gap-1">
-                        <Checkbox
-                          checked={form.recipeTypes.includes(type)}
-                          onCheckedChange={() => handleToggleRecipeType(type)}
-                        />
-                        <span className="text-white">{type}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="relative">
-                  <Label className="text-blue-300">Ingredients</Label>
-                  <div className="space-y-2 mt-2">
-                    {form.ingredients.map((ing) => (
-                      <div
-                        key={ing.id}
-                        className="flex items-center gap-2 bg-gray-800/50 p-2 rounded-xl"
-                      >
-                        <span className="text-white flex-1">
-                          {ing.quantity} {ing.unit} {ing.name}
-                        </span>
-                        <Button
-                          type="button"
-                          onClick={() => handleDeleteIngredient(ing.id)}
-                          className="bg-red-500 text-white p-1 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                        >
-                          <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                            <Trash2 className="w-4 h-4" />
-                          </span>
-                          <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 mt-2">
-                    <Input
-                      name="newIngredientQuantity"
-                      value={form.newIngredientQuantity}
-                      onChange={handleChange}
-                      placeholder="Quantity"
-                      className="glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                    />
-                    <Input
-                      name="newIngredientUnit"
-                      value={form.newIngredientUnit}
-                      onChange={handleChange}
-                      placeholder="Unit"
-                      className="glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                    />
-                    <Input
-                      name="newIngredientName"
-                      value={form.newIngredientName}
-                      onChange={handleChange}
-                      placeholder="Name"
-                      className="glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    onClick={handleAddIngredient}
-                    className="w-full bg-blue-600 text-white py-2 rounded-xl mt-2"
-                  >
-                    Add Ingredient
-                  </Button>
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="instructions"
-                    animate={
-                      form.instructions
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Instructions
-                  </motion.label>
-                  <motion.textarea
-                    id="instructions"
-                    name="instructions"
-                    value={form.instructions}
-                    onChange={handleChange}
-                    placeholder="Step-by-step instructions"
-                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in min-h-[150px]"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="prepTime"
-                      animate={
-                        form.prepTime
-                          ? { y: -25, scale: 0.9 }
-                          : { y: 0, scale: 1 }
-                      }
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      onClick={() => {
+                        const selectedDays = Object.keys(planner);
+                        const list = generateShoppingList(selectedDays);
+                        // show simple export as CSV
+                        const csvLines: string[] = ["Ingredient,Quantities"];
+                        Object.entries(list).forEach(([name, vals]) => {
+                          csvLines.push(
+                            `${name},"${vals.map((v) => v.quantity + " " + v.unit).join(" + ")}"`
+                          );
+                        });
+                        const blob = new Blob([csvLines.join("\n")], {
+                          type: "text/csv",
+                        });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "shopping-from-planner.csv";
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                      className="gap-2"
                     >
-                      Prep Time
-                    </motion.label>
-                    <motion.input
-                      id="prepTime"
-                      type="text"
-                      name="prepTime"
-                      value={form.prepTime}
-                      onChange={handleChange}
-                      placeholder="e.g., 15 min"
-                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="cookTime"
-                      animate={
-                        form.cookTime
-                          ? { y: -25, scale: 0.9 }
-                          : { y: 0, scale: 1 }
-                      }
-                    >
-                      Cook Time
-                    </motion.label>
-                    <motion.input
-                      id="cookTime"
-                      type="text"
-                      name="cookTime"
-                      value={form.cookTime}
-                      onChange={handleChange}
-                      placeholder="e.g., 30 min"
-                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
+                      <Download className="h-4 w-4" /> Generate Shopping List
+                    </Button>
                   </div>
                 </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+
+        {/* Recipes Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+          {filtered.map((r) => (
+            <motion.div key={r.id} whileHover={{ y: -4 }} className="group">
+              <Card className="overflow-hidden">
                 <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="servings"
-                    animate={
-                      form.servings
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
+                  {r.imageUrl ? (
+                    <img
+                      src={r.imageUrl}
+                      alt={r.name}
+                      className="w-full h-40 object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-40 bg-gradient-to-br from-accent/10 to-accent/5 flex items-center justify-center text-muted-foreground">
+                      No image
+                    </div>
+                  )}
+                  <button
+                    onClick={() => toggleFavorite(r.id)}
+                    className="absolute top-2 right-2 p-2 rounded-full bg-card/60"
                   >
-                    Servings
-                  </motion.label>
-                  <motion.input
-                    id="servings"
-                    type="number"
-                    name="servings"
-                    value={form.servings}
-                    onChange={handleChange}
-                    placeholder="e.g., 4"
-                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="notes"
-                    animate={
-                      form.notes ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Notes
-                  </motion.label>
-                  <motion.textarea
-                    id="notes"
-                    name="notes"
-                    value={form.notes}
-                    onChange={handleChange}
-                    placeholder="Additional notes or variations"
-                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in min-h-[100px]"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                {error && (
-                  <motion.p
-                    id="form-error"
-                    aria-live="assertive"
-                    className="text-red-400 mb-6 text-center font-medium drop-shadow animate-pulse"
-                    variants={errorVariants}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    {error}
-                  </motion.p>
-                )}
-                <motion.div animate={buttonControls}>
-                  <Button
-                    type="button"
-                    disabled={isLoading}
-                    onClick={showAddRecipe ? handleAddRecipe : handleEditRecipe}
-                    className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
-                      isLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {isLoading ? (
-                      <Loading />
+                    {r.favorite ? (
+                      <Star className="h-5 w-5 text-yellow-400" />
                     ) : (
-                      <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                        <Save className="w-5 h-5" />
-                        {showAddRecipe ? "Add Recipe" : "Save Changes"}
+                      <StarOff className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </button>
+                </div>
+
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-lg">{r.name}</h3>
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => openEdit(r)}
+                      >
+                        <Edit2 />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => deleteRecipe(r.id)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {r.mealTypes.map((m) => (
+                      <span
+                        key={m}
+                        className="text-xs px-2 py-1 bg-muted/10 rounded-full"
+                      >
+                        {m}
+                      </span>
+                    ))}
+                    {r.recipeType && (
+                      <span className="text-xs px-2 py-1 bg-muted/10 rounded-full">
+                        {r.recipeType}
                       </span>
                     )}
-                    <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
+                  </div>
+
+                  <Accordion type="single" collapsible className="mt-4">
+                    <AccordionItem value="details">
+                      <AccordionTrigger>Details</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="mb-3">
+                          <h4 className="font-medium">Ingredients</h4>
+                          <ul className="list-disc pl-5 mt-2 text-sm">
+                            {r.ingredients.map((ing) => (
+                              <li key={ing.id}>
+                                {ing.quantity} {ing.unit} — {ing.name}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="mb-3">
+                          <h4 className="font-medium">Instructions</h4>
+                          <p className="text-sm mt-2 whitespace-pre-wrap">
+                            {r.instructions}
+                          </p>
+                        </div>
+                        <div className="flex gap-4 text-sm text-muted-foreground">
+                          <div>Prep: {r.prepTime}m</div>
+                          <div>Cook: {r.cookTime}m</div>
+                          <div>Serves: {r.servings}</div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </div>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Editor Dialog */}
+        <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {editingId ? "Edit Recipe" : "Add Recipe"}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={form.name}
+                  onChange={(e: any) =>
+                    setForm({ ...form, name: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Meal Types</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {DEFAULT_MEAL_TYPES.map((m) => (
+                      <label key={m} className="inline-flex items-center gap-2">
+                        <Checkbox
+                          checked={form.mealTypes.includes(m)}
+                          onCheckedChange={(v: any) => {
+                            setForm((s) => ({
+                              ...s,
+                              mealTypes: v
+                                ? [...s.mealTypes, m]
+                                : s.mealTypes.filter((x) => x !== m),
+                            }));
+                          }}
+                        />
+                        <span className="text-sm">{m}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <Label>Recipe Type</Label>
+                  <Input
+                    value={form.recipeType}
+                    onChange={(e: any) =>
+                      setForm({ ...form, recipeType: e.target.value })
+                    }
+                    placeholder="e.g., Vegan, Dessert"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Ingredients</Label>
+                <div className="space-y-2 mt-2">
+                  {form.ingredients.map((ing, idx) => (
+                    <div
+                      key={ing.id}
+                      className="grid grid-cols-12 gap-2 items-center"
+                    >
+                      <Input
+                        className="col-span-5"
+                        value={ing.name}
+                        onChange={(e: any) => {
+                          const copy = [...form.ingredients];
+                          copy[idx] = { ...copy[idx], name: e.target.value };
+                          setForm({ ...form, ingredients: copy });
+                        }}
+                        placeholder="Name"
+                      />
+                      <Input
+                        className="col-span-3"
+                        value={ing.quantity}
+                        onChange={(e: any) => {
+                          const copy = [...form.ingredients];
+                          copy[idx] = {
+                            ...copy[idx],
+                            quantity: e.target.value,
+                          };
+                          setForm({ ...form, ingredients: copy });
+                        }}
+                        placeholder="Qty"
+                      />
+                      <Input
+                        className="col-span-3"
+                        value={ing.unit}
+                        onChange={(e: any) => {
+                          const copy = [...form.ingredients];
+                          copy[idx] = { ...copy[idx], unit: e.target.value };
+                          setForm({ ...form, ingredients: copy });
+                        }}
+                        placeholder="Unit"
+                      />
+                      <Button
+                        variant="ghost"
+                        className="col-span-1"
+                        onClick={() => {
+                          setForm((s) => ({
+                            ...s,
+                            ingredients: s.ingredients.filter(
+                              (x) => x.id !== ing.id
+                            ),
+                          }));
+                        }}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    onClick={() =>
+                      setForm((s) => ({
+                        ...s,
+                        ingredients: [
+                          ...s.ingredients,
+                          {
+                            id: Date.now().toString(),
+                            name: "",
+                            quantity: "",
+                            unit: "",
+                          },
+                        ],
+                      }))
+                    }
+                    className="mt-2"
+                  >
+                    <Plus className="h-4 w-4" /> Add Ingredient
                   </Button>
-                </motion.div>
+                </div>
+              </div>
+
+              <div>
+                <Label>Instructions</Label>
+                <Textarea
+                  value={form.instructions}
+                  onChange={(e: any) =>
+                    setForm({ ...form, instructions: e.target.value })
+                  }
+                  className="min-h-28"
+                />
+              </div>
+
+              <div className="grid grid-cols-4 gap-3">
+                <div>
+                  <Label>Prep (min)</Label>
+                  <Input
+                    type="number"
+                    value={form.prepTime}
+                    onChange={(e: any) =>
+                      setForm({
+                        ...form,
+                        prepTime: Number(e.target.value) || 0,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Cook (min)</Label>
+                  <Input
+                    type="number"
+                    value={form.cookTime}
+                    onChange={(e: any) =>
+                      setForm({
+                        ...form,
+                        cookTime: Number(e.target.value) || 0,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Servings</Label>
+                  <Input
+                    type="number"
+                    value={form.servings}
+                    onChange={(e: any) =>
+                      setForm({
+                        ...form,
+                        servings: Number(e.target.value) || 1,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Image URL</Label>
+                  <Input
+                    value={form.imageUrl}
+                    onChange={(e: any) =>
+                      setForm({ ...form, imageUrl: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Notes</Label>
+                <Textarea
+                  value={form.notes}
+                  onChange={(e: any) =>
+                    setForm({ ...form, notes: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
                 <Button
-                  type="button"
-                  disabled={isLoading}
-                  onClick={() => {
-                    setShowAddRecipe(false);
-                    setShowEditRecipe(false);
-                    resetForm();
-                  }}
-                  className={`w-full bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 ${
-                    isLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  variant="outline"
+                  onClick={() => setIsEditorOpen(false)}
                 >
                   Cancel
                 </Button>
-              </motion.form>
-            </CardContent>
-          </motion.div>
-        </motion.div>
-      )}
-
-      {/* Menu Planner Modal */}
-      {showMenuPlanner && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={modalVariants}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-          onClick={() => setShowMenuPlanner(false)}
-        >
-          <motion.div
-            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-4xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-            <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                Weekly Menu Planner
-              </CardTitle>
-              <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-                {[
-                  "Monday",
-                  "Tuesday",
-                  "Wednesday",
-                  "Thursday",
-                  "Friday",
-                  "Saturday",
-                  "Sunday",
-                ].map((day) => (
-                  <div key={day} className="space-y-2">
-                    <h4 className="text-lg font-semibold text-white">{day}</h4>
-                    {mealTypes.map((meal) => (
-                      <Select
-                        key={meal}
-                        value={weeklyMenu[day]?.[meal] || ""}
-                        onValueChange={(value) =>
-                          handleAddToMenu(day, meal, value)
-                        }
-                      >
-                        <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                          <SelectValue placeholder={meal} />
-                        </SelectTrigger>
-                        <SelectContent className="dropdown fade-in-down">
-                          {recipes.map((recipe) => (
-                            <SelectItem
-                              key={recipe.id}
-                              value={recipe.id}
-                              className="dropdown-item"
-                            >
-                              {recipe.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ))}
-                  </div>
-                ))}
+                <Button
+                  onClick={saveRecipe}
+                  className="bg-primary text-primary-foreground"
+                >
+                  {editingId ? "Update" : "Create"}
+                </Button>
               </div>
-              <Button
-                onClick={generateShoppingList}
-                className="w-full bg-blue-600 text-white py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 mt-6"
-              >
-                <span className="flex items-center justify-center gap-2">
-                  <CalendarDays className="w-5 h-5" />
-                  Generate Shopping List
-                </span>
-              </Button>
-              {shoppingList.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-xl font-bold text-white mb-2">
-                    Shopping List
-                  </h4>
-                  <ul className="space-y-2">
-                    {shoppingList.map((item) => (
-                      <li
-                        key={item.id}
-                        className="bg-gray-800/30 p-2 rounded-xl text-white"
-                      >
-                        {item.quantity} {item.unit} {item.name}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </CardContent>
-          </motion.div>
-        </motion.div>
-      )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
-};
-
-export default Recipes;
+}

@@ -1,9 +1,25 @@
-import React, { useState } from "react";
-import { motion, useAnimation } from "framer-motion";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Search,
+  Download,
+  ShoppingCart,
+  ChevronDown,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -13,1407 +29,687 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Save, Download, Trash2, ShoppingBag, Edit2 } from "lucide-react";
-import { Toast } from "@/components/ui/toast";
-import Loading from "@/pages/Loading";
+import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 
-const predefinedCategories = [
+interface ShoppingItem {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  category: string;
+  priority: "low" | "medium" | "high";
+  store: string;
+  note: string;
+  bought: boolean;
+}
+
+const PREDEFINED_CATEGORIES = [
   "Vegetables",
-  "Dairy",
-  "Baked Goods",
-  "Meat",
   "Fruits",
+  "Dairy",
+  "Meat",
+  "Bakery",
+  "Beverages",
+  "Pantry",
+  "Frozen",
+  "Toiletries",
   "Household",
+];
+
+const PREDEFINED_STORES = [
+  "Walmart",
+  "Whole Foods",
+  "Costco",
+  "Target",
+  "Local Market",
   "Other",
 ];
 
-const priorities = [
-  { value: "low", label: "Low", color: "bg-gray-500" },
-  { value: "medium", label: "Medium", color: "bg-yellow-500" },
-  { value: "high", label: "High", color: "bg-red-500" },
-];
-
-type Item = {
-  id: string;
-  name: string;
-  quantity: string;
-  unit: string;
-  note: string;
-  priority: "low" | "medium" | "high";
-  category: string;
-  bought: boolean;
+const PRIORITY_COLORS = {
+  low: "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+  medium:
+    "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+  high: "bg-red-500/20 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800",
 };
 
-type ItemsByStore = {
-  [key: string]: Item[];
-};
-
-const Shopping = () => {
-  const [showToast, setShowToast] = useState(false);
-  const [showDownloadModal, setShowDownloadModal] = useState(false);
-  const [downloadStore, setDownloadStore] = useState<string>("");
-  const [stores, setStores] = useState<string[]>(["Lidl", "Tesco", "Market"]);
-  const [itemsByStore, setItemsByStore] = useState<ItemsByStore>(
-    stores.reduce((acc, store) => {
-      acc[store] = [];
-      return acc;
-    }, {} as ItemsByStore)
-  );
-  const [showAddItem, setShowAddItem] = useState(false);
-  const [showEditItem, setShowEditItem] = useState(false);
-  const [editItem, setEditItem] = useState<Item | null>(null);
-  const [form, setForm] = useState({
-    store: stores[0],
+export default function ShoppingManager() {
+  const [items, setItems] = useState<ShoppingItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [showBoughtFilter, setShowBoughtFilter] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [quickAddInput, setQuickAddInput] = useState("");
+  const [newItem, setNewItem] = useState({
     name: "",
-    quantity: "",
-    unit: "",
+    quantity: 1,
+    unit: "piece",
+    category: "Pantry",
+    priority: "medium" as const,
+    store: "Walmart",
     note: "",
-    priority: "medium" as "low" | "medium" | "high",
-    category: predefinedCategories[0],
   });
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchQueries, setSearchQueries] = useState<{ [key: string]: string }>(
-    stores.reduce((acc, store) => {
-      acc[store] = "";
-      return acc;
-    }, {} as { [key: string]: string })
-  );
-  const [showAddStore, setShowAddStore] = useState(false);
-  const [newStoreName, setNewStoreName] = useState("");
-  const [shoppingModeStore, setShoppingModeStore] = useState<string | null>(
-    null
-  );
-  const buttonControls = useAnimation();
+  const { toast } = useToast();
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setError("");
-  };
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      const matchesSearch = item.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const matchesCategory =
+        categoryFilter === "all" || item.category === categoryFilter;
+      const matchesPriority =
+        priorityFilter === "all" || item.priority === priorityFilter;
+      const matchesBought = !showBoughtFilter || item.bought;
 
-  const handleAddItem = async () => {
-    if (!form.name.trim() || !form.quantity.trim()) {
-      setError("Name and quantity are required.");
+      return (
+        matchesSearch && matchesCategory && matchesPriority && matchesBought
+      );
+    });
+  }, [items, searchQuery, categoryFilter, priorityFilter, showBoughtFilter]);
+
+  const itemsByStore = useMemo(() => {
+    const grouped: Record<string, ShoppingItem[]> = {};
+    filteredItems.forEach((item) => {
+      if (!grouped[item.store]) {
+        grouped[item.store] = [];
+      }
+      grouped[item.store].push(item);
+    });
+    return grouped;
+  }, [filteredItems]);
+
+  const handleAddItem = () => {
+    if (!newItem.name.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter an item name",
+        variant: "destructive",
+      });
       return;
     }
-    setIsLoading(true);
-    await buttonControls.start({
-      scale: [1, 1.1, 1],
-      transition: { duration: 0.3 },
+
+    if (editingId) {
+      setItems(
+        items.map((item) =>
+          item.id === editingId ? { ...item, ...newItem } : item
+        )
+      );
+      toast({
+        title: "Success",
+        description: "Item updated successfully",
+      });
+      setEditingId(null);
+    } else {
+      const item: ShoppingItem = {
+        id: Date.now().toString(),
+        ...newItem,
+        bought: false,
+      };
+      setItems([...items, item]);
+      toast({
+        title: "Success",
+        description: "Item added to shopping list",
+      });
+    }
+
+    setNewItem({
+      name: "",
+      quantity: 1,
+      unit: "piece",
+      category: "Pantry",
+      priority: "medium",
+      store: "Walmart",
+      note: "",
     });
-    const newItem: Item = {
+    setIsModalOpen(false);
+  };
+
+  const handleQuickAdd = () => {
+    if (!quickAddInput.trim()) return;
+
+    const item: ShoppingItem = {
       id: Date.now().toString(),
-      name: form.name.trim(),
-      quantity: form.quantity.trim(),
-      unit: form.unit.trim(),
-      note: form.note.trim(),
-      priority: form.priority,
-      category: form.category,
+      name: quickAddInput.trim(),
+      quantity: 1,
+      unit: "piece",
+      category: "Pantry",
+      priority: "medium",
+      store: "Walmart",
+      note: "",
       bought: false,
     };
-    setItemsByStore((prev) => ({
-      ...prev,
-      [form.store]: [...(prev[form.store] || []), newItem],
-    }));
-    setForm({
-      store: stores[0],
-      name: "",
-      quantity: "",
-      unit: "",
-      note: "",
-      priority: "medium",
-      category: predefinedCategories[0],
+    setItems([...items, item]);
+    setQuickAddInput("");
+    toast({
+      title: "Success",
+      description: "Item added quickly",
     });
-    setShowAddItem(false);
-    setError("");
-    setIsLoading(false);
   };
 
-  const handleEditItem = async () => {
-    if (!editItem || !form.name.trim() || !form.quantity.trim()) {
-      setError("Name and quantity are required.");
-      return;
-    }
-    setIsLoading(true);
-    await buttonControls.start({
-      scale: [1, 1.1, 1],
-      transition: { duration: 0.3 },
+  const handleDelete = (id: string) => {
+    setItems(items.filter((item) => item.id !== id));
+    toast({
+      title: "Success",
+      description: "Item deleted",
     });
-    setItemsByStore((prev) => ({
-      ...prev,
-      [form.store]: prev[form.store].map((item) =>
-        item.id === editItem.id
-          ? {
-              ...item,
-              name: form.name.trim(),
-              quantity: form.quantity.trim(),
-              unit: form.unit.trim(),
-              note: form.note.trim(),
-              priority: form.priority,
-              category: form.category,
-            }
-          : item
-      ),
-    }));
-    setForm({
-      store: stores[0],
-      name: "",
-      quantity: "",
-      unit: "",
-      note: "",
-      priority: "medium",
-      category: predefinedCategories[0],
-    });
-    setEditItem(null);
-    setShowEditItem(false);
-    setError("");
-    setIsLoading(false);
   };
 
-  const handleOpenEditItem = (store: string, item: Item) => {
-    setEditItem(item);
-    setForm({
-      store,
+  const handleToggleBought = (id: string) => {
+    setItems(
+      items.map((item) =>
+        item.id === id ? { ...item, bought: !item.bought } : item
+      )
+    );
+  };
+
+  const handleEdit = (item: ShoppingItem) => {
+    setNewItem({
       name: item.name,
       quantity: item.quantity,
       unit: item.unit,
-      note: item.note,
-      priority: item.priority,
       category: item.category,
+      priority: item.priority,
+      store: item.store,
+      note: item.note,
     });
-    setShowEditItem(true);
+    setEditingId(item.id);
+    setIsModalOpen(true);
   };
 
-  const handleToggleBought = (store: string, itemId: string) => {
-    setItemsByStore((prev) => ({
-      ...prev,
-      [store]: prev[store].map((item) =>
-        item.id === itemId ? { ...item, bought: !item.bought } : item
-      ),
-    }));
-  };
+  const exportToCSV = () => {
+    const stores = Object.keys(itemsByStore);
+    let csv = "Store,Item,Quantity,Unit,Category,Priority,Note,Bought\n";
 
-  const handleDeleteItem = (store: string, itemId: string) => {
-    setItemsByStore((prev) => ({
-      ...prev,
-      [store]: prev[store].filter((item) => item.id !== itemId),
-    }));
-  };
-
-  const handleSearchChange = (store: string, value: string) => {
-    setSearchQueries((prev) => ({
-      ...prev,
-      [store]: value,
-    }));
-  };
-
-  const getFilteredAndGroupedItems = (store: string) => {
-    const search = searchQueries[store].toLowerCase();
-    const filtered = (itemsByStore[store] || []).filter(
-      (item) =>
-        item.name.toLowerCase().includes(search) ||
-        item.note.toLowerCase().includes(search) ||
-        item.category.toLowerCase().includes(search)
-    );
-    const grouped = filtered.reduce((acc, item) => {
-      if (!acc[item.category]) {
-        acc[item.category] = [];
-      }
-      acc[item.category].push(item);
-      return acc;
-    }, {} as { [key: string]: Item[] });
-    return grouped;
-  };
-
-  const handleDownloadList = () => {
-    if (!downloadStore) return;
-
-    const groupedItems = getFilteredAndGroupedItems(downloadStore);
-    let content = `${downloadStore}\n\n`;
-
-    Object.keys(groupedItems).forEach((category) => {
-      content += `${category}:\n`;
-      groupedItems[category].forEach((item) => {
-        content += `[ ] ${item.name} - ${item.quantity} ${item.unit}${
-          item.note ? ` (${item.note})` : ""
-        }\n`;
+    stores.forEach((store) => {
+      itemsByStore[store].forEach((item) => {
+        csv += `${store},"${item.name}",${item.quantity},${item.unit},${item.category},${item.priority},"${item.note}",${item.bought}\n`;
       });
-      content += "\n";
     });
 
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${downloadStore}_shopping_list.txt`;
-    document.body.appendChild(a);
+    a.download = `shopping-list-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    window.URL.revokeObjectURL(url);
 
-    setShowDownloadModal(false);
-    setDownloadStore("");
-    setShowToast(true);
-  };
-
-  const handleAddStore = async () => {
-    if (!newStoreName.trim()) {
-      setError("Store name is required.");
-      return;
-    }
-    setIsLoading(true);
-    await buttonControls.start({
-      scale: [1, 1.1, 1],
-      transition: { duration: 0.3 },
+    toast({
+      title: "Success",
+      description: "Shopping list exported to CSV",
     });
-    const newStore = newStoreName.trim();
-    setStores((prev) => [...prev, newStore]);
-    setItemsByStore((prev) => ({
-      ...prev,
-      [newStore]: [],
-    }));
-    setSearchQueries((prev) => ({
-      ...prev,
-      [newStore]: "",
-    }));
-    setNewStoreName("");
-    setShowAddStore(false);
-    setError("");
-    setIsLoading(false);
+    setIsExportModalOpen(false);
   };
 
-  const handleDeleteStore = (store: string) => {
-    setStores((prev) => prev.filter((s) => s !== store));
-    setItemsByStore((prev) => {
-      const newItems = { ...prev };
-      delete newItems[store];
-      return newItems;
-    });
-    setSearchQueries((prev) => {
-      const newQueries = { ...prev };
-      delete newQueries[store];
-      return newQueries;
-    });
-    if (shoppingModeStore === store) {
-      setShoppingModeStore(null);
-    }
-  };
-
-  const handleEnterShoppingMode = (store: string) => {
-    setShoppingModeStore(store);
-  };
-
-  const inputVariants = {
-    focus: {
-      scale: 1.02,
-      boxShadow: "0 0 10px rgba(37, 99, 235, 0.5)",
-      transition: { duration: 0.2 },
-    },
-    blur: {
-      scale: 1,
-      boxShadow: "none",
-      transition: { duration: 0.2 },
-    },
-  };
-
-  const errorVariants = {
-    hidden: { opacity: 0, y: -10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-  };
-
-  const modalVariants = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
-  };
+  const stores = Object.keys(itemsByStore).sort();
+  const boughtCount = items.filter((item) => item.bought).length;
+  const totalCount = items.length;
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden font-sans">
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="w-full max-w-4xl relative z-10"
-      >
-        <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden mb-8">
-          <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-          <CardContent className="p-10 relative z-10">
-            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-              Shopping Lists
-            </CardTitle>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-              className="mb-6"
-            >
-              <Button
-                type="button"
-                disabled={isLoading}
-                onClick={() => setShowAddStore(true)}
-                className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
-                  isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                  <Plus className="w-5 h-5" />
-                  Add Store
-                </span>
-                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-              </Button>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.4 }}
-              className="mb-6"
-            >
-              <Button
-                type="button"
-                disabled={isLoading}
-                onClick={() => setShowAddItem(true)}
-                className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
-                  isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                  <Plus className="w-5 h-5" />
-                  Add Item
-                </span>
-                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-              </Button>
-            </motion.div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {stores.map((store, index) => {
-                const groupedItems = getFilteredAndGroupedItems(store);
-                return (
-                  <motion.div
-                    key={store}
-                    initial={{ opacity: 0, y: 50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                  >
-                    <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden h-full">
-                      <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-                      <CardContent className="p-6 relative z-10 h-full flex flex-col">
-                        <div className="flex justify-between items-center mb-4">
-                          <CardTitle className="text-2xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                            {store}
-                          </CardTitle>
-                          <div className="flex gap-2">
-                            <Button
-                              type="button"
-                              onClick={() => handleEnterShoppingMode(store)}
-                              className="bg-linear-to-r from-blue-600 to-emerald-500 text-white p-2 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                            >
-                              <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                                <ShoppingBag className="w-4 h-4" />
-                              </span>
-                              <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                            </Button>
-                            <Button
-                              type="button"
-                              onClick={() => handleDeleteStore(store)}
-                              className="bg-red-500 text-white p-2 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                            >
-                              <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                                <Trash2 className="w-4 h-4" />
-                              </span>
-                              <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                            </Button>
-                          </div>
-                        </div>
-                        <Input
-                          placeholder="Search items..."
-                          value={searchQueries[store]}
-                          onChange={(e) =>
-                            handleSearchChange(store, e.target.value)
-                          }
-                          className="glass mb-4 px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                        />
-                        <div className="flex-1 overflow-y-auto">
-                          {Object.keys(groupedItems).length > 0 ? (
-                            Object.keys(groupedItems).map((category) => (
-                              <div key={category} className="mb-4">
-                                <h3 className="text-lg font-semibold text-blue-300 mb-2">
-                                  {category}
-                                </h3>
-                                <div className="space-y-2">
-                                  {groupedItems[category]
-                                    .sort((a, b) => {
-                                      const priorityOrder = {
-                                        high: 0,
-                                        medium: 1,
-                                        low: 2,
-                                      };
-                                      return (
-                                        priorityOrder[a.priority] -
-                                        priorityOrder[b.priority]
-                                      );
-                                    })
-                                    .map((item) => (
-                                      <motion.div
-                                        key={item.id}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                        className={`flex items-center gap-2 p-2 rounded-lg border ${
-                                          item.bought
-                                            ? "bg-green-500/10 border-green-400"
-                                            : "bg-red-500/10 border-red-400"
-                                        }`}
-                                      >
-                                        <Checkbox
-                                          checked={item.bought}
-                                          onCheckedChange={() =>
-                                            handleToggleBought(store, item.id)
-                                          }
-                                          className="text-green-500"
-                                        />
-                                        <div className="flex-1 text-white">
-                                          <div
-                                            className={`font-medium ${
-                                              item.bought
-                                                ? "text-green-400"
-                                                : "text-red-400"
-                                            }`}
-                                          >
-                                            {item.name}
-                                          </div>
-                                          <div className="text-sm text-gray-300">
-                                            {item.quantity} {item.unit}{" "}
-                                            {item.note ? `(${item.note})` : ""}
-                                          </div>
-                                        </div>
-                                        <Badge
-                                          className={`${
-                                            priorities.find(
-                                              (p) => p.value === item.priority
-                                            )?.color
-                                          } text-white`}
-                                        >
-                                          {item.priority}
-                                        </Badge>
-                                        <Button
-                                          type="button"
-                                          onClick={() =>
-                                            handleOpenEditItem(store, item)
-                                          }
-                                          className="bg-blue-500 text-white p-1 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                                        >
-                                          <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                                            <Edit2 className="w-4 h-4" />
-                                          </span>
-                                          <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                                        </Button>
-                                        <Button
-                                          type="button"
-                                          onClick={() =>
-                                            handleDeleteItem(store, item.id)
-                                          }
-                                          className="bg-red-500 text-white p-1 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                                        >
-                                          <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                                            <Trash2 className="w-4 h-4" />
-                                          </span>
-                                          <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                                        </Button>
-                                      </motion.div>
-                                    ))}
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-gray-400 text-center">
-                              No items added yet
-                            </p>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/80 p-4 sm:p-8">
+      <Toaster />
+      <div className="mx-auto max-w-5xl">
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-          className="fixed bottom-8 right-8"
+          className="mb-8"
         >
-          <Button
-            type="button"
-            onClick={() => setShowDownloadModal(true)}
-            className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-          >
-            <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-              <Download className="w-5 h-5" />
-              Download List
-            </span>
-            <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-          </Button>
-        </motion.div>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground flex items-center gap-3">
+                <ShoppingCart className="h-8 w-8 text-accent" />
+                Shopping List
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                {boughtCount} of {totalCount} items purchased
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Dialog
+                open={isExportModalOpen}
+                onOpenChange={setIsExportModalOpen}
+              >
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 bg-transparent"
+                  >
+                    <Download className="h-4 w-4" />
+                    Export
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Export Shopping List</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Export your shopping list as CSV per store
+                    </p>
+                    <Button onClick={exportToCSV} className="w-full gap-2">
+                      <Download className="h-4 w-4" />
+                      Download as CSV
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
 
-        {showDownloadModal && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={modalVariants}
-            className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowDownloadModal(false)}
-          >
-            <motion.div
-              className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-              <CardContent className="p-10 relative z-10">
-                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                  Download Shopping List
-                </CardTitle>
-                <div className="mb-6">
-                  <Label
-                    htmlFor="download-store"
-                    className="block text-blue-300 mb-2 font-semibold"
-                  >
-                    Select Store
-                  </Label>
-                  <Select
-                    value={downloadStore}
-                    onValueChange={setDownloadStore}
-                  >
-                    <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                      <SelectValue placeholder="Select store" />
-                    </SelectTrigger>
-                    <SelectContent className="dropdown fade-in-down">
-                      {stores.map((store) => (
-                        <SelectItem
-                          key={store}
-                          value={store}
-                          className="dropdown-item"
+              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                    <Plus className="h-4 w-4" />
+                    Add Item
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingId ? "Edit Item" : "Add New Item"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">
+                        Item Name
+                      </label>
+                      <Input
+                        placeholder="e.g., Milk"
+                        value={newItem.name}
+                        onChange={(e) =>
+                          setNewItem({ ...newItem, name: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          Quantity
+                        </label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={newItem.quantity}
+                          onChange={(e) =>
+                            setNewItem({
+                              ...newItem,
+                              quantity: Number.parseInt(e.target.value) || 1,
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          Unit
+                        </label>
+                        <Select
+                          value={newItem.unit}
+                          onValueChange={(value) =>
+                            setNewItem({ ...newItem, unit: value })
+                          }
                         >
-                          {store}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    disabled={!downloadStore}
-                    onClick={handleDownloadList}
-                    className="flex-1 bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
-                  >
-                    Download
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => setShowDownloadModal(false)}
-                    className="flex-1 bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {showAddStore && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={modalVariants}
-            className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowAddStore(false)}
-          >
-            <motion.div
-              className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-              <CardContent className="p-10 relative z-10">
-                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                  Add Store
-                </CardTitle>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="newStoreName"
-                    animate={
-                      newStoreName ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Store Name
-                  </motion.label>
-                  <motion.input
-                    id="newStoreName"
-                    type="text"
-                    value={newStoreName}
-                    onChange={(e) => setNewStoreName(e.target.value)}
-                    placeholder="Enter store name"
-                    className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 mb-4 fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                {error && (
-                  <motion.p
-                    id="store-error"
-                    aria-live="assertive"
-                    className="text-red-400 mb-4 text-center font-medium drop-shadow animate-pulse"
-                    variants={errorVariants}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    {error}
-                  </motion.p>
-                )}
-                <div className="flex gap-2">
-                  <motion.div animate={buttonControls}>
-                    <Button
-                      type="button"
-                      disabled={isLoading}
-                      onClick={handleAddStore}
-                      className={`flex-1 bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
-                        isLoading ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      {isLoading ? (
-                        <Loading />
-                      ) : (
-                        <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                          <Plus className="w-5 h-5" />
-                          Add Store
-                        </span>
-                      )}
-                      <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                    </Button>
-                  </motion.div>
-                  <Button
-                    type="button"
-                    disabled={isLoading}
-                    onClick={() => {
-                      setShowAddStore(false);
-                      setNewStoreName("");
-                      setError("");
-                    }}
-                    className={`flex-1 bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 ${
-                      isLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {showAddItem && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={modalVariants}
-            className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowAddItem(false)}
-          >
-            <motion.div
-              className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-              <CardContent className="p-10 relative z-10">
-                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                  Add Shopping Item
-                </CardTitle>
-                <motion.form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleAddItem();
-                  }}
-                  className="space-y-6"
-                >
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="store"
-                      animate={
-                        form.store ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                      }
-                    >
-                      Store
-                    </motion.label>
-                    <Select
-                      value={form.store}
-                      onValueChange={(value) =>
-                        setForm({ ...form, store: value })
-                      }
-                    >
-                      <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                        <SelectValue placeholder="Select store" />
-                      </SelectTrigger>
-                      <SelectContent className="dropdown fade-in-down">
-                        {stores.map((store) => (
-                          <SelectItem
-                            key={store}
-                            value={store}
-                            className="dropdown-item"
-                          >
-                            {store}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="name"
-                      animate={
-                        form.name ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                      }
-                    >
-                      Name
-                    </motion.label>
-                    <motion.input
-                      id="name"
-                      type="text"
-                      name="name"
-                      value={form.name}
-                      onChange={handleChange}
-                      placeholder="Item name"
-                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="relative">
-                      <motion.label
-                        className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                        htmlFor="quantity"
-                        animate={
-                          form.quantity
-                            ? { y: -25, scale: 0.9 }
-                            : { y: 0, scale: 1 }
-                        }
-                      >
-                        Quantity
-                      </motion.label>
-                      <motion.input
-                        id="quantity"
-                        type="text"
-                        name="quantity"
-                        value={form.quantity}
-                        onChange={handleChange}
-                        placeholder="Quantity"
-                        className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                        variants={inputVariants}
-                        whileFocus="focus"
-                        initial="blur"
-                      />
-                    </div>
-                    <div className="relative">
-                      <motion.label
-                        className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                        htmlFor="unit"
-                        animate={
-                          form.unit
-                            ? { y: -25, scale: 0.9 }
-                            : { y: 0, scale: 1 }
-                        }
-                      >
-                        Unit
-                      </motion.label>
-                      <motion.input
-                        id="unit"
-                        type="text"
-                        name="unit"
-                        value={form.unit}
-                        onChange={handleChange}
-                        placeholder="Unit (kg, pcs, etc.)"
-                        className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                        variants={inputVariants}
-                        whileFocus="focus"
-                        initial="blur"
-                      />
-                    </div>
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="note"
-                      animate={
-                        form.note ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                      }
-                    >
-                      Note
-                    </motion.label>
-                    <motion.input
-                      id="note"
-                      type="text"
-                      name="note"
-                      value={form.note}
-                      onChange={handleChange}
-                      placeholder="Special note"
-                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="priority"
-                      animate={
-                        form.priority
-                          ? { y: -25, scale: 0.9 }
-                          : { y: 0, scale: 1 }
-                      }
-                    >
-                      Priority
-                    </motion.label>
-                    <Select
-                      value={form.priority}
-                      onValueChange={(value) =>
-                        setForm({
-                          ...form,
-                          priority: value as "low" | "medium" | "high",
-                        })
-                      }
-                    >
-                      <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                        <SelectValue placeholder="Select priority" />
-                      </SelectTrigger>
-                      <SelectContent className="dropdown fade-in-down">
-                        {priorities.map((p) => (
-                          <SelectItem
-                            key={p.value}
-                            value={p.value}
-                            className="dropdown-item"
-                          >
-                            {p.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="category"
-                      animate={
-                        form.category
-                          ? { y: -25, scale: 0.9 }
-                          : { y: 0, scale: 1 }
-                      }
-                    >
-                      Category
-                    </motion.label>
-                    <Select
-                      value={form.category}
-                      onValueChange={(value) =>
-                        setForm({ ...form, category: value })
-                      }
-                    >
-                      <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent className="dropdown fade-in-down">
-                        {predefinedCategories.map((cat) => (
-                          <SelectItem
-                            key={cat}
-                            value={cat}
-                            className="dropdown-item"
-                          >
-                            {cat}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {error && (
-                    <motion.p
-                      id="form-error"
-                      aria-live="assertive"
-                      className="text-red-400 mb-6 text-center font-medium drop-shadow animate-pulse"
-                      variants={errorVariants}
-                      initial="hidden"
-                      animate="visible"
-                    >
-                      {error}
-                    </motion.p>
-                  )}
-                  <motion.div animate={buttonControls}>
-                    <Button
-                      type="submit"
-                      disabled={isLoading}
-                      className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
-                        isLoading ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      {isLoading ? (
-                        <Loading />
-                      ) : (
-                        <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                          <Plus className="w-5 h-5" />
-                          Add Item
-                        </span>
-                      )}
-                      <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                    </Button>
-                  </motion.div>
-                  <Button
-                    type="button"
-                    disabled={isLoading}
-                    onClick={() => setShowAddItem(false)}
-                    className={`w-full bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 ${
-                      isLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    Cancel
-                  </Button>
-                </motion.form>
-              </CardContent>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {showEditItem && editItem && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={modalVariants}
-            className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowEditItem(false)}
-          >
-            <motion.div
-              className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-              <CardContent className="p-10 relative z-10">
-                <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                  Edit Shopping Item
-                </CardTitle>
-                <motion.form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleEditItem();
-                  }}
-                  className="space-y-6"
-                >
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="store"
-                      animate={
-                        form.store ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                      }
-                    >
-                      Store
-                    </motion.label>
-                    <Select
-                      value={form.store}
-                      onValueChange={(value) =>
-                        setForm({ ...form, store: value })
-                      }
-                    >
-                      <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                        <SelectValue placeholder="Select store" />
-                      </SelectTrigger>
-                      <SelectContent className="dropdown fade-in-down">
-                        {stores.map((store) => (
-                          <SelectItem
-                            key={store}
-                            value={store}
-                            className="dropdown-item"
-                          >
-                            {store}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="name"
-                      animate={
-                        form.name ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                      }
-                    >
-                      Name
-                    </motion.label>
-                    <motion.input
-                      id="name"
-                      type="text"
-                      name="name"
-                      value={form.name}
-                      onChange={handleChange}
-                      placeholder="Item name"
-                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="relative">
-                      <motion.label
-                        className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                        htmlFor="quantity"
-                        animate={
-                          form.quantity
-                            ? { y: -25, scale: 0.9 }
-                            : { y: 0, scale: 1 }
-                        }
-                      >
-                        Quantity
-                      </motion.label>
-                      <motion.input
-                        id="quantity"
-                        type="text"
-                        name="quantity"
-                        value={form.quantity}
-                        onChange={handleChange}
-                        placeholder="Quantity"
-                        className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                        variants={inputVariants}
-                        whileFocus="focus"
-                        initial="blur"
-                      />
-                    </div>
-                    <div className="relative">
-                      <motion.label
-                        className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                        htmlFor="unit"
-                        animate={
-                          form.unit
-                            ? { y: -25, scale: 0.9 }
-                            : { y: 0, scale: 1 }
-                        }
-                      >
-                        Unit
-                      </motion.label>
-                      <motion.input
-                        id="unit"
-                        type="text"
-                        name="unit"
-                        value={form.unit}
-                        onChange={handleChange}
-                        placeholder="Unit (kg, pcs, etc.)"
-                        className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                        variants={inputVariants}
-                        whileFocus="focus"
-                        initial="blur"
-                      />
-                    </div>
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="note"
-                      animate={
-                        form.note ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                      }
-                    >
-                      Note
-                    </motion.label>
-                    <motion.input
-                      id="note"
-                      type="text"
-                      name="note"
-                      value={form.note}
-                      onChange={handleChange}
-                      placeholder="Special note"
-                      className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="priority"
-                      animate={
-                        form.priority
-                          ? { y: -25, scale: 0.9 }
-                          : { y: 0, scale: 1 }
-                      }
-                    >
-                      Priority
-                    </motion.label>
-                    <Select
-                      value={form.priority}
-                      onValueChange={(value) =>
-                        setForm({
-                          ...form,
-                          priority: value as "low" | "medium" | "high",
-                        })
-                      }
-                    >
-                      <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                        <SelectValue placeholder="Select priority" />
-                      </SelectTrigger>
-                      <SelectContent className="dropdown fade-in-down">
-                        {priorities.map((p) => (
-                          <SelectItem
-                            key={p.value}
-                            value={p.value}
-                            className="dropdown-item"
-                          >
-                            {p.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="relative">
-                    <motion.label
-                      className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                      htmlFor="category"
-                      animate={
-                        form.category
-                          ? { y: -25, scale: 0.9 }
-                          : { y: 0, scale: 1 }
-                      }
-                    >
-                      Category
-                    </motion.label>
-                    <Select
-                      value={form.category}
-                      onValueChange={(value) =>
-                        setForm({ ...form, category: value })
-                      }
-                    >
-                      <SelectTrigger className="glass w-full px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent className="dropdown fade-in-down">
-                        {predefinedCategories.map((cat) => (
-                          <SelectItem
-                            key={cat}
-                            value={cat}
-                            className="dropdown-item"
-                          >
-                            {cat}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {error && (
-                    <motion.p
-                      id="form-error"
-                      aria-live="assertive"
-                      className="text-red-400 mb-6 text-center font-medium drop-shadow animate-pulse"
-                      variants={errorVariants}
-                      initial="hidden"
-                      animate="visible"
-                    >
-                      {error}
-                    </motion.p>
-                  )}
-                  <motion.div animate={buttonControls}>
-                    <Button
-                      type="submit"
-                      disabled={isLoading}
-                      className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
-                        isLoading ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      {isLoading ? (
-                        <Loading />
-                      ) : (
-                        <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                          <Save className="w-5 h-5" />
-                          Save Changes
-                        </span>
-                      )}
-                      <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                    </Button>
-                  </motion.div>
-                  <Button
-                    type="button"
-                    disabled={isLoading}
-                    onClick={() => {
-                      setShowEditItem(false);
-                      setEditItem(null);
-                      setForm({
-                        store: stores[0],
-                        name: "",
-                        quantity: "",
-                        unit: "",
-                        note: "",
-                        priority: "medium",
-                        category: predefinedCategories[0],
-                      });
-                      setError("");
-                    }}
-                    className={`w-full bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 ${
-                      isLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    Cancel
-                  </Button>
-                </motion.form>
-              </CardContent>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {shoppingModeStore && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={modalVariants}
-            className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShoppingModeStore(null)}
-          >
-            <motion.div
-              className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-md h-[80vh]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-              <CardContent className="p-10 relative z-10 h-full flex flex-col">
-                <CardTitle className="text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                  Shopping Mode - {shoppingModeStore}
-                </CardTitle>
-                <Input
-                  placeholder="Search items..."
-                  value={searchQueries[shoppingModeStore]}
-                  onChange={(e) =>
-                    handleSearchChange(shoppingModeStore, e.target.value)
-                  }
-                  className="glass mb-4 px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                />
-                <div className="flex-1 overflow-y-auto">
-                  {Object.keys(
-                    getFilteredAndGroupedItems(shoppingModeStore)
-                  ).map((category) => (
-                    <div key={category} className="mb-4">
-                      <h3 className="text-lg font-semibold text-blue-300 mb-2">
-                        {category}
-                      </h3>
-                      <div className="space-y-2">
-                        {getFilteredAndGroupedItems(shoppingModeStore)
-                          [category].sort((a, b) => {
-                            const priorityOrder = {
-                              high: 0,
-                              medium: 1,
-                              low: 2,
-                            };
-                            return (
-                              priorityOrder[a.priority] -
-                              priorityOrder[b.priority]
-                            );
-                          })
-                          .map((item) => (
-                            <motion.div
-                              key={item.id}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ duration: 0.3 }}
-                              className={`flex items-center gap-2 p-2 rounded-lg border ${
-                                item.bought
-                                  ? "bg-green-500/10 border-green-400"
-                                  : "bg-red-500/10 border-red-400"
-                              }`}
-                            >
-                              <Checkbox
-                                checked={item.bought}
-                                onCheckedChange={() =>
-                                  handleToggleBought(shoppingModeStore, item.id)
-                                }
-                                className="text-green-500"
-                              />
-                              <div className="flex-1 text-white">
-                                <div
-                                  className={`font-medium ${
-                                    item.bought
-                                      ? "text-green-400"
-                                      : "text-red-400"
-                                  }`}
-                                >
-                                  {item.name}
-                                </div>
-                                <div className="text-sm text-gray-300">
-                                  {item.quantity} {item.unit}{" "}
-                                  {item.note ? `(${item.note})` : ""}
-                                </div>
-                              </div>
-                              <Badge
-                                className={`${
-                                  priorities.find(
-                                    (p) => p.value === item.priority
-                                  )?.color
-                                } text-white`}
-                              >
-                                {item.priority}
-                              </Badge>
-                              <Button
-                                type="button"
-                                onClick={() =>
-                                  handleOpenEditItem(shoppingModeStore, item)
-                                }
-                                className="bg-blue-500 text-white p-1 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                              >
-                                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                                  <Edit2 className="w-4 h-4" />
-                                </span>
-                                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                              </Button>
-                              <Button
-                                type="button"
-                                onClick={() =>
-                                  handleDeleteItem(shoppingModeStore, item.id)
-                                }
-                                className="bg-red-500 text-white p-1 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                              >
-                                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                                  <Trash2 className="w-4 h-4" />
-                                </span>
-                                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                              </Button>
-                            </motion.div>
-                          ))}
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[
+                              "piece",
+                              "kg",
+                              "lb",
+                              "liter",
+                              "ml",
+                              "pack",
+                              "box",
+                              "bottle",
+                            ].map((unit) => (
+                              <SelectItem key={unit} value={unit}>
+                                {unit}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
-                  ))}
-                </div>
-                <Button
-                  type="button"
-                  onClick={() => setShoppingModeStore(null)}
-                  className="w-full bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 mt-4"
-                >
-                  Exit Shopping Mode
-                </Button>
-              </CardContent>
-            </motion.div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          Category
+                        </label>
+                        <Select
+                          value={newItem.category}
+                          onValueChange={(value) =>
+                            setNewItem({ ...newItem, category: value })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PREDEFINED_CATEGORIES.map((cat) => (
+                              <SelectItem key={cat} value={cat}>
+                                {cat}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          Store
+                        </label>
+                        <Select
+                          value={newItem.store}
+                          onValueChange={(value) =>
+                            setNewItem({ ...newItem, store: value })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PREDEFINED_STORES.map((store) => (
+                              <SelectItem key={store} value={store}>
+                                {store}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">
+                        Priority
+                      </label>
+                      <Select
+                        value={newItem.priority}
+                        onValueChange={(value: any) =>
+                          setNewItem({ ...newItem, priority: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">
+                        Note
+                      </label>
+                      <Input
+                        placeholder="Add any notes..."
+                        value={newItem.note}
+                        onChange={(e) =>
+                          setNewItem({ ...newItem, note: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleAddItem}
+                        className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        {editingId ? "Update Item" : "Add Item"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsModalOpen(false);
+                          setEditingId(null);
+                          setNewItem({
+                            name: "",
+                            quantity: 1,
+                            unit: "piece",
+                            category: "Pantry",
+                            priority: "medium",
+                            store: "Walmart",
+                            note: "",
+                          });
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+
+          {/* Quick Add */}
+          <div className="flex gap-2 mb-6">
+            <Input
+              placeholder="Quick add item..."
+              value={quickAddInput}
+              onChange={(e) => setQuickAddInput(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleQuickAdd()}
+              className="flex-1"
+            />
+            <Button onClick={handleQuickAdd} size="sm" variant="outline">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search items..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {PREDEFINED_CATEGORIES.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Priorities</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant={showBoughtFilter ? "default" : "outline"}
+              onClick={() => setShowBoughtFilter(!showBoughtFilter)}
+              className="gap-2"
+            >
+              Unbought Only
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* Empty State */}
+        {stores.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12"
+          >
+            <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">
+              No items in your shopping list yet
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Add your first item to get started
+            </p>
+          </motion.div>
+        ) : (
+          /* Stores Accordion */
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-3"
+          >
+            {stores.map((store, storeIndex) => (
+              <motion.div
+                key={store}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: storeIndex * 0.1 }}
+              >
+                <StoreAccordion
+                  store={store}
+                  items={itemsByStore[store]}
+                  onToggleBought={handleToggleBought}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              </motion.div>
+            ))}
           </motion.div>
         )}
-        {/* Toast notification */}
-        {showToast && (
-          <Toast
-            message="Download successful!"
-            type="success"
-            onClose={() => setShowToast(false)}
-          />
-        )}
-      </motion.div>
+      </div>
     </div>
   );
-};
+}
 
-export default Shopping;
+interface StoreAccordionProps {
+  store: string;
+  items: ShoppingItem[];
+  onToggleBought: (id: string) => void;
+  onEdit: (item: ShoppingItem) => void;
+  onDelete: (id: string) => void;
+}
+
+function StoreAccordion({
+  store,
+  items,
+  onToggleBought,
+  onEdit,
+  onDelete,
+}: StoreAccordionProps) {
+  const [isOpen, setIsOpen] = useState(true);
+  const boughtCount = items.filter((item) => item.bought).length;
+
+  return (
+    <Card className="overflow-hidden border-border/50 hover:border-border transition-colors">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-6 py-4 flex items-center justify-between hover:bg-card/50 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <ShoppingCart className="h-5 w-5 text-accent" />
+          <div className="text-left">
+            <h3 className="font-semibold text-foreground">{store}</h3>
+            <p className="text-xs text-muted-foreground">
+              {boughtCount} of {items.length} items purchased
+            </p>
+          </div>
+        </div>
+        <motion.div
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown className="h-5 w-5 text-muted-foreground" />
+        </motion.div>
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="border-t border-border/50"
+          >
+            <div className="px-6 py-4 space-y-3">
+              {items.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={`flex items-center gap-4 p-3 rounded-lg border transition-all ${
+                    item.bought
+                      ? "bg-muted/50 border-muted"
+                      : "bg-card/30 border-border/30 hover:bg-card/50"
+                  }`}
+                >
+                  <Checkbox
+                    checked={item.bought}
+                    onCheckedChange={() => onToggleBought(item.id)}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p
+                        className={`font-medium truncate ${
+                          item.bought
+                            ? "text-muted-foreground line-through"
+                            : "text-foreground"
+                        }`}
+                      >
+                        {item.quantity} {item.unit} {item.name}
+                      </p>
+                      <Badge
+                        className={`whitespace-nowrap ${PRIORITY_COLORS[item.priority]} border`}
+                      >
+                        {item.priority === "high" && (
+                          <Zap className="h-3 w-3 mr-1" />
+                        )}
+                        {item.priority}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{item.category}</span>
+                      {item.note && (
+                        <>
+                          <span>•</span>
+                          <span className="truncate">{item.note}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onEdit(item)}
+                      className="h-8 w-8 p-0 hover:bg-accent/20"
+                    >
+                      <Edit2 className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onDelete(item.id)}
+                      className="h-8 w-8 p-0 hover:bg-destructive/20"
+                    >
+                      <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                    </Button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Card>
+  );
+}

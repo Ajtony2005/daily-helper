@@ -1,223 +1,350 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import {
+  CheckSquare,
+  CreditCard,
+  ShoppingCart,
+  UtensilsCrossed,
+  Book,
+  Heart,
+  Package,
+  Star,
+  Zap,
+  Lock,
+  Smartphone,
+  ArrowRight,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
-import { motion, useAnimation } from "framer-motion";
+import { useRef } from "react";
 
 const features = [
   {
-    name: "Finance",
-    path: "/finance",
-    desc: "Track expenses, visualize spending, and get weekly/monthly insights to manage your budget like a pro.",
-    icon: "💸",
-    accent: "bg-linear-to-br from-teal-500 to-teal-700",
+    icon: CheckSquare,
+    title: "To-Do",
+    description:
+      "Organize tasks and boost productivity with smart task management.",
+    href: "/todo",
   },
   {
-    name: "Inventory",
-    path: "/inventory",
-    desc: "Keep tabs on dorm essentials, avoid overstocking, and streamline your supplies.",
-    icon: "📦",
-    accent: "bg-linear-to-br from-purple-500 to-purple-700",
+    icon: CreditCard,
+    title: "Finance",
+    description: "Track expenses and manage your budget effortlessly.",
+    href: "/finance",
   },
   {
-    name: "Shopping",
-    path: "/shopping",
-    desc: "Smart shopping lists synced with your inventory for hassle-free grocery runs.",
-    icon: "🛒",
-    accent: "bg-linear-to-br from-pink-500 to-pink-700",
+    icon: ShoppingCart,
+    title: "Shopping",
+    description: "Create and manage shopping lists for your needs.",
+    href: "/shopping",
   },
   {
-    name: "Meals",
-    path: "/meals",
-    desc: "Plan breakfast, lunch, dinner, and snacks for the week with nutrition tracking.",
-    icon: "🍽️",
-    accent: "bg-linear-to-br from-orange-500 to-orange-700",
+    icon: UtensilsCrossed,
+    title: "Meals",
+    description: "Plan your meals and stay organized with meal tracking.",
+    href: "/meals",
   },
   {
-    name: "To-Do",
-    path: "/todo",
-    desc: "Organize tasks with priorities and deadlines to stay on top of your studies.",
-    icon: "✅",
-    accent: "bg-linear-to-br from-green-500 to-green-700",
+    icon: Book,
+    title: "Recipes",
+    description: "Save and organize your favorite recipes in one place.",
+    href: "/recipes",
   },
   {
-    name: "Recipes",
-    path: "/recipes",
-    desc: "Store and explore recipes to cook delicious meals tailored to your ingredients.",
-    icon: "📖",
-    accent: "bg-linear-to-br from-blue-500 to-blue-700",
+    icon: Heart,
+    title: "Wellness",
+    description: "Monitor your health and wellness goals daily.",
+    href: "/wellness",
   },
   {
-    name: "Wellness",
-    path: "/wellness",
-    desc: "Track vitamins, workouts, and get weather-based daily prep tips.",
-    icon: "💪",
-    accent: "bg-linear-to-br from-red-500 to-red-700",
+    icon: Package,
+    title: "Inventory",
+    description: "Keep track of items and manage your inventory.",
+    href: "/inventory",
+  },
+  {
+    icon: Star,
+    title: "Wishlist",
+    description: "Curate and organize your wishlist items.",
+    href: "/wishlist",
   },
 ];
 
-export default function Home() {
-  const buttonControls = useAnimation();
+const benefits = [
+  {
+    icon: Zap,
+    title: "Lightning Fast",
+    description: "Optimized performance for instant access to your data.",
+  },
+  {
+    icon: Lock,
+    title: "Privacy First",
+    description: "Your data is encrypted and stored securely.",
+  },
+  {
+    icon: Smartphone,
+    title: "Fully Responsive",
+    description: "Works seamlessly on all devices and screen sizes.",
+  },
+];
 
-  const handleButtonClick = async () => {
-    await buttonControls.start({
-      scale: [1, 1.1, 1],
-      transition: { duration: 0.3 },
-    });
-  };
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
 
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: (i) => ({
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, delay: i * 0.1 },
-    }),
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 10,
+    },
+  },
+};
+
+export default function HomePage() {
+  const featuresRef = useRef<HTMLDivElement>(null);
+
+  const scrollToFeatures = () => {
+    featuresRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden font-sans bg-gray-900 text-white">
+    <main className="min-h-screen bg-gradient-to-b from-background to-background/80">
       {/* Hero Section */}
-      <section className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-16 text-center relative">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="relative z-10"
-        >
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-            DailyHelper
-          </h1>
-          <p className="mt-4 text-lg sm:text-xl md:text-2xl max-w-2xl mx-auto text-blue-300">
-            Your all-in-one student companion to organize, plan, and thrive.
-            Built for the modern student life.
-          </p>
-          <motion.div animate={buttonControls} className="mt-8">
+      <section className="relative overflow-hidden px-4 py-20 sm:py-32">
+        <div className="mx-auto max-w-4xl text-center">
+          {/* Welcome Tag */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-6 inline-block"
+          >
+            <div className="rounded-full bg-gradient-to-r from-accent/20 to-accent/10 px-4 py-1.5 backdrop-blur-sm border border-accent/20">
+              <span className="text-sm font-medium text-accent">
+                Welcome to DailyHelper
+              </span>
+            </div>
+          </motion.div>
+
+          {/* Main Title */}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-balance text-foreground"
+          >
+            Your All-in-One Productivity Companion
+          </motion.h1>
+
+          {/* Description */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="mb-10 text-lg text-muted-foreground sm:text-xl max-w-2xl mx-auto leading-relaxed"
+          >
+            Manage tasks, finances, shopping lists, meals, recipes, wellness,
+            inventory, and wishlists all in one intuitive platform.
+          </motion.p>
+
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          >
+            <Link to="/dashboard">
+              <Button
+                size="lg"
+                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Get Started
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
             <Button
-              asChild
-              onClick={handleButtonClick}
-              className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-6 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+              size="lg"
+              variant="outline"
+              onClick={scrollToFeatures}
+              className="cursor-pointer bg-transparent"
             >
-              <a href="/dashboard">
-                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                  Get Started <ArrowRight className="ml-2 h-5 w-5" />
-                </span>
-                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-              </a>
+              Learn More
             </Button>
           </motion.div>
-        </motion.div>
+        </div>
+
+        {/* Background Gradient Accent */}
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-accent/20 to-accent/5 rounded-full blur-3xl -z-10" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-accent/10 to-accent/5 rounded-full blur-3xl -z-10" />
       </section>
 
       {/* Features Section */}
-      <section className="px-4 py-12 w-full">
-        <h2 className="text-3xl sm:text-4xl font-extrabold mb-12 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-          Everything You Need to Succeed
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-          {features.map((feature, i) => (
-            <motion.div
-              key={feature.name}
-              custom={i}
-              initial="hidden"
-              animate="visible"
-              variants={cardVariants}
-            >
-              <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden">
-                <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-                <CardHeader className="flex flex-row items-center gap-4 p-6 relative z-10">
-                  <span
-                    className={`text-3xl p-3 rounded-full ${feature.accent}`}
-                  >
-                    {feature.icon}
-                  </span>
-                  <CardTitle className="text-xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                    {feature.name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 relative z-10">
-                  <p className="mb-4 min-h-[80px] text-blue-300 opacity-80">
-                    {feature.desc}
-                  </p>
-                  <Button
-                    asChild
-                    className="w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                  >
-                    <a href={feature.path}>
-                      <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                        Explore {feature.name}
-                      </span>
-                      <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                    </a>
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+      <section ref={featuresRef} className="px-4 py-20 sm:py-32">
+        <div className="mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl font-bold sm:text-4xl mb-4 text-foreground">
+              Everything You Need
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Comprehensive tools for every aspect of your life
+            </p>
+          </motion.div>
+
+          {/* Features Grid */}
+          <motion.div
+            variants={container}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+          >
+            {features.map((feature) => {
+              const IconComponent = feature.icon;
+              return (
+                <motion.div
+                  key={feature.title}
+                  variants={item}
+                  whileHover={{ y: -4 }}
+                  className="group relative"
+                >
+                  <Link href={feature.href}>
+                    <div className="relative h-full rounded-xl border border-border bg-card/50 backdrop-blur-sm p-6 transition-all duration-300 hover:bg-card hover:border-accent/50 cursor-pointer overflow-hidden">
+                      {/* Gradient background on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                      <div className="relative z-10">
+                        <div className="mb-4 inline-flex p-3 rounded-lg bg-gradient-to-br from-accent/20 to-accent/10">
+                          <IconComponent className="h-6 w-6 text-accent" />
+                        </div>
+                        <h3 className="font-semibold text-foreground mb-2">
+                          {feature.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {feature.description}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </motion.div>
         </div>
       </section>
 
-      {/* Why Choose Us Section */}
-      <section className="px-4 py-12 w-full">
-        <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-          <CardHeader className="p-6 relative z-10">
-            <CardTitle className="text-2xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-              Why DailyHelper?
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 relative z-10">
-            <ul className="list-disc pl-6 space-y-3 text-blue-300 opacity-80">
-              <li>All-in-one dashboard tailored for student life</li>
-              <li>Modern, responsive, and visually stunning design</li>
-              <li>
-                Smart integrations: sync inventory with shopping, meals with
-                recipes, and more
-              </li>
-              <li>Personalized insights and automated reminders via email</li>
-              <li>
-                Powered by cutting-edge tech: Vite, Tailwind CSS, Shadcn UI, and
-                Firebase
-              </li>
-            </ul>
-            <Button
-              className="mt-6 w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-              asChild
-            >
-              <a href="/about">
-                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                  Learn More
-                </span>
-                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-              </a>
-            </Button>
-          </CardContent>
-        </Card>
+      {/* Benefits Section */}
+      <section className="px-4 py-20 sm:py-32 bg-card/30 backdrop-blur-sm">
+        <div className="mx-auto max-w-5xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl font-bold sm:text-4xl mb-4 text-foreground">
+              Why Choose DailyHelper?
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Built with quality and user experience in mind
+            </p>
+          </motion.div>
+
+          <motion.div
+            variants={container}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          >
+            {benefits.map((benefit) => {
+              const IconComponent = benefit.icon;
+              return (
+                <motion.div
+                  key={benefit.title}
+                  variants={item}
+                  className="rounded-xl border border-border bg-card p-8 text-center"
+                >
+                  <div className="mb-4 inline-flex p-4 rounded-lg bg-gradient-to-br from-accent/30 to-accent/10">
+                    <IconComponent className="h-6 w-6 text-accent" />
+                  </div>
+                  <h3 className="font-semibold text-foreground mb-3 text-lg">
+                    {benefit.title}
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {benefit.description}
+                  </p>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="px-4 py-16 text-center w-full">
-        <h2 className="text-3xl sm:text-4xl font-extrabold mb-6 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-          Ready to Simplify Your Student Life?
-        </h2>
-        <p className="text-lg max-w-2xl mx-auto mb-8 text-blue-300 opacity-80">
-          Join thousands of students who are staying organized and thriving with
-          DailyHelper.
-        </p>
-        <motion.div animate={buttonControls}>
-          <Button
-            asChild
-            onClick={handleButtonClick}
-            className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
+      {/* CTA Section */}
+      <section className="px-4 py-20 sm:py-32">
+        <div className="mx-auto max-w-3xl text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="mb-8"
           >
-            <a href="/res">
-              <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                Sign Up Now <ArrowRight className="ml-2 h-5 w-5" />
-              </span>
-              <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-            </a>
-          </Button>
-        </motion.div>
+            <h2 className="text-3xl font-bold sm:text-4xl mb-4 text-foreground">
+              Ready to Get Started?
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Join thousands of users who are already mastering their
+              productivity
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          >
+            <Link to="/todo">
+              <Button
+                size="lg"
+                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Start Today
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link to="/login">
+              <Button size="lg" variant="outline">
+                Sign In
+              </Button>
+            </Link>
+          </motion.div>
+        </div>
+
+        {/* Background Gradient Accent */}
+        <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-gradient-to-bl from-accent/20 to-accent/5 rounded-full blur-3xl -z-10" />
       </section>
-    </div>
+    </main>
   );
 }

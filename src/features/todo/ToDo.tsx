@@ -1,8 +1,22 @@
-import React, { useState } from "react";
-import { motion, useAnimation } from "framer-motion";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+"use client";
+
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Grid3x3,
+  List,
+  Calendar,
+  Upload,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -11,1176 +25,666 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Save, Edit2, Trash2 } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import { format, isBefore, addDays, parseISO } from "date-fns";
-import Loading from "@/pages/Loading";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
-const initialCategories = ["University", "Association", "Personal", "Other"];
-
-const priorities = [
-  { value: "low", label: "Low", color: "bg-green-500" },
-  { value: "medium", label: "Medium", color: "bg-yellow-500" },
-  { value: "high", label: "High", color: "bg-red-500" },
-];
-
-type SubTask = {
+interface Task {
   id: string;
   name: string;
-  completed: boolean;
-};
-
-type Task = {
-  id: string;
-  name: string;
-  deadline?: string;
+  deadline: Date | null;
   category: string;
-  completed: boolean;
   priority: "low" | "medium" | "high";
-  subtasks: SubTask[];
+  subtasks: string;
   notes: string;
-  attachment?: File | null;
+  attachment: File | null;
+  completed: boolean;
+  createdAt: Date;
+}
+
+interface TodoManagerProps {
+  initialTasks?: Task[];
+}
+
+const priorityColors = {
+  low: "bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+  medium:
+    "bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800",
+  high: "bg-red-500/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800",
 };
 
-const ToDo = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [categories, setCategories] = useState<string[]>(initialCategories);
-  const [showAddTask, setShowAddTask] = useState(false);
-  const [showEditTask, setShowEditTask] = useState(false);
-  const [editTask, setEditTask] = useState<Task | null>(null);
-  const [form, setForm] = useState({
+const priorityIcons = {
+  low: "border-blue-500 bg-blue-50 dark:bg-blue-950",
+  medium: "border-amber-500 bg-amber-50 dark:bg-amber-950",
+  high: "border-red-500 bg-red-50 dark:bg-red-950",
+};
+
+export default function TodoManager({ initialTasks = [] }: TodoManagerProps) {
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterPriority, setFilterPriority] = useState<string>("all");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [showCalendar, setShowCalendar] = useState(false);
+  const { toast } = useToast();
+
+  const [formData, setFormData] = useState({
     name: "",
-    deadline: "",
-    category: categories[0],
+    deadline: null as Date | null,
+    category: "",
     newCategory: "",
-    priority: "medium" as "low" | "medium" | "high",
-    subtasks: "" as string,
+    priority: "medium" as const,
+    subtasks: "",
     notes: "",
     attachment: null as File | null,
   });
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const buttonControls = useAnimation();
 
-  const handleChange = (
-    e:
-      | React.ChangeEvent<
-          HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-        >
-      | { name: string; value: any }
-  ) => {
-    if ("target" in e) {
-      setForm({ ...form, [e.target.name]: e.target.value });
+  const categories = useMemo(() => {
+    const unique = new Set(tasks.map((t) => t.category).filter(Boolean));
+    return Array.from(unique);
+  }, [tasks]);
+
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((task) => {
+      const matchesSearch = task.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const matchesCategory =
+        filterCategory === "all" || task.category === filterCategory;
+      const matchesPriority =
+        filterPriority === "all" || task.priority === filterPriority;
+
+      return matchesSearch && matchesCategory && matchesPriority;
+    });
+  }, [tasks, searchTerm, filterCategory, filterPriority]);
+
+  const handleOpenModal = (task?: Task) => {
+    if (task) {
+      setEditingTask(task);
+      setFormData({
+        name: task.name,
+        deadline: task.deadline,
+        category: task.category,
+        newCategory: "",
+        priority: task.priority,
+        subtasks: task.subtasks,
+        notes: task.notes,
+        attachment: task.attachment,
+      });
     } else {
-      setForm({ ...form, [e.name]: e.value });
+      setEditingTask(null);
+      setFormData({
+        name: "",
+        deadline: null,
+        category: "",
+        newCategory: "",
+        priority: "medium",
+        subtasks: "",
+        notes: "",
+        attachment: null,
+      });
     }
-    setError("");
+    setIsModalOpen(true);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setForm({ ...form, attachment: e.target.files[0] });
-    }
-  };
-
-  const handleAddTask = async () => {
-    if (!form.name.trim()) {
-      setError("Task name is required.");
+  const handleSaveTask = () => {
+    if (!formData.name.trim()) {
+      toast({
+        title: "Error",
+        description: "Task name is required",
+        variant: "destructive",
+      });
       return;
     }
-    let taskCategory = form.category;
-    if (form.newCategory.trim() && form.category === "Add New") {
-      if (categories.includes(form.newCategory.trim())) {
-        setError("Category already exists.");
-        return;
-      }
-      taskCategory = form.newCategory.trim();
-      setCategories([...categories, taskCategory]);
-    }
-    const subtaskList = form.subtasks
-      .split("\n")
-      .filter((st) => st.trim())
-      .map((st) => ({
-        id: Date.now().toString() + Math.random(),
-        name: st.trim(),
+
+    const category = formData.newCategory || formData.category || "General";
+
+    if (editingTask) {
+      setTasks(
+        tasks.map((t) =>
+          t.id === editingTask.id
+            ? {
+                ...t,
+                name: formData.name,
+                deadline: formData.deadline,
+                category,
+                priority: formData.priority,
+                subtasks: formData.subtasks,
+                notes: formData.notes,
+                attachment: formData.attachment,
+              }
+            : t
+        )
+      );
+      toast({
+        title: "Success",
+        description: "Task updated successfully",
+      });
+    } else {
+      const newTask: Task = {
+        id: Date.now().toString(),
+        name: formData.name,
+        deadline: formData.deadline,
+        category,
+        priority: formData.priority,
+        subtasks: formData.subtasks,
+        notes: formData.notes,
+        attachment: formData.attachment,
         completed: false,
-      }));
-    setIsLoading(true);
-    await buttonControls.start({
-      scale: [1, 1.1, 1],
-      transition: { duration: 0.3 },
-    });
-    const newTask: Task = {
-      id: Date.now().toString(),
-      name: form.name.trim(),
-      deadline: form.deadline,
-      category: taskCategory,
-      completed: false,
-      priority: form.priority,
-      subtasks: subtaskList,
-      notes: form.notes.trim(),
-      attachment: form.attachment,
-    };
-    setTasks([...tasks, newTask]);
-    setForm({
-      name: "",
-      deadline: "",
-      category: categories[0],
-      newCategory: "",
-      priority: "medium",
-      subtasks: "",
-      notes: "",
-      attachment: null,
-    });
-    setShowAddTask(false);
-    setError("");
-    setIsLoading(false);
-  };
-
-  const handleEditTask = async () => {
-    if (!editTask || !form.name.trim()) {
-      setError("Task name is required.");
-      return;
+        createdAt: new Date(),
+      };
+      setTasks([...tasks, newTask]);
+      toast({
+        title: "Success",
+        description: "Task created successfully",
+      });
     }
-    let taskCategory = form.category;
-    if (form.newCategory.trim() && form.category === "Add New") {
-      if (categories.includes(form.newCategory.trim())) {
-        setError("Category already exists.");
-        return;
-      }
-      taskCategory = form.newCategory.trim();
-      setCategories([...categories, taskCategory]);
-    }
-    const subtaskList = form.subtasks
-      .split("\n")
-      .filter((st) => st.trim())
-      .map((st) => ({
-        id: Date.now().toString() + Math.random(),
-        name: st.trim(),
-        completed: false,
-      }));
-    setIsLoading(true);
-    await buttonControls.start({
-      scale: [1, 1.1, 1],
-      transition: { duration: 0.3 },
+
+    setIsModalOpen(false);
+  };
+
+  const handleDeleteTask = (id: string) => {
+    setTasks(tasks.filter((t) => t.id !== id));
+    toast({
+      title: "Success",
+      description: "Task deleted successfully",
     });
-    const updatedTask = {
-      ...editTask,
-      name: form.name.trim(),
-      deadline: form.deadline,
-      category: taskCategory,
-      priority: form.priority,
-      subtasks: subtaskList,
-      notes: form.notes.trim(),
-      attachment: form.attachment,
-    };
+  };
+
+  const handleToggleComplete = (id: string) => {
     setTasks(
-      tasks.map((task) => (task.id === editTask.id ? updatedTask : task))
-    );
-    setForm({
-      name: "",
-      deadline: "",
-      category: categories[0],
-      newCategory: "",
-      priority: "medium",
-      subtasks: "",
-      notes: "",
-      attachment: null,
-    });
-    setEditTask(null);
-    setShowEditTask(false);
-    setError("");
-    setIsLoading(false);
-  };
-
-  const handleOpenEditTask = (task: Task) => {
-    setEditTask(task);
-    setForm({
-      name: task.name,
-      deadline: task.deadline || "",
-      category: task.category,
-      newCategory: "",
-      priority: task.priority,
-      subtasks: task.subtasks.map((st) => st.name).join("\n"),
-      notes: task.notes,
-      attachment: null,
-    });
-    setShowEditTask(true);
-  };
-
-  const handleDeleteTask = (taskId: string) => {
-    setTasks(tasks.filter((task) => task.id !== taskId));
-  };
-
-  const handleToggleCompleted = (taskId: string) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
+      tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
     );
   };
 
-  const handleToggleSubtask = (taskId: string, subtaskId: string) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              subtasks: task.subtasks.map((st) =>
-                st.id === subtaskId ? { ...st, completed: !st.completed } : st
-              ),
-            }
-          : task
-      )
-    );
+  const handlePrevDay = () => {
+    const prev = new Date(selectedDate);
+    prev.setDate(prev.getDate() - 1);
+    setSelectedDate(prev);
   };
 
-  const getFilteredTasks = () => {
-    const search = searchQuery.toLowerCase();
-    return tasks.filter(
-      (task) =>
-        (selectedCategory === "All" ||
-          selectedCategory === "All Tasks" ||
-          task.category === selectedCategory) &&
-        (task.name.toLowerCase().includes(search) ||
-          task.notes.toLowerCase().includes(search))
-    );
+  const handleNextDay = () => {
+    const next = new Date(selectedDate);
+    next.setDate(next.getDate() + 1);
+    setSelectedDate(next);
   };
 
-  const getTasksForDate = (date: Date) => {
-    return getFilteredTasks().filter(
-      (task) => task.deadline === format(date, "yyyy-MM-dd")
-    );
+  const handleToday = () => {
+    setSelectedDate(new Date());
   };
 
-  const getTaskStatus = (task: Task) => {
-    if (task.completed) return "green";
-    if (task.deadline) {
-      const deadlineDate = parseISO(task.deadline);
-      if (isBefore(deadlineDate, new Date())) return "red";
-      if (isBefore(deadlineDate, addDays(new Date(), 3))) return "yellow";
-    }
-    return "gray";
-  };
+  const TaskCard = ({ task }: { task: Task }) => (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      whileHover={{ y: -2 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+    >
+      <Card
+        className={cn(
+          "p-4 border-l-4 transition-all duration-200 hover:shadow-md",
+          task.priority === "high" && "border-l-red-500",
+          task.priority === "medium" && "border-l-amber-500",
+          task.priority === "low" && "border-l-blue-500",
+          task.completed && "opacity-60 bg-muted"
+        )}
+      >
+        <div className="flex items-start gap-3">
+          <Checkbox
+            checked={task.completed}
+            onCheckedChange={() => handleToggleComplete(task.id)}
+            className="mt-1"
+          />
 
-  const handleSortTasks = (sortBy: "priority" | "deadline") => {
-    const sorted = [...getFilteredTasks()].sort((a, b) => {
-      if (sortBy === "priority") {
-        const priorityOrder = { high: 0, medium: 1, low: 2 };
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
-      } else if (sortBy === "deadline") {
-        return (
-          (a.deadline ? new Date(a.deadline).getTime() : Infinity) -
-          (b.deadline ? new Date(b.deadline).getTime() : Infinity)
-        );
-      }
-      return 0;
-    });
-    setTasks(sorted);
-  };
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h3
+                className={cn(
+                  "font-medium text-foreground truncate",
+                  task.completed && "line-through text-muted-foreground"
+                )}
+              >
+                {task.name}
+              </h3>
+              <div
+                className={cn(
+                  "inline-block px-2 py-0.5 rounded text-xs font-medium border",
+                  priorityColors[task.priority]
+                )}
+              >
+                {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+              </div>
+            </div>
 
-  const inputVariants = {
-    focus: {
-      scale: 1.02,
-      boxShadow: "0 0 10px rgba(37, 99, 235, 0.5)",
-      transition: { duration: 0.2 },
-    },
-    blur: {
-      scale: 1,
-      boxShadow: "none",
-      transition: { duration: 0.2 },
-    },
-  };
+            {task.category && (
+              <p className="text-xs text-muted-foreground mb-2">
+                📁 {task.category}
+              </p>
+            )}
 
-  const errorVariants = {
-    hidden: { opacity: 0, y: -10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-  };
+            {task.deadline && (
+              <p className="text-xs text-muted-foreground mb-2">
+                📅 {task.deadline.toLocaleDateString()}
+              </p>
+            )}
 
-  const modalVariants = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
-  };
+            {task.notes && (
+              <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                {task.notes}
+              </p>
+            )}
+
+            {task.subtasks && (
+              <p className="text-xs text-muted-foreground mb-2">
+                ✓ {task.subtasks.split("\n").length} subtasks
+              </p>
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleOpenModal(task)}
+              className="h-8 w-8 p-0"
+            >
+              <Edit2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleDeleteTask(task.id)}
+              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden font-sans">
+    <div className="space-y-6 p-4 sm:p-6 max-w-7xl mx-auto">
+      {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 50 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="w-full max-w-4xl relative z-10"
+        className="space-y-4"
       >
-        <Card className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden mb-8">
-          <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-          <CardContent className="p-10 relative z-10">
-            <CardTitle className="text-4xl font-extrabold mb-10 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-              To-Do List
-            </CardTitle>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-              className="mb-6"
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <h1 className="text-3xl font-bold text-foreground">My Tasks</h1>
+          <Button
+            onClick={() => handleOpenModal()}
+            className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
+          >
+            <Plus className="h-4 w-4" />
+            Add Task
+          </Button>
+        </div>
+
+        {/* View Toggle and Search */}
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search tasks..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="gap-2"
             >
-              <Button
-                type="button"
-                disabled={isLoading}
-                onClick={() => setShowAddTask(true)}
-                className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
-                  isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                  <Plus className="w-5 h-5" />
-                  Add Task
-                </span>
-                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-              </Button>
-            </motion.div>
-            <div className="flex gap-4 mb-6">
-              <Input
-                placeholder="Search tasks..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-              />
-              <Select
-                value={selectedCategory}
-                onValueChange={setSelectedCategory}
-              >
-                <SelectTrigger className="w-48 glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                  <SelectValue placeholder="Filter by category" />
-                </SelectTrigger>
-                <SelectContent className="dropdown fade-in-down">
-                  <SelectItem value="All" className="dropdown-item">
-                    All
-                  </SelectItem>
-                  <SelectItem value="All Tasks" className="dropdown-item">
-                    All Tasks
-                  </SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat} className="dropdown-item">
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={viewMode}
-                onValueChange={(value: "list" | "calendar") =>
-                  setViewMode(value)
-                }
-              >
-                <SelectTrigger className="w-48 glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                  <SelectValue placeholder="View mode" />
-                </SelectTrigger>
-                <SelectContent className="dropdown fade-in-down">
-                  <SelectItem value="list" className="dropdown-item">
-                    List View
-                  </SelectItem>
-                  <SelectItem value="calendar" className="dropdown-item">
-                    Calendar View
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-4 mb-6">
-              <Button
-                onClick={() => handleSortTasks("priority")}
-                className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                  Sort by Priority
-                </span>
-                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-              </Button>
-              <Button
-                onClick={() => handleSortTasks("deadline")}
-                className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                  Sort by Deadline
-                </span>
-                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-              </Button>
-              <Button
-                onClick={() => setSelectedCategory("All Tasks")}
-                className="bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                  All Tasks
-                </span>
-                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-              </Button>
-            </div>
-            {viewMode === "list" ? (
-              <div className="space-y-8">
-                {getFilteredTasks().map((task) => {
-                  const statusColor = {
-                    green: "bg-green-500/10 border-green-400 text-green-400",
-                    yellow:
-                      "bg-yellow-500/10 border-yellow-400 text-yellow-400",
-                    red: "bg-red-500/10 border-red-400 text-red-400",
-                    gray: "bg-gray-500/10 border-gray-400 text-gray-400",
-                  }[getTaskStatus(task)];
-                  return (
-                    <motion.div
-                      key={task.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3 }}
-                      className={`glass p-4 rounded-xl border border-blue-600/40 shadow-inner ${statusColor}`}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            checked={task.completed}
-                            onCheckedChange={() =>
-                              handleToggleCompleted(task.id)
-                            }
-                            className="text-green-500"
-                          />
-                          <div className="font-bold text-lg text-white">
-                            {task.name}
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            onClick={() => handleOpenEditTask(task)}
-                            className="bg-blue-600 text-white p-1 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                          >
-                            <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                              <Edit2 className="w-4 h-4" />
-                            </span>
-                            <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                          </Button>
-                          <Button
-                            type="button"
-                            onClick={() => handleDeleteTask(task.id)}
-                            className="bg-red-500 text-white p-1 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group"
-                          >
-                            <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                              <Trash2 className="w-4 h-4" />
-                            </span>
-                            <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="text-sm text-gray-300 mb-2">
-                        Deadline: {task.deadline || "No deadline"}
-                      </div>
-                      <div className="text-sm text-gray-300 mb-2">
-                        Category: {task.category}
-                      </div>
-                      <div className="text-sm text-gray-300 mb-2">
-                        Priority: {task.priority}
-                      </div>
-                      <div className="text-sm text-gray-300 mb-2">
-                        Notes: {task.notes || "No notes"}
-                      </div>
-                      {task.attachment && (
-                        <div className="text-sm text-gray-300 mb-2">
-                          Attachment: {task.attachment.name}
-                        </div>
-                      )}
-                      <div className="mt-4">
-                        <h4 className="text-md font-semibold text-blue-300 mb-2">
-                          Subtasks
-                        </h4>
-                        <div className="space-y-2">
-                          {task.subtasks.map((subtask) => (
-                            <div
-                              key={subtask.id}
-                              className="flex items-center gap-2"
-                            >
-                              <Checkbox
-                                checked={subtask.completed}
-                                onCheckedChange={() =>
-                                  handleToggleSubtask(task.id, subtask.id)
-                                }
-                                className="text-green-500"
-                              />
-                              <span className="text-white">{subtask.name}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="space-y-8">
-                <div className="flex justify-center mb-8">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => date && setSelectedDate(date)}
-                    className="rounded-3xl glass border-4 border-blue-600/60 p-16 text-3xl shadow-2xl w-full max-w-4xl fade-in"
-                    style={{ fontSize: "2.5rem", minHeight: "600px" }}
-                  />
-                </div>
-                <div className="space-y-6">
-                  {getTasksForDate(selectedDate).map((task) => {
-                    const statusColor = {
-                      green: "bg-green-500/10 border-green-400 text-green-400",
-                      yellow:
-                        "bg-yellow-500/10 border-yellow-400 text-yellow-400",
-                      red: "bg-red-500/10 border-red-400 text-red-400",
-                      gray: "bg-gray-500/10 border-gray-400 text-gray-400",
-                    }[getTaskStatus(task)];
-                    return (
-                      <motion.div
-                        key={task.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.3 }}
-                        className={`glass p-8 rounded-2xl border-2 border-blue-600/40 shadow-inner text-lg ${statusColor} fade-in`}
-                        style={{ fontSize: "1.125rem" }}
-                      >
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex items-center gap-4">
-                            <Checkbox
-                              checked={task.completed}
-                              onCheckedChange={() =>
-                                handleToggleCompleted(task.id)
-                              }
-                              className="text-green-500 scale-125"
-                            />
-                            <div className="font-bold text-2xl text-white">
-                              {task.name}
-                            </div>
-                          </div>
-                          <div className="flex gap-4">
-                            <Button
-                              type="button"
-                              onClick={() => handleOpenEditTask(task)}
-                              className="bg-blue-600 text-white p-2 rounded-2xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group text-xl"
-                            >
-                              <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                                <Edit2 className="w-6 h-6" />
-                              </span>
-                              <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                            </Button>
-                            <Button
-                              type="button"
-                              onClick={() => handleDeleteTask(task.id)}
-                              className="bg-red-500 text-white p-2 rounded-2xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group text-xl"
-                            >
-                              <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                                <Trash2 className="w-6 h-6" />
-                              </span>
-                              <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="text-lg text-gray-300 mb-2">
-                          Deadline: {task.deadline || "No deadline"}
-                        </div>
-                        <div className="text-lg text-gray-300 mb-2">
-                          Category: {task.category}
-                        </div>
-                        <div className="text-lg text-gray-300 mb-2">
-                          Priority: {task.priority}
-                        </div>
-                        <div className="text-lg text-gray-300 mb-2">
-                          Notes: {task.notes || "No notes"}
-                        </div>
-                        {task.attachment && (
-                          <div className="text-lg text-gray-300 mb-2">
-                            Attachment: {task.attachment.name}
-                          </div>
-                        )}
-                        <div className="mt-6">
-                          <h4 className="text-xl font-semibold text-blue-300 mb-4">
-                            Subtasks
-                          </h4>
-                          <div className="space-y-4">
-                            {task.subtasks.map((subtask) => (
-                              <div
-                                key={subtask.id}
-                                className="flex items-center gap-4"
-                              >
-                                <Checkbox
-                                  checked={subtask.completed}
-                                  onCheckedChange={() =>
-                                    handleToggleSubtask(task.id, subtask.id)
-                                  }
-                                  className="text-green-500 scale-125"
-                                />
-                                <span className="text-white text-lg">
-                                  {subtask.name}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              <List className="h-4 w-4" />
+              <span className="hidden sm:inline">List</span>
+            </Button>
+            <Button
+              variant={viewMode === "grid" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("grid")}
+              className="gap-2"
+            >
+              <Grid3x3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Grid</span>
+            </Button>
+            <Button
+              variant={showCalendar ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowCalendar(!showCalendar)}
+              className="gap-2"
+            >
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline">Calendar</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Filter by category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={filterPriority} onValueChange={setFilterPriority}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Filter by priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Priorities</SelectItem>
+              <SelectItem value="low">Low</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </motion.div>
 
-      {/* Add Task Modal */}
-      {showAddTask && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={modalVariants}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm p-4"
-          onClick={() => setShowAddTask(false)}
-        >
+      {/* Calendar View */}
+      <AnimatePresence>
+        {showCalendar && (
           <motion.div
-            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-[90vw] sm:max-w-md max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="border rounded-lg p-4 bg-card"
           >
-            <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-            <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                Add Task
-              </CardTitle>
-              <motion.form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleAddTask();
-                }}
-                className="space-y-6"
-              >
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="name"
-                    animate={
-                      form.name ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Task Name
-                  </motion.label>
-                  <motion.input
-                    id="name"
-                    type="text"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    placeholder="Enter task name"
-                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="deadline"
-                    animate={
-                      form.deadline
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Deadline (Optional)
-                  </motion.label>
-                  <motion.input
-                    id="deadline"
-                    type="date"
-                    name="deadline"
-                    value={form.deadline}
-                    onChange={handleChange}
-                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="category"
-                    animate={
-                      form.category
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Category
-                  </motion.label>
-                  <Select
-                    value={form.category}
-                    onValueChange={(value) =>
-                      setForm({ ...form, category: value, newCategory: "" })
-                    }
-                  >
-                    <SelectTrigger className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent className="dropdown fade-in-down">
-                      {categories.map((cat) => (
-                        <SelectItem
-                          key={cat}
-                          value={cat}
-                          className="dropdown-item"
-                        >
-                          {cat}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="Add New" className="dropdown-item">
-                        Add New
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {form.category === "Add New" && (
-                    <motion.input
-                      id="newCategory"
-                      type="text"
-                      name="newCategory"
-                      value={form.newCategory}
-                      onChange={handleChange}
-                      placeholder="New category name"
-                      className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  )}
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="priority"
-                    animate={
-                      form.priority
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Priority
-                  </motion.label>
-                  <Select
-                    value={form.priority}
-                    onValueChange={(value) =>
-                      setForm({
-                        ...form,
-                        priority: value as "low" | "medium" | "high",
-                      })
-                    }
-                  >
-                    <SelectTrigger className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent className="dropdown fade-in-down">
-                      {priorities.map((p) => (
-                        <SelectItem
-                          key={p.value}
-                          value={p.value}
-                          className="dropdown-item"
-                        >
-                          {p.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="subtasks"
-                    animate={
-                      form.subtasks
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Subtasks (one per line)
-                  </motion.label>
-                  <motion.textarea
-                    id="subtasks"
-                    name="subtasks"
-                    value={form.subtasks}
-                    onChange={handleChange}
-                    placeholder="Enter subtasks, one per line"
-                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="notes"
-                    animate={
-                      form.notes ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Notes
-                  </motion.label>
-                  <motion.textarea
-                    id="notes"
-                    name="notes"
-                    value={form.notes}
-                    onChange={handleChange}
-                    placeholder="Enter notes"
-                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="attachment"
-                    animate={
-                      form.attachment
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Attachment (Optional)
-                  </motion.label>
-                  <motion.input
-                    id="attachment"
-                    type="file"
-                    onChange={handleFileChange}
-                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                {error && (
-                  <motion.p
-                    id="form-error"
-                    aria-live="assertive"
-                    className="text-red-400 mb-6 text-center font-medium drop-shadow animate-pulse"
-                    variants={errorVariants}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    {error}
-                  </motion.p>
-                )}
-                <motion.div animate={buttonControls}>
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
-                      isLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {isLoading ? (
-                      <Loading />
-                    ) : (
-                      <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                        <Save className="w-5 h-5" />
-                        Add Task
-                      </span>
-                    )}
-                    <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                  </Button>
-                </motion.div>
+            <div className="space-y-4">
+              {/* Date Navigation */}
+              <div className="flex items-center justify-between gap-4">
                 <Button
-                  type="button"
-                  disabled={isLoading}
-                  onClick={() => setShowAddTask(false)}
-                  className={`w-full bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 ${
-                    isLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrevDay}
+                  className="gap-2 bg-transparent"
                 >
-                  Cancel
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
                 </Button>
-              </motion.form>
-            </CardContent>
-          </motion.div>
-        </motion.div>
-      )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleToday}
+                  className="gap-2 bg-transparent"
+                >
+                  Today
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextDay}
+                  className="gap-2 bg-transparent"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <span className="font-medium text-sm">
+                  {selectedDate.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </span>
+              </div>
 
-      {/* Edit Task Modal */}
-      {showEditTask && editTask && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={modalVariants}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm p-4"
-          onClick={() => setShowEditTask(false)}
-        >
-          <motion.div
-            className="bg-transparent border-none shadow-glass backdrop-blur-xl rounded-xl overflow-hidden w-full max-w-[90vw] sm:max-w-md max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="absolute inset-0 pointer-events-none rounded-xl border-2 border-blue-600/40 animate-pulse shadow-[0_0_50px_15px_rgba(37,99,235,0.3)]"></div>
-            <CardContent className="p-10 relative z-10">
-              <CardTitle className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-emerald-500 text-center drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)] animate-gradient-x">
-                Edit Task
-              </CardTitle>
-              <motion.form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleEditTask();
-                }}
-                className="space-y-6"
-              >
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="name"
-                    animate={
-                      form.name ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Task Name
-                  </motion.label>
-                  <motion.input
-                    id="name"
-                    type="text"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    placeholder="Enter task name"
-                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="deadline"
-                    animate={
-                      form.deadline
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Deadline (Optional)
-                  </motion.label>
-                  <motion.input
-                    id="deadline"
-                    type="date"
-                    name="deadline"
-                    value={form.deadline}
-                    onChange={handleChange}
-                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="category"
-                    animate={
-                      form.category
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Category
-                  </motion.label>
-                  <Select
-                    value={form.category}
-                    onValueChange={(value) =>
-                      setForm({ ...form, category: value, newCategory: "" })
-                    }
-                  >
-                    <SelectTrigger className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent className="dropdown fade-in-down">
-                      {categories.map((cat) => (
-                        <SelectItem
-                          key={cat}
-                          value={cat}
-                          className="dropdown-item"
-                        >
-                          {cat}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="Add New" className="dropdown-item">
-                        Add New
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {form.category === "Add New" && (
-                    <motion.input
-                      id="newCategory"
-                      type="text"
-                      name="newCategory"
-                      value={form.newCategory}
-                      onChange={handleChange}
-                      placeholder="New category name"
-                      className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 mt-2 fade-in"
-                      variants={inputVariants}
-                      whileFocus="focus"
-                      initial="blur"
-                    />
-                  )}
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="priority"
-                    animate={
-                      form.priority
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Priority
-                  </motion.label>
-                  <Select
-                    value={form.priority}
-                    onValueChange={(value) =>
-                      setForm({
-                        ...form,
-                        priority: value as "low" | "medium" | "high",
-                      })
-                    }
-                  >
-                    <SelectTrigger className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent className="dropdown fade-in-down">
-                      {priorities.map((p) => (
-                        <SelectItem
-                          key={p.value}
-                          value={p.value}
-                          className="dropdown-item"
-                        >
-                          {p.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="subtasks"
-                    animate={
-                      form.subtasks
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Subtasks (one per line)
-                  </motion.label>
-                  <motion.textarea
-                    id="subtasks"
-                    name="subtasks"
-                    value={form.subtasks}
-                    onChange={handleChange}
-                    placeholder="Enter subtasks, one per line"
-                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="notes"
-                    animate={
-                      form.notes ? { y: -25, scale: 0.9 } : { y: 0, scale: 1 }
-                    }
-                  >
-                    Notes
-                  </motion.label>
-                  <motion.textarea
-                    id="notes"
-                    name="notes"
-                    value={form.notes}
-                    onChange={handleChange}
-                    placeholder="Enter notes"
-                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 placeholder-gray-400/50 min-h-[100px] fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                <div className="relative">
-                  <motion.label
-                    className="block text-blue-300 mb-2 font-semibold tracking-wide transition-all duration-300"
-                    htmlFor="attachment"
-                    animate={
-                      form.attachment
-                        ? { y: -25, scale: 0.9 }
-                        : { y: 0, scale: 1 }
-                    }
-                  >
-                    Attachment (Optional)
-                  </motion.label>
-                  <motion.input
-                    id="attachment"
-                    type="file"
-                    onChange={handleFileChange}
-                    className="w-full glass px-4 py-3 text-(--color-card-darkForeground) border-(--color-border) focus:outline-none transition-all duration-300 fade-in"
-                    variants={inputVariants}
-                    whileFocus="focus"
-                    initial="blur"
-                  />
-                </div>
-                {error && (
-                  <motion.p
-                    id="form-error"
-                    aria-live="assertive"
-                    className="text-red-400 mb-6 text-center font-medium drop-shadow animate-pulse"
-                    variants={errorVariants}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    {error}
-                  </motion.p>
-                )}
-                <motion.div animate={buttonControls}>
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className={`w-full bg-linear-to-r from-blue-600 to-emerald-500 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 relative overflow-hidden group ${
-                      isLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {isLoading ? (
-                      <Loading />
-                    ) : (
-                      <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">
-                        <Save className="w-5 h-5" />
-                        Save Task
-                      </span>
-                    )}
-                    <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500 rounded-full"></span>
-                  </Button>
-                </motion.div>
-                <Button
-                  type="button"
-                  disabled={isLoading}
-                  onClick={() => setShowEditTask(false)}
-                  className={`w-full bg-gray-800/30 text-white font-bold py-3 rounded-xl shadow-soft hover:scale-105 transition-all duration-300 ${
-                    isLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  Cancel
-                </Button>
-              </motion.form>
-            </CardContent>
+              {/* Calendar Component */}
+              <div className="flex justify-center">
+                <CalendarComponent
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  className="rounded-md border"
+                />
+              </div>
+            </div>
           </motion.div>
-        </motion.div>
-      )}
+        )}
+      </AnimatePresence>
+
+      {/* Tasks Display */}
+      <div>
+        {filteredTasks.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12"
+          >
+            <p className="text-muted-foreground text-lg">
+              {searchTerm ||
+              filterCategory !== "all" ||
+              filterPriority !== "all"
+                ? "No tasks match your filters"
+                : "No tasks yet. Create one to get started!"}
+            </p>
+          </motion.div>
+        ) : (
+          <div
+            className={cn(
+              viewMode === "grid"
+                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                : "space-y-3"
+            )}
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredTasks.map((task) => (
+                <TaskCard key={task.id} task={task} />
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
+
+      {/* Add/Edit Task Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingTask ? "Edit Task" : "Create New Task"}
+            </DialogTitle>
+            <DialogDescription>
+              {editingTask
+                ? "Update your task details below"
+                : "Add a new task with all the details you need"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            {/* Task Name */}
+            <div className="space-y-2">
+              <Label htmlFor="task-name">Task Name *</Label>
+              <Input
+                id="task-name"
+                placeholder="Enter task name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+              />
+            </div>
+
+            {/* Deadline */}
+            <div className="space-y-2">
+              <Label htmlFor="deadline">Deadline</Label>
+              <Input
+                id="deadline"
+                type="date"
+                value={
+                  formData.deadline
+                    ? formData.deadline.toISOString().split("T")[0]
+                    : ""
+                }
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    deadline: e.target.value ? new Date(e.target.value) : null,
+                  })
+                }
+              />
+            </div>
+
+            {/* Category */}
+            <div className="space-y-2">
+              <Label>Category</Label>
+              <div className="space-y-2">
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, category: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select or create category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="Or create new category..."
+                  value={formData.newCategory}
+                  onChange={(e) =>
+                    setFormData({ ...formData, newCategory: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Priority */}
+            <div className="space-y-2">
+              <Label>Priority</Label>
+              <Select
+                value={formData.priority}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    priority: value as "low" | "medium" | "high",
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">
+                    <span className="flex items-center gap-2">🔵 Low</span>
+                  </SelectItem>
+                  <SelectItem value="medium">
+                    <span className="flex items-center gap-2">🟡 Medium</span>
+                  </SelectItem>
+                  <SelectItem value="high">
+                    <span className="flex items-center gap-2">🔴 High</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Subtasks */}
+            <div className="space-y-2">
+              <Label htmlFor="subtasks">Subtasks</Label>
+              <Textarea
+                id="subtasks"
+                placeholder="Enter subtasks, one per line"
+                value={formData.subtasks}
+                onChange={(e) =>
+                  setFormData({ ...formData, subtasks: e.target.value })
+                }
+                className="min-h-20"
+              />
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                placeholder="Add any additional notes"
+                value={formData.notes}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
+                className="min-h-20"
+              />
+            </div>
+
+            {/* File Attachment */}
+            <div className="space-y-2">
+              <Label htmlFor="attachment">Attachment</Label>
+              <div className="border-2 border-dashed rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer">
+                <label htmlFor="file-input" className="cursor-pointer">
+                  <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                    <Upload className="h-4 w-4" />
+                    <span className="text-sm">
+                      {formData.attachment?.name || "Click to upload a file"}
+                    </span>
+                  </div>
+                </label>
+                <input
+                  id="file-input"
+                  type="file"
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      attachment: e.target.files?.[0] || null,
+                    })
+                  }
+                  className="hidden"
+                />
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex gap-2 justify-end pt-4">
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveTask}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {editingTask ? "Update Task" : "Create Task"}
+              </Button>
+            </div>
+          </motion.div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
-
-export default ToDo;
+}
