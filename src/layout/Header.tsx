@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
@@ -23,8 +23,11 @@ import {
   Sun,
   Moon,
   User,
+  LogOut,
+  LogIn,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface HeaderProps {
   isDark?: boolean;
@@ -54,8 +57,19 @@ export default function Header({
   const [isOpen, setIsOpen] = useState(false);
   const [isDark, setIsDark] = useState<boolean>(Boolean(isDarkProp));
   const location = useLocation();
+  const navigate = useNavigate();
   const firstLinkRef = useRef<HTMLAnchorElement | null>(null);
   const [notifCount, setNotifCount] = useState<number>(0);
+  const { currentUser, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   useEffect(() => {
     if (typeof isDarkProp === "boolean") setIsDark(isDarkProp);
@@ -149,45 +163,50 @@ export default function Header({
         </Link>
 
         <div className="hidden md:flex items-center gap-4">
-          <nav className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link, idx) => {
-              const Icon = link.icon;
-              const isActive =
-                location.pathname === link.href ||
-                (link.href !== "/" && location.pathname.startsWith(link.href));
-              return (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  ref={idx === 0 ? firstLinkRef : undefined}
-                  aria-current={isActive ? "page" : undefined}
-                  className={cn(
-                    "px-3 py-2 rounded-md flex items-center gap-2 text-sm",
-                    isActive
-                      ? "bg-accent/10 text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="hidden md:inline">{link.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+          {currentUser && (
+            <nav className="hidden lg:flex items-center gap-1">
+              {navLinks.map((link, idx) => {
+                const Icon = link.icon;
+                const isActive =
+                  location.pathname === link.href ||
+                  (link.href !== "/" &&
+                    location.pathname.startsWith(link.href));
+                return (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    ref={idx === 0 ? firstLinkRef : undefined}
+                    aria-current={isActive ? "page" : undefined}
+                    className={cn(
+                      "px-3 py-2 rounded-md flex items-center gap-2 text-sm",
+                      isActive
+                        ? "bg-accent/10 text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
+                    )}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="hidden md:inline">{link.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            to="/notifications"
-            className="relative p-2 rounded-md hover:bg-background/10"
-          >
-            <Bell className="w-5 h-5" aria-hidden />
-            {notifCount > 0 && (
-              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-semibold leading-none text-white bg-destructive rounded-full">
-                {notifCount}
-              </span>
-            )}
-          </Link>
+          {currentUser && (
+            <Link
+              to="/notifications"
+              className="relative p-2 rounded-md hover:bg-background/10"
+            >
+              <Bell className="w-5 h-5" aria-hidden />
+              {notifCount > 0 && (
+                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-semibold leading-none text-white bg-destructive rounded-full">
+                  {notifCount}
+                </span>
+              )}
+            </Link>
+          )}
 
           <button
             aria-label="Toggle theme"
@@ -204,13 +223,33 @@ export default function Header({
             )}
           </button>
 
-          <Link
-            to="/profile"
-            className="hidden md:inline-flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent/10"
-          >
-            <User className="w-5 h-5" />
-            <span className="text-sm">Account</span>
-          </Link>
+          {currentUser ? (
+            <>
+              <Link
+                to="/profile"
+                className="hidden md:inline-flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent/10"
+              >
+                <User className="w-5 h-5" />
+                <span className="text-sm">Profile</span>
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="hidden md:inline-flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent/10 text-destructive"
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="text-sm">Logout</span>
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              className="hidden md:inline-flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent/10"
+            >
+              <LogIn className="w-5 h-5" />
+              <span className="text-sm">Login</span>
+            </Link>
+          )}
 
           <button
             aria-expanded={isOpen}
@@ -256,36 +295,67 @@ export default function Header({
                 </div>
 
                 <nav id="main-navigation" className="flex-1 grid gap-3">
-                  {navLinks.map((link, idx) => {
-                    const Icon = link.icon;
-                    const isActive =
-                      location.pathname === link.href ||
-                      (link.href !== "/" &&
-                        location.pathname.startsWith(link.href));
-                    return (
-                      <Link
-                        key={link.href}
-                        to={link.href}
-                        onClick={() => setIsOpen(false)}
-                        ref={idx === 0 ? firstLinkRef : undefined}
-                        className={cn(
-                          "flex items-center gap-3 px-4 py-3 rounded-md text-lg",
-                          isActive
-                            ? "bg-accent/10 text-foreground"
-                            : "text-on-surface hover:bg-accent/10"
-                        )}
-                      >
-                        <Icon className="w-5 h-5" />
-                        <span>{link.label}</span>
-                      </Link>
-                    );
-                  })}
+                  {currentUser &&
+                    navLinks.map((link, idx) => {
+                      const Icon = link.icon;
+                      const isActive =
+                        location.pathname === link.href ||
+                        (link.href !== "/" &&
+                          location.pathname.startsWith(link.href));
+                      return (
+                        <Link
+                          key={link.href}
+                          to={link.href}
+                          onClick={() => setIsOpen(false)}
+                          ref={idx === 0 ? firstLinkRef : undefined}
+                          className={cn(
+                            "flex items-center gap-3 px-4 py-3 rounded-md text-lg",
+                            isActive
+                              ? "bg-accent/10 text-foreground"
+                              : "text-on-surface hover:bg-accent/10"
+                          )}
+                        >
+                          <Icon className="w-5 h-5" />
+                          <span>{link.label}</span>
+                        </Link>
+                      );
+                    })}
+
+                  {!currentUser && (
+                    <Link
+                      to="/login"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-md text-lg text-on-surface hover:bg-accent/10"
+                    >
+                      <LogIn className="w-5 h-5" />
+                      <span>Login</span>
+                    </Link>
+                  )}
                 </nav>
 
-                <div className="mt-auto">
-                  <Link to="/settings" className="btn-secondary">
-                    Settings
-                  </Link>
+                <div className="mt-auto flex flex-col gap-2">
+                  {currentUser && (
+                    <>
+                      <Link
+                        to="/profile"
+                        className="btn-secondary"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <User className="w-4 h-4" />
+                        Profile
+                      </Link>
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setIsOpen(false);
+                        }}
+                        className="btn-outline text-destructive"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Logout
+                      </button>
+                    </>
+                  )}
                 </div>
               </motion.div>
 
@@ -295,18 +365,54 @@ export default function Header({
                 exit={{ x: 40 }}
                 className="p-8 border-l border-border/20 hidden md:flex flex-col"
               >
-                <h4 className="font-semibold">Quick actions</h4>
-                <div className="mt-4 grid gap-3">
-                  <Link to="/shopping" className="btn-outline">
-                    Open Shopping
-                  </Link>
-                  <Link to="/meals" className="btn-outline">
-                    Log a Meal
-                  </Link>
-                  <Link to="/finance" className="btn-outline">
-                    Add Transaction
-                  </Link>
-                </div>
+                {currentUser ? (
+                  <>
+                    <h4 className="font-semibold">Quick actions</h4>
+                    <div className="mt-4 grid gap-3">
+                      <Link
+                        to="/shopping"
+                        className="btn-outline"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Open Shopping
+                      </Link>
+                      <Link
+                        to="/meals"
+                        className="btn-outline"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Log a Meal
+                      </Link>
+                      <Link
+                        to="/finance"
+                        className="btn-outline"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Add Transaction
+                      </Link>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h4 className="font-semibold">Get Started</h4>
+                    <div className="mt-4 grid gap-3">
+                      <Link
+                        to="/login"
+                        className="btn-primary"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Login
+                      </Link>
+                      <Link
+                        to="/register"
+                        className="btn-outline"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Register
+                      </Link>
+                    </div>
+                  </>
+                )}
               </motion.div>
             </div>
           </motion.div>
